@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"exercise2/cmd/actormgmt/internal/app/command/createaccount"
+
+	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -17,18 +19,19 @@ func NewHandler(handler *createaccount.Handler) *Handler {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var req CreateAccountRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
+	actorID, err := uuid.Parse(req.ActorID)
+	if err != nil {
+		http.Error(w, "invalid actor id", http.StatusBadRequest)
+		return
+	}
 
 	account, err := h.CreateAccount.Execute(context.Background(), createaccount.Command{
+		ActorID:      actorID,
 		DltAccountId: req.DltAccountId,
 		PrivateKey:   req.PrivateKey,
 		PublicKey:    req.PublicKey,
@@ -40,6 +43,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	resp := CreateAccountResponse{
 		ID:           account.ID.String(),
+		ActorID:      account.ActorID.String(),
 		DltAccountId: account.DltAccountId,
 		PrivateKey:   account.PrivateKey,
 		PublicKey:    account.PublicKey,

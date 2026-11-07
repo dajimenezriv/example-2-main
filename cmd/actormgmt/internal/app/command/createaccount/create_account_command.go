@@ -5,9 +5,15 @@ import (
 	"errors"
 
 	accountDomain "exercise2/cmd/actormgmt/internal/domain/account"
+	actorDomain "exercise2/cmd/actormgmt/internal/domain/actor"
+
+	"github.com/google/uuid"
 )
 
+var ErrDltAccountIdRequired = errors.New("DltAccountId is required")
+
 type Command struct {
+	ActorID      uuid.UUID
 	DltAccountId string
 	PrivateKey   string
 	PublicKey    string
@@ -15,18 +21,24 @@ type Command struct {
 
 type Handler struct {
 	AccountRepository accountDomain.Repository
+	ActorRepository   actorDomain.Repository
 }
 
-func NewHandler(repo accountDomain.Repository) *Handler {
-	return &Handler{AccountRepository: repo}
+func NewHandler(account accountDomain.Repository, actor actorDomain.Repository) *Handler {
+	return &Handler{AccountRepository: account, ActorRepository: actor}
 }
 
 func (h *Handler) Execute(ctx context.Context, cmd Command) (*accountDomain.Account, error) {
 	if cmd.DltAccountId == "" {
-		return nil, errors.New("DltAccountId is required")
+		return nil, ErrDltAccountIdRequired
 	}
 
-	acc := accountDomain.New(cmd.DltAccountId, cmd.PrivateKey, cmd.PublicKey)
+	act, err := h.ActorRepository.FindByID(cmd.ActorID)
+	if err != nil {
+		return nil, err
+	}
+
+	acc := accountDomain.New(act.ID, cmd.DltAccountId, cmd.PrivateKey, cmd.PublicKey)
 
 	if err := h.AccountRepository.Save(&acc); err != nil {
 		return nil, err

@@ -7,13 +7,11 @@ import (
 	actorDomain "exercise2/cmd/actormgmt/internal/domain/actor"
 )
 
-// Command input
 type Command struct {
 	TaxId string
 	Type  actorDomain.ActorType
 }
 
-// Handler
 type Handler struct {
 	ActorRepository actorDomain.Repository
 }
@@ -22,7 +20,6 @@ func NewHandler(repo actorDomain.Repository) *Handler {
 	return &Handler{ActorRepository: repo}
 }
 
-// Execute command
 func (h *Handler) Execute(ctx context.Context, cmd Command) (*actorDomain.Actor, error) {
 	if cmd.TaxId == "" {
 		return nil, errors.New("TaxId is required")

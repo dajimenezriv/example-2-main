@@ -1,6 +1,12 @@
 package actor
 
-import "github.com/google/uuid"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
+
+var ErrActorNotFound = errors.New("actor not found")
 
 type Actor struct {
 	ID    uuid.UUID

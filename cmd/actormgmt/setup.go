@@ -11,7 +11,7 @@ import (
 	getAccountsEndpoint "exercise2/cmd/actormgmt/internal/infra/http/getaccounts"
 	getActorsEndpoint "exercise2/cmd/actormgmt/internal/infra/http/getactors"
 	accountrepo "exercise2/cmd/actormgmt/internal/infra/repository/account"
-	"exercise2/cmd/actormgmt/internal/infra/repository/actor"
+	actorrepo "exercise2/cmd/actormgmt/internal/infra/repository/actor"
 )
 
 type Context struct {
@@ -29,11 +29,11 @@ func SetupContext(db *sql.DB) (*Context, error) {
 	accountRepo := accountrepo.NewPostgresRepository(db)
 	actorRepo := actorrepo.NewPostgresRepository(db)
 
-	createAccountHandler := createAccountCommand.NewHandler(accountRepo)
+	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo)
 	createActorHandler := createActorCommand.NewHandler(actorRepo)
 
 	getAccountsQuery := getaccounts.NewQuery(accountRepo)
-	getActorsQuery := getactors.NewQuery(actorRepo)
+	getActorsQuery := getactors.NewQuery(actorRepo, accountRepo)
 
 	createAccountHTTP := createAccountEndpoint.NewHandler(createAccountHandler)
 	createActorHTTP := createActorEndpoint.NewHandler(createActorHandler)

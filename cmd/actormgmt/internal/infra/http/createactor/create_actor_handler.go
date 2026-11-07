@@ -9,7 +9,6 @@ import (
 	"exercise2/cmd/actormgmt/internal/domain/actor"
 )
 
-// HTTP Adapter para CreateActor
 type Handler struct {
 	CreateActor *createactor.Handler
 }
@@ -19,11 +18,6 @@ func NewHandler(cmd *createactor.Handler) *Handler {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var req CreateActorRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)

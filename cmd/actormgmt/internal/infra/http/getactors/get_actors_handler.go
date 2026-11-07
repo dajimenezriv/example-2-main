@@ -15,11 +15,6 @@ func NewHandler(query *getactors.Query) *Handler {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	actors, err := h.Query.Execute()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
