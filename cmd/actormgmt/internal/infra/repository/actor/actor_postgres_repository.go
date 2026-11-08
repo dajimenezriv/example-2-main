@@ -2,6 +2,7 @@ package actorrepo
 
 import (
 	"database/sql"
+	"errors"
 
 	"exercise2/cmd/actormgmt/internal/domain/actor"
 
@@ -27,6 +28,9 @@ func (r *PostgresRepository) FindByID(id uuid.UUID) (*actor.Actor, error) {
 	var model Actor
 	var idStr string
 	if err := row.Scan(&idStr, &model.TaxId, &model.Type); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, actor.ErrActorNotFound
+		}
 		return nil, err
 	}
 	model.ID, _ = uuid.Parse(idStr)

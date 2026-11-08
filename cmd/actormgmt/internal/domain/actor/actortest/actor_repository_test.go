@@ -6,5 +6,8 @@ import (
 )
 
 func TestFakeRepositoryContract(t *testing.T) {
-	RunRepositoryContract(t, func(_ *testing.T) actor.Repository { return NewFakeRepository() })
+	RunRepositoryContract(t, func(t *testing.T) actor.Repository {
+		t.Helper()
+		return NewFakeRepository()
+	})
 }
