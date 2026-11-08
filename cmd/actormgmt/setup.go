@@ -13,7 +13,7 @@ import (
 	accountrepo "exercise2/cmd/actormgmt/internal/infra/repository/account"
 	actorrepo "exercise2/cmd/actormgmt/internal/infra/repository/actor"
 
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type Context struct {
@@ -31,7 +31,7 @@ func SetupContext(db *sql.DB) (*Context, error) {
 	accountRepo := accountrepo.NewPostgresRepository(db)
 	actorRepo := actorrepo.NewPostgresRepository(db)
 
-	newID := func() uuid.UUID { return uuid.Must(uuid.NewV7()) }
+	newID := func() uuid.UUID { return uuid.NewV7() }
 	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo, newID)
 	createActorHandler := createActorCommand.NewHandler(actorRepo)
 

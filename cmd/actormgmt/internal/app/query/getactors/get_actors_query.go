@@ -3,8 +3,7 @@ package getactors
 import (
 	domainAccount "exercise2/cmd/actormgmt/internal/domain/account"
 	domainActor "exercise2/cmd/actormgmt/internal/domain/actor"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type Query struct {

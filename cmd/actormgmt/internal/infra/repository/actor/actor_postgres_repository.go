@@ -5,7 +5,7 @@ import (
 
 	"exercise2/cmd/actormgmt/internal/domain/actor"
 
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type PostgresRepository struct {

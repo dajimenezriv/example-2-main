@@ -1,6 +1,6 @@
 package accountrepo
 
-import "github.com/google/uuid"
+import "uuid"
 
 type Account struct {
 	ID           uuid.UUID

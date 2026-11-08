@@ -1,6 +1,6 @@
 package actor
 
-import "github.com/google/uuid"
+import "uuid"
 
 //go:generate mockgen -source=actor_repository.go -destination=mocks/actor_repository_mock.go -package=mocks
 type Repository interface {

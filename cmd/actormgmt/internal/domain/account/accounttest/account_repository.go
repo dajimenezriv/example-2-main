@@ -6,7 +6,7 @@ import (
 	"slices"
 	"sync"
 
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type FakeRepository struct {

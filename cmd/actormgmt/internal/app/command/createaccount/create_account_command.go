@@ -3,11 +3,10 @@ package createaccount
 import (
 	"context"
 	"errors"
+	"uuid"
 
 	accountDomain "exercise2/cmd/actormgmt/internal/domain/account"
 	actorDomain "exercise2/cmd/actormgmt/internal/domain/actor"
-
-	"github.com/google/uuid"
 )
 
 var ErrDltAccountIdRequired = errors.New("DltAccountId is required")

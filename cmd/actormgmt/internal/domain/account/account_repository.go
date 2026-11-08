@@ -1,6 +1,6 @@
 package account
 
-import "github.com/google/uuid"
+import "uuid"
 
 type Repository interface {
 	Save(account *Account) error

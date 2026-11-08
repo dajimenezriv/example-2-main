@@ -2,10 +2,10 @@ package accountrepo
 
 import (
 	"database/sql"
+	"uuid"
 
 	"exercise2/cmd/actormgmt/internal/domain/account"
 
-	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 

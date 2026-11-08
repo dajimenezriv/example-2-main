@@ -5,7 +5,7 @@ import (
 	actorrepo "exercise2/cmd/actormgmt/internal/infra/repository/actor"
 	"sync"
 
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type FakeRepository struct {

@@ -8,8 +8,9 @@ import (
 	"exercise2/cmd/actormgmt/internal/domain/actor/actortest"
 	"testing"
 
+	"uuid"
+
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/uuid"
 )
 
 var (

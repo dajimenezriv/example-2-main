@@ -2,8 +2,7 @@ package account
 
 import (
 	"errors"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 var ErrAccountNotFound = errors.New("account not found")

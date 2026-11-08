@@ -2,8 +2,7 @@ package actor
 
 import (
 	"errors"
-
-	"github.com/google/uuid"
+	"uuid"
 )
 
 var ErrActorNotFound = errors.New("actor not found")

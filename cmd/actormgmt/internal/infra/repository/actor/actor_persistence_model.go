@@ -1,6 +1,6 @@
 package actorrepo
 
-import "github.com/google/uuid"
+import "uuid"
 
 type Actor struct {
 	ID    uuid.UUID

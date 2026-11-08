@@ -7,7 +7,7 @@ import (
 
 	"exercise2/cmd/actormgmt/internal/app/command/createaccount"
 
-	"github.com/google/uuid"
+	"uuid"
 )
 
 type Handler struct {
