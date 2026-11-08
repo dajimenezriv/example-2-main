@@ -7,7 +7,6 @@ import (
 	"exercise2/cmd/actormgmt/internal/domain/actor/actortest"
 	"testing"
 
-	_ "github.com/lib/pq"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )

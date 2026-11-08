@@ -9,29 +9,36 @@ import (
 
 type FakeRepository struct {
 	mu     sync.Mutex
-	Actors map[uuid.UUID]actor.Actor
+	Actors []actor.Actor
 
 	SaveErr, FindByIDErr, FindAllErr error
 }
 
 func NewFakeRepository() *FakeRepository {
 	return &FakeRepository{
-		Actors: make(map[uuid.UUID]actor.Actor),
+		Actors: []actor.Actor{},
 	}
 }
 
-func (f *FakeRepository) Save(actor *actor.Actor) error {
+func (f *FakeRepository) Save(act *actor.Actor) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.Actors[actor.ID] = *actor
+	for _, a := range f.Actors {
+		if a.ID == act.ID {
+			return actor.ErrActorAlreadyExists
+		}
+	}
+	f.Actors = append(f.Actors, *act)
 	return f.SaveErr
 }
 
 func (f *FakeRepository) FindByID(id uuid.UUID) (*actor.Actor, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if acc, ok := f.Actors[id]; ok {
-		return &acc, f.FindByIDErr
+	for _, a := range f.Actors {
+		if a.ID == id {
+			return &a, f.FindByIDErr
+		}
 	}
 	return nil, actor.ErrActorNotFound
 }
@@ -39,9 +46,9 @@ func (f *FakeRepository) FindByID(id uuid.UUID) (*actor.Actor, error) {
 func (f *FakeRepository) FindAll() ([]*actor.Actor, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	var accs []*actor.Actor
-	for _, acc := range f.Actors {
-		accs = append(accs, &acc)
+	accs := make([]*actor.Actor, len(f.Actors))
+	for i, acc := range f.Actors {
+		accs[i] = &acc
 	}
 	return accs, f.FindAllErr
 }

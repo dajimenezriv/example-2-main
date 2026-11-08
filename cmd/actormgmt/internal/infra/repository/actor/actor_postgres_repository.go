@@ -7,7 +7,11 @@ import (
 	"exercise2/cmd/actormgmt/internal/domain/actor"
 
 	"uuid"
+
+	"github.com/lib/pq"
 )
+
+const uniqueViolation = "23505"
 
 type PostgresRepository struct {
 	db *sql.DB
@@ -20,6 +24,9 @@ func NewPostgresRepository(db *sql.DB) *PostgresRepository {
 func (r *PostgresRepository) Save(a *actor.Actor) error {
 	model := ToPersistenceModel(a)
 	_, err := r.db.Exec("INSERT INTO actors (id, tax_id, type) VALUES ($1,$2,$3)", model.ID, model.TaxId, model.Type)
+	if pgErr, ok := errors.AsType[*pq.Error](err); ok && pgErr.Code == uniqueViolation {
+		return actor.ErrActorAlreadyExists
+	}
 	return err
 }
 

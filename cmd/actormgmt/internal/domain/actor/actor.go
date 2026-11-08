@@ -5,7 +5,10 @@ import (
 	"uuid"
 )
 
-var ErrActorNotFound = errors.New("actor not found")
+var (
+	ErrActorNotFound      = errors.New("actor not found")
+	ErrActorAlreadyExists = errors.New("actor already exists")
+)
 
 type Actor struct {
 	ID    uuid.UUID

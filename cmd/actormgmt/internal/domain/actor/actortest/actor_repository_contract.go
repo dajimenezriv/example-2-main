@@ -27,9 +27,22 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		}
 	})
 
+	t.Run("Save fails if actor already exists", func(t *testing.T) {
+		repo := newRepo(t)
+		want := actor.New("TaxID", actor.Issuer)
+
+		if err := repo.Save(&want); err != nil {
+			t.Fatalf("Save() = %v, want nil", err)
+		}
+		if err := repo.Save(&want); !errors.Is(err, actor.ErrActorAlreadyExists) {
+			t.Fatalf("Save() = %v, want %v", err, actor.ErrActorAlreadyExists)
+		}
+	})
+
 	t.Run("FindByID returns error if actor not found", func(t *testing.T) {
 		repo := newRepo(t)
 		a, err := repo.FindByID(uuid.New())
+
 		if !errors.Is(err, actor.ErrActorNotFound) {
 			t.Errorf("FindByID() = %v, want %v", err, actor.ErrActorNotFound)
 		}
