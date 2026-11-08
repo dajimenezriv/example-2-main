@@ -1,7 +1,6 @@
 package createaccount
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
@@ -30,7 +29,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	account, err := h.CreateAccount.Execute(context.Background(), createaccount.Command{
+	account, err := h.CreateAccount.Execute(r.Context(), createaccount.Command{
 		ActorID:      actorID,
 		DltAccountId: req.DltAccountId,
 		PrivateKey:   req.PrivateKey,
@@ -45,7 +44,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ID:           account.ID.String(),
 		ActorID:      account.ActorID.String(),
 		DltAccountId: account.DltAccountId,
-		PrivateKey:   account.PrivateKey,
 		PublicKey:    account.PublicKey,
 	}
 

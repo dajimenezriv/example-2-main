@@ -1,7 +1,6 @@
 package createactor
 
 import (
-	"context"
 	"encoding/json"
 	"exercise2/cmd/actormgmt/internal/app/command/createactor"
 	"net/http"
@@ -26,7 +25,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	actorType := actor.ActorType(req.Type)
 
-	actor, err := h.CreateActor.Execute(context.Background(), createactor.Command{
+	actor, err := h.CreateActor.Execute(r.Context(), createactor.Command{
 		TaxId: req.TaxId,
 		Type:  actorType,
 	})

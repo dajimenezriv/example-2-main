@@ -79,7 +79,6 @@ func TestCreateAccount(t *testing.T) {
 	body := `{
 		"actor_id": "` + existingActorID.String() + `",
 		"dlt_account_id": "DLT account ID",
-		"private_key": "Private key",
 		"public_key": "Public key"
 	}`
 
@@ -101,7 +100,6 @@ func TestCreateAccount(t *testing.T) {
 		"id":             newAccountID.String(),
 		"actor_id":       existingActorID.String(),
 		"dlt_account_id": "DLT account ID",
-		"private_key":    "Private key",
 		"public_key":     "Public key",
 	}
 	if diff := cmp.Diff(want, got); diff != "" {
