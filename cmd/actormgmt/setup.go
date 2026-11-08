@@ -31,7 +31,8 @@ func SetupContext(db *sql.DB) (*Context, error) {
 	accountRepo := accountrepo.NewPostgresRepository(db)
 	actorRepo := actorrepo.NewPostgresRepository(db)
 
-	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo, uuid.New)
+	newID := func() uuid.UUID { return uuid.Must(uuid.NewV7()) }
+	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo, newID)
 	createActorHandler := createActorCommand.NewHandler(actorRepo)
 
 	getAccountsQuery := getaccounts.NewQuery(accountRepo)
