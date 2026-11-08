@@ -9,13 +9,13 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
 )
 
 var (
 	errBoom        = errors.New("boom")
 	exitingActorID = uuid.New()
+	newAccountID   = uuid.New()
 )
 
 func newSUT(t *testing.T) (*Handler, *accounttest.FakeRepository, *actortest.FakeRepository) {
@@ -25,7 +25,8 @@ func newSUT(t *testing.T) (*Handler, *accounttest.FakeRepository, *actortest.Fak
 	if err := actRepo.Save(&actor.Actor{ID: exitingActorID}); err != nil {
 		t.Fatalf("seeding actor: %v", err)
 	}
-	return NewHandler(accRepo, actRepo), accRepo, actRepo
+	newID := func() uuid.UUID { return newAccountID }
+	return NewHandler(accRepo, actRepo, newID), accRepo, actRepo
 }
 
 func TestErrors(t *testing.T) {
@@ -86,26 +87,22 @@ func TestCreatesAccount(t *testing.T) {
 	}
 
 	want := &account.Account{
+		ID:           newAccountID,
 		ActorID:      exitingActorID,
 		DltAccountId: cmd.DltAccountId,
 		PrivateKey:   cmd.PrivateKey,
 		PublicKey:    cmd.PublicKey,
 	}
-	if diff := cmp.Diff(want, acc, cmpopts.IgnoreFields(account.Account{}, "ID")); diff != "" {
+	if diff := cmp.Diff(want, acc); diff != "" {
 		t.Errorf("Execute() account mismatch (-want +got):\n%s", diff)
 	}
-	if acc.ID == uuid.Nil {
-		t.Error("Execute() account ID was not generated")
-	}
 
-	// The account was persisted exactly as returned. Read it back through the
-	// port rather than the fake's internals.
-	stored, err := accRepo.FindByID(acc.ID)
+	stored, err := accRepo.FindByID(newAccountID)
 	if err != nil {
-		t.Fatalf("FindByID(%v) = %v, want stored account", acc.ID, err)
+		t.Fatalf("FindByID(%v) = %v, want stored account", newAccountID, err)
 	}
-	if diff := cmp.Diff(acc, stored); diff != "" {
-		t.Errorf("stored account mismatch (-returned +stored):\n%s", diff)
+	if diff := cmp.Diff(want, stored); diff != "" {
+		t.Errorf("stored account mismatch (-want +got):\n%s", diff)
 	}
 	if got := len(accRepo.Accounts); got != 1 {
 		t.Errorf("len(accounts) = %d, want 1", got)

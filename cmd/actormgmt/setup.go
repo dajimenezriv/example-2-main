@@ -12,6 +12,8 @@ import (
 	getActorsEndpoint "exercise2/cmd/actormgmt/internal/infra/http/getactors"
 	accountrepo "exercise2/cmd/actormgmt/internal/infra/repository/account"
 	actorrepo "exercise2/cmd/actormgmt/internal/infra/repository/actor"
+
+	"github.com/google/uuid"
 )
 
 type Context struct {
@@ -29,7 +31,7 @@ func SetupContext(db *sql.DB) (*Context, error) {
 	accountRepo := accountrepo.NewPostgresRepository(db)
 	actorRepo := actorrepo.NewPostgresRepository(db)
 
-	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo)
+	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo, uuid.New)
 	createActorHandler := createActorCommand.NewHandler(actorRepo)
 
 	getAccountsQuery := getaccounts.NewQuery(accountRepo)

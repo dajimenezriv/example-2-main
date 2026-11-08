@@ -16,9 +16,9 @@ type Account struct {
 	PublicKey    string
 }
 
-func New(actorID uuid.UUID, dltId, privKey, pubKey string) Account {
+func New(id, actorID uuid.UUID, dltId, privKey, pubKey string) Account {
 	return Account{
-		ID:           uuid.New(),
+		ID:           id,
 		ActorID:      actorID,
 		DltAccountId: dltId,
 		PrivateKey:   privKey,

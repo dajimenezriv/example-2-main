@@ -22,10 +22,11 @@ type Command struct {
 type Handler struct {
 	AccountRepository accountDomain.Repository
 	ActorRepository   actorDomain.Repository
+	newID             func() uuid.UUID
 }
 
-func NewHandler(account accountDomain.Repository, actor actorDomain.Repository) *Handler {
-	return &Handler{AccountRepository: account, ActorRepository: actor}
+func NewHandler(account accountDomain.Repository, actor actorDomain.Repository, newID func() uuid.UUID) *Handler {
+	return &Handler{AccountRepository: account, ActorRepository: actor, newID: newID}
 }
 
 func (h *Handler) Execute(ctx context.Context, cmd Command) (*accountDomain.Account, error) {
@@ -38,7 +39,7 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*accountDomain.Acco
 		return nil, err
 	}
 
-	acc := accountDomain.New(act.ID, cmd.DltAccountId, cmd.PrivateKey, cmd.PublicKey)
+	acc := accountDomain.New(h.newID(), act.ID, cmd.DltAccountId, cmd.PrivateKey, cmd.PublicKey)
 
 	if err := h.AccountRepository.Save(&acc); err != nil {
 		return nil, err
