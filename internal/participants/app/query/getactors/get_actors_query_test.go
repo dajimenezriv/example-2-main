@@ -50,7 +50,7 @@ func saveActor(t *testing.T, repo actor.Repository, uuid uuid.UUID) *actor.Actor
 
 func saveAccount(t *testing.T, repo account.Repository, uuid, actorID uuid.UUID) *account.Account {
 	t.Helper()
-	a := account.New(uuid, actorID, "DLT account ID", "Private key", "Public Key")
+	a := account.New(uuid, actorID, "DLT account ID", "Private key", "Public key")
 	if err := repo.Save(context.Background(), &a); err != nil {
 		log.Fatalf("actor repo save = %v", err)
 	}
@@ -73,7 +73,7 @@ func TestContextCanceledReturnsError(t *testing.T) {
 	}
 }
 
-func TestExecute(t *testing.T) {
+func TestReturnActorsWithAccounts(t *testing.T) {
 	actorRepo, accountRepo := newSUT(t)
 	q := NewQuery(actorRepo, accountRepo)
 
@@ -85,12 +85,12 @@ func TestExecute(t *testing.T) {
 	want := []ActorDTO{
 		{ID: actorID1, TaxId: "Tax ID", Type: actor.Issuer, Accounts: []AccountDTO{
 			{ID: accountID1, DltAccountId: "DLT account ID", PublicKey: "Public key"},
-			{ID: accountID1, DltAccountId: "DLT account ID", PublicKey: "Public key"},
+			{ID: accountID2, DltAccountId: "DLT account ID", PublicKey: "Public key"},
 		}},
 		{ID: actorID2, TaxId: "Tax ID", Type: actor.Issuer, Accounts: []AccountDTO{
-			{ID: accountID1, DltAccountId: "DLT account ID", PublicKey: "Public key"},
+			{ID: accountID3, DltAccountId: "DLT account ID", PublicKey: "Public key"},
 		}},
-		{ID: actorID3, TaxId: "Tax ID", Type: actor.Issuer, Accounts: []AccountDTO{}},
+		{ID: actorID3, TaxId: "Tax ID", Type: actor.Issuer, Accounts: nil},
 	}
 	if diff := cmp.Diff(got, want); diff != "" {
 		t.Errorf("actors (-want +got):\n%s", diff)

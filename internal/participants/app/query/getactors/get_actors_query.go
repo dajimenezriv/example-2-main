@@ -4,7 +4,6 @@ import (
 	"context"
 	domainAccount "exercise/internal/participants/domain/account"
 	domainActor "exercise/internal/participants/domain/actor"
-	"fmt"
 	"uuid"
 )
 
@@ -45,30 +44,23 @@ func (q *Query) Execute(ctx context.Context) ([]ActorDTO, error) {
 		return nil, err
 	}
 
-	fmt.Println(actorsIDs)
+	byActor := make(map[uuid.UUID][]AccountDTO, len(actors))
 	for _, acc := range accounts {
-		fmt.Println(acc)
+		byActor[acc.ActorID] = append(byActor[acc.ActorID], AccountDTO{
+			ID:           acc.ID,
+			DltAccountId: acc.DltAccountId,
+			PublicKey:    acc.PublicKey,
+		})
 	}
 
-	var actorDTOs []ActorDTO
-	for _, act := range actors {
-		var accountDTOs []AccountDTO
-		for _, acc := range accounts {
-			if acc.ActorID == act.ID {
-				accountDTOs = append(accountDTOs, AccountDTO{
-					ID:           acc.ID,
-					DltAccountId: acc.DltAccountId,
-					PublicKey:    acc.PublicKey,
-				})
-			}
-		}
-
-		actorDTOs = append(actorDTOs, ActorDTO{
+	actorDTOs := make([]ActorDTO, len(actors))
+	for i, act := range actors {
+		actorDTOs[i] = ActorDTO{
 			ID:       act.ID,
 			TaxId:    act.TaxId,
 			Type:     act.Type,
-			Accounts: accountDTOs,
-		})
+			Accounts: byActor[act.ID],
+		}
 	}
 	return actorDTOs, nil
 }

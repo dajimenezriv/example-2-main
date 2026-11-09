@@ -5,7 +5,7 @@ vars:
   MIGRATIONS: migrations
 
 tasks:
-  coverage:
+  cover:
     cmds:
       - go test ./... -count=1 -coverprofile=raw_coverage.out
       - grep -vE '/(actortest|accounttest)/' raw_coverage.out > coverage.out
