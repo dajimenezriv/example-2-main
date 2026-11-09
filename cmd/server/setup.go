@@ -2,16 +2,16 @@ package main
 
 import (
 	"database/sql"
+	createAccountEndpoint "exercise/internal/adapters/http/createaccount"
+	createActorEndpoint "exercise/internal/adapters/http/createactor"
+	getAccountsEndpoint "exercise/internal/adapters/http/getaccounts"
+	getActorsEndpoint "exercise/internal/adapters/http/getactors"
+	accountrepo "exercise/internal/adapters/postgres/account"
+	actorrepo "exercise/internal/adapters/postgres/actor"
 	createAccountCommand "exercise/internal/app/command/createaccount"
 	createActorCommand "exercise/internal/app/command/createactor"
 	"exercise/internal/app/query/getaccounts"
 	"exercise/internal/app/query/getactors"
-	createAccountEndpoint "exercise/internal/infra/http/createaccount"
-	createActorEndpoint "exercise/internal/infra/http/createactor"
-	getAccountsEndpoint "exercise/internal/infra/http/getaccounts"
-	getActorsEndpoint "exercise/internal/infra/http/getactors"
-	accountrepo "exercise/internal/infra/repository/account"
-	actorrepo "exercise/internal/infra/repository/actor"
 
 	"uuid"
 )
