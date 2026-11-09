@@ -10,7 +10,7 @@ import (
 
 	"uuid"
 
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type ActorRepository struct {
@@ -35,7 +35,7 @@ func (r *ActorRepository) Save(ctx context.Context, a *actor.Actor) error {
 		TaxID: a.TaxId,
 		Type:  string(a.Type),
 	})
-	if pgErr, ok := errors.AsType[*pq.Error](err); ok && pgErr.Code == uniqueViolation {
+	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
 		return actor.ErrActorAlreadyExists
 	}
 	return err

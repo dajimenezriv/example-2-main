@@ -9,7 +9,7 @@ import (
 	"exercise/internal/domain/account"
 	"uuid"
 
-	"github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type AccountRepository struct {
@@ -38,7 +38,7 @@ func (r *AccountRepository) Save(ctx context.Context, a *account.Account) error 
 		PrivateKey:   a.PrivateKey,
 		PublicKey:    a.PublicKey,
 	})
-	if pgErr, ok := errors.AsType[*pq.Error](err); ok && pgErr.Code == uniqueViolation {
+	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
 		return account.ErrAccountAlreadyExists
 	}
 	return err
