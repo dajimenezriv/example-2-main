@@ -1,4 +1,4 @@
--- name: CreateAccount :one
+-- name: CreateAccount :exec
 INSERT INTO
   accounts (
     id,
@@ -14,7 +14,7 @@ VALUES
     @dlt_account_id,
     @private_key,
     @public_key
-  ) RETURNING *;
+  );
 
 -- name: FindAccountByID :one
 SELECT

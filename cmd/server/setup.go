@@ -31,8 +31,8 @@ type application struct {
 
 func setupApplication(db *pgxpool.Pool) (*application, error) {
 	q := sqlcgen.New(db)
-	accountRepo := accountrepo.NewPostgresRepository(q)
-	actorRepo := actorrepo.NewPostgresRepository(q)
+	accountRepo := accountrepo.NewAccountPostgresRepository(q)
+	actorRepo := actorrepo.NewActorPostgresRepository(q)
 
 	newID := func() uuid.UUID { return uuid.NewV7() }
 	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo, newID)

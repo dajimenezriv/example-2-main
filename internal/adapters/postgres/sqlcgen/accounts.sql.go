@@ -11,7 +11,7 @@ import (
 	"uuid"
 )
 
-const createAccount = `-- name: CreateAccount :one
+const createAccount = `-- name: CreateAccount :exec
 INSERT INTO
   accounts (
     id,
@@ -27,7 +27,7 @@ VALUES
     $3,
     $4,
     $5
-  ) RETURNING id, dlt_account_id, private_key, public_key, actor_id
+  )
 `
 
 type CreateAccountParams struct {
@@ -38,23 +38,15 @@ type CreateAccountParams struct {
 	PublicKey    string
 }
 
-func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) (Account, error) {
-	row := q.db.QueryRow(ctx, createAccount,
+func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) error {
+	_, err := q.db.Exec(ctx, createAccount,
 		arg.ID,
 		arg.ActorID,
 		arg.DltAccountID,
 		arg.PrivateKey,
 		arg.PublicKey,
 	)
-	var i Account
-	err := row.Scan(
-		&i.ID,
-		&i.DltAccountID,
-		&i.PrivateKey,
-		&i.PublicKey,
-		&i.ActorID,
-	)
-	return i, err
+	return err
 }
 
 const findAccountByID = `-- name: FindAccountByID :one

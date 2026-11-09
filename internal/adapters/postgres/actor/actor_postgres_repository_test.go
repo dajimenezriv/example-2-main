@@ -13,7 +13,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
-func TestPostgresRepositoryContract(t *testing.T) {
+func TestActorPostgresRepositoryContract(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test")
 	}
@@ -44,6 +44,6 @@ func TestPostgresRepositoryContract(t *testing.T) {
 		if _, err := pool.Exec(t.Context(), "TRUNCATE actors CASCADE"); err != nil {
 			t.Fatalf("TRUNCATE actors: %v", err)
 		}
-		return NewPostgresRepository(q)
+		return NewActorPostgresRepository(q)
 	})
 }

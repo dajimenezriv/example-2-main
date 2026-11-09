@@ -16,7 +16,7 @@ import (
 func seedActor(t *testing.T, q *sqlcgen.Queries) uuid.UUID {
 	t.Helper()
 	id := uuid.New()
-	if _, err := q.CreateActor(t.Context(), sqlcgen.CreateActorParams{ID: id, TaxID: "Tax ID", Type: "Type"}); err != nil {
+	if err := q.CreateActor(t.Context(), sqlcgen.CreateActorParams{ID: id, TaxID: "Tax ID", Type: "Type"}); err != nil {
 		t.Fatalf("seed actor: %v", err)
 	}
 	return id
@@ -55,7 +55,7 @@ func TestPostgresRepositoryContract(t *testing.T) {
 			t.Fatalf("TRUNCATE actors: %v", err)
 		}
 		return accounttest.Fixture{
-			Repo: NewPostgresRepository(q),
+			Repo: NewAccountPostgresRepository(q),
 			NewActorID: func(t *testing.T) uuid.UUID {
 				t.Helper()
 				return seedActor(t, q)

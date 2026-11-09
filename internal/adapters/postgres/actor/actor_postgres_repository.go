@@ -15,39 +15,50 @@ import (
 
 const uniqueViolation = "23505"
 
-type PostgresRepository struct {
+type ActorPostgresRepository struct {
 	db *sqlcgen.Queries
 }
 
-func NewPostgresRepository(db *sqlcgen.Queries) *PostgresRepository {
-	return &PostgresRepository{db: db}
+func NewActorPostgresRepository(db *sqlcgen.Queries) *ActorPostgresRepository {
+	return &ActorPostgresRepository{db: db}
 }
 
-func (r *PostgresRepository) Save(ctx context.Context, a *actor.Actor) error {
-	model := ToPersistenceModel(a)
-	_, err := r.db.CreateActor(ctx, model)
+func toActorDomain(d sqlcgen.Actor) *actor.Actor {
+	return &actor.Actor{
+		ID:    d.ID,
+		TaxId: d.TaxID,
+		Type:  actor.ActorType(d.Type),
+	}
+}
+
+func (r *ActorPostgresRepository) Save(ctx context.Context, a *actor.Actor) error {
+	err := r.db.CreateActor(ctx, sqlcgen.CreateActorParams{
+		ID:    a.ID,
+		TaxID: a.TaxId,
+		Type:  string(a.Type),
+	})
 	if pgErr, ok := errors.AsType[*pq.Error](err); ok && pgErr.Code == uniqueViolation {
 		return actor.ErrActorAlreadyExists
 	}
 	return err
 }
 
-func (r *PostgresRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
+func (r *ActorPostgresRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
 	a, err := r.db.FindActorByID(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, actor.ErrActorNotFound
 	}
-	return ToDomain(a), nil
+	return toActorDomain(a), nil
 }
 
-func (r *PostgresRepository) FindAll(ctx context.Context) ([]*actor.Actor, error) {
+func (r *ActorPostgresRepository) FindAll(ctx context.Context) ([]*actor.Actor, error) {
 	as, err := r.db.FindActors(ctx)
 	if err != nil {
 		return nil, err
 	}
 	res := make([]*actor.Actor, len(as))
 	for i, a := range as {
-		res[i] = ToDomain(a)
+		res[i] = toActorDomain(a)
 	}
 	return res, nil
 }

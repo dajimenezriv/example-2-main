@@ -11,11 +11,11 @@ import (
 	"uuid"
 )
 
-const createActor = `-- name: CreateActor :one
+const createActor = `-- name: CreateActor :exec
 INSERT INTO
   actors (id, tax_id, type)
 VALUES
-  ($1, $2, $3) RETURNING id, tax_id, type
+  ($1, $2, $3)
 `
 
 type CreateActorParams struct {
@@ -24,11 +24,9 @@ type CreateActorParams struct {
 	Type  string
 }
 
-func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) (Actor, error) {
-	row := q.db.QueryRow(ctx, createActor, arg.ID, arg.TaxID, arg.Type)
-	var i Actor
-	err := row.Scan(&i.ID, &i.TaxID, &i.Type)
-	return i, err
+func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) error {
+	_, err := q.db.Exec(ctx, createActor, arg.ID, arg.TaxID, arg.Type)
+	return err
 }
 
 const findActorByID = `-- name: FindActorByID :one

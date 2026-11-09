@@ -1,8 +1,8 @@
--- name: CreateActor :one
+-- name: CreateActor :exec
 INSERT INTO
   actors (id, tax_id, type)
 VALUES
-  (@id, @tax_id, @type) RETURNING *;
+  (@id, @tax_id, @type);
 
 -- name: FindActorByID :one
 SELECT
