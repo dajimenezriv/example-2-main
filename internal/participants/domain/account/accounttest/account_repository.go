@@ -20,7 +20,10 @@ func NewFakeRepository() *FakeRepository {
 	}
 }
 
-func (f *FakeRepository) Save(_ context.Context, acc *account.Account) error {
+func (f *FakeRepository) Save(ctx context.Context, acc *account.Account) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, a := range f.Accounts {
@@ -32,7 +35,10 @@ func (f *FakeRepository) Save(_ context.Context, acc *account.Account) error {
 	return nil
 }
 
-func (f *FakeRepository) FindByID(_ context.Context, id uuid.UUID) (*account.Account, error) {
+func (f *FakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.Account, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, a := range f.Accounts {
@@ -43,7 +49,10 @@ func (f *FakeRepository) FindByID(_ context.Context, id uuid.UUID) (*account.Acc
 	return nil, account.ErrAccountNotFound
 }
 
-func (f *FakeRepository) FindAll(_ context.Context) ([]*account.Account, error) {
+func (f *FakeRepository) FindAll(ctx context.Context) ([]*account.Account, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	accs := make([]*account.Account, len(f.Accounts))
@@ -53,7 +62,10 @@ func (f *FakeRepository) FindAll(_ context.Context) ([]*account.Account, error) 
 	return accs, nil
 }
 
-func (f *FakeRepository) FindByActorIDs(_ context.Context, actorIDs []uuid.UUID) ([]*account.Account, error) {
+func (f *FakeRepository) FindByActorIDs(ctx context.Context, actorIDs []uuid.UUID) ([]*account.Account, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	var accs []*account.Account

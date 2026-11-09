@@ -68,6 +68,9 @@ func (r *AccountRepository) FindAll(ctx context.Context) ([]*account.Account, er
 }
 
 func (r *AccountRepository) FindByActorIDs(ctx context.Context, actorIDs []uuid.UUID) ([]*account.Account, error) {
+	if len(actorIDs) == 0 {
+		return []*account.Account{}, nil
+	}
 	as, err := r.db.FindAccountsByActorIDs(ctx, actorIDs)
 	if err != nil {
 		return nil, err

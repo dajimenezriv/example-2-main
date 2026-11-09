@@ -1,6 +1,7 @@
 package getaccounts
 
 import (
+	"context"
 	"exercise/internal/participants/app/query/getaccounts"
 	"exercise/internal/participants/domain/account"
 	"exercise/internal/participants/domain/account/accounttest"
@@ -23,23 +24,30 @@ func newSUT(t *testing.T) account.Repository {
 	return repo
 }
 
-func post(t *testing.T, repo account.Repository) *httptest.ResponseRecorder {
+func post(t *testing.T, ctx context.Context, repo account.Repository) *httptest.ResponseRecorder {
 	t.Helper()
 	rec := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", "/accounts", nil)
+	req := httptest.NewRequestWithContext(ctx, "GET", "/accounts", nil)
 	h := NewHandler(&getaccounts.Query{Repo: repo})
 	h.ServeHTTP(rec, req)
 	return rec
 }
 
-func TestGetAccountsRepoCommandFails(t *testing.T) {
+func TestGetAccountsQueryFails(t *testing.T) {
 	repo := newSUT(t)
-	rec := post(t, repo)
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	rec := post(t, ctx, repo)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("Code = %d, want %d", rec.Code, http.StatusInternalServerError)
+	}
 }
 
 func TestGetAccountsReturnsAllAccounts(t *testing.T) {
 	repo := newSUT(t)
-	rec := post(t, repo)
+	rec := post(t, t.Context(), repo)
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("Code = %d, want %d", rec.Code, http.StatusOK)
