@@ -12,7 +12,7 @@ import (
 func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
 	t.Run("Save stores the actor", func(t *testing.T) {
 		repo := newRepo(t)
-		want := actor.New("TaxID", actor.Issuer)
+		want, _ := actor.New("TaxID", actor.Issuer)
 
 		if err := repo.Save(&want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
@@ -29,7 +29,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 
 	t.Run("Save fails if actor already exists", func(t *testing.T) {
 		repo := newRepo(t)
-		want := actor.New("TaxID", actor.Issuer)
+		want, _ := actor.New("TaxID", actor.Issuer)
 
 		if err := repo.Save(&want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)

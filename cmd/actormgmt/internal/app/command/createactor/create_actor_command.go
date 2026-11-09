@@ -25,7 +25,10 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*actorDomain.Actor,
 		return nil, errors.New("TaxId is required")
 	}
 
-	actor := actorDomain.New(cmd.TaxId, cmd.Type)
+	actor, err := actorDomain.New(cmd.TaxId, cmd.Type)
+	if err != nil {
+		return nil, err
+	}
 
 	if err := h.ActorRepository.Save(&actor); err != nil {
 		return nil, err
