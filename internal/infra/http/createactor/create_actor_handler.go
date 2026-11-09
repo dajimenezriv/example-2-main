@@ -2,10 +2,10 @@ package createactor
 
 import (
 	"encoding/json"
-	"exercise2/internal/app/command/createactor"
+	"exercise/internal/app/command/createactor"
 	"net/http"
 
-	"exercise2/internal/domain/actor"
+	"exercise/internal/domain/actor"
 )
 
 type Handler struct {

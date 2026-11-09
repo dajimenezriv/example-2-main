@@ -1,7 +1,7 @@
 package getaccounts
 
 import (
-	domainAccount "exercise2/internal/domain/account"
+	domainAccount "exercise/internal/domain/account"
 )
 
 type Query struct {

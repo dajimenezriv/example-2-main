@@ -1,8 +1,8 @@
 package getactors
 
 import (
-	domainAccount "exercise2/internal/domain/account"
-	domainActor "exercise2/internal/domain/actor"
+	domainAccount "exercise/internal/domain/account"
+	domainActor "exercise/internal/domain/actor"
 	"uuid"
 )
 

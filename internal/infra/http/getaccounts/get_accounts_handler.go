@@ -2,7 +2,7 @@ package getaccounts
 
 import (
 	"encoding/json"
-	"exercise2/internal/app/query/getaccounts"
+	"exercise/internal/app/query/getaccounts"
 	"net/http"
 )
 

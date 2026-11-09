@@ -5,7 +5,7 @@ import (
 	"errors"
 	"uuid"
 
-	"exercise2/internal/domain/account"
+	"exercise/internal/domain/account"
 
 	"github.com/lib/pq"
 )

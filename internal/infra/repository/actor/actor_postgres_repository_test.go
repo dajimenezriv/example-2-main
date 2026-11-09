@@ -3,8 +3,8 @@ package actorrepo
 import (
 	"context"
 	"database/sql"
-	"exercise2/internal/domain/actor"
-	"exercise2/internal/domain/actor/actortest"
+	"exercise/internal/domain/actor"
+	"exercise/internal/domain/actor/actortest"
 	"testing"
 
 	"github.com/testcontainers/testcontainers-go"

@@ -2,7 +2,7 @@ package actortest
 
 import (
 	"errors"
-	"exercise2/internal/domain/actor"
+	"exercise/internal/domain/actor"
 	"testing"
 	"uuid"
 

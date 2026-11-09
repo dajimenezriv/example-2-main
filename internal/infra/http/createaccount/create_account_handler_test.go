@@ -2,10 +2,10 @@ package createaccount
 
 import (
 	"encoding/json"
-	"exercise2/internal/app/command/createaccount"
-	"exercise2/internal/domain/account/accounttest"
-	"exercise2/internal/domain/actor"
-	"exercise2/internal/domain/actor/actortest"
+	"exercise/internal/app/command/createaccount"
+	"exercise/internal/domain/account/accounttest"
+	"exercise/internal/domain/actor"
+	"exercise/internal/domain/actor/actortest"
 	"net/http"
 	"net/http/httptest"
 	"strings"

@@ -3,7 +3,7 @@ package accountrepo
 import (
 	"context"
 	"database/sql"
-	"exercise2/internal/domain/account/accounttest"
+	"exercise/internal/domain/account/accounttest"
 	"testing"
 	"uuid"
 

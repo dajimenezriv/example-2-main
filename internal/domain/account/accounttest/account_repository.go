@@ -1,7 +1,7 @@
 package accounttest
 
 import (
-	"exercise2/internal/domain/account"
+	"exercise/internal/domain/account"
 	"slices"
 	"sync"
 

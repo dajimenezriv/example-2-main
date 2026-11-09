@@ -1,7 +1,7 @@
 package actortest
 
 import (
-	"exercise2/internal/domain/actor"
+	"exercise/internal/domain/actor"
 	"sync"
 
 	"uuid"

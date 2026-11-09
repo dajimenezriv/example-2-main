@@ -1,4 +1,4 @@
-module exercise2
+module exercise
 
 go 1.27
 

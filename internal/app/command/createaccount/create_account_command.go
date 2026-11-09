@@ -5,8 +5,8 @@ import (
 	"errors"
 	"uuid"
 
-	accountDomain "exercise2/internal/domain/account"
-	actorDomain "exercise2/internal/domain/actor"
+	accountDomain "exercise/internal/domain/account"
+	actorDomain "exercise/internal/domain/actor"
 )
 
 var ErrDltAccountIdRequired = errors.New("DltAccountId is required")

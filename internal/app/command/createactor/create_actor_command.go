@@ -5,7 +5,7 @@ import (
 	"errors"
 	"uuid"
 
-	actorDomain "exercise2/internal/domain/actor"
+	actorDomain "exercise/internal/domain/actor"
 )
 
 type Command struct {

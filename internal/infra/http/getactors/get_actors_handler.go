@@ -2,7 +2,7 @@ package getactors
 
 import (
 	"encoding/json"
-	"exercise2/internal/app/query/getactors"
+	"exercise/internal/app/query/getactors"
 	"net/http"
 )
 

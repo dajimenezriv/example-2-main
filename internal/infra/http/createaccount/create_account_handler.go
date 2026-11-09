@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"exercise2/internal/app/command/createaccount"
+	"exercise/internal/app/command/createaccount"
 
 	"uuid"
 )

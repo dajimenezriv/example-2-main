@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"exercise2/internal/domain/actor"
+	"exercise/internal/domain/actor"
 
 	"uuid"
 

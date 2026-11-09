@@ -1,6 +1,6 @@
 package accountrepo
 
-import "exercise2/internal/domain/account"
+import "exercise/internal/domain/account"
 
 func ToPersistenceModel(a *account.Account) *Account {
 	return &Account{

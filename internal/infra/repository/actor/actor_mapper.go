@@ -1,6 +1,6 @@
 package actorrepo
 
-import "exercise2/internal/domain/actor"
+import "exercise/internal/domain/actor"
 
 func ToPersistenceModel(a *actor.Actor) *Actor {
 	return &Actor{

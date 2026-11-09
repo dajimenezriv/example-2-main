@@ -2,7 +2,7 @@ package accounttest
 
 import (
 	"errors"
-	"exercise2/internal/domain/account"
+	"exercise/internal/domain/account"
 	"testing"
 	"uuid"
 
