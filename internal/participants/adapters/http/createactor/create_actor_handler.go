@@ -8,6 +8,17 @@ import (
 	"exercise/internal/participants/domain/actor"
 )
 
+type createActorRequest struct {
+	TaxId string `json:"tax_id"`
+	Type  string `json:"type"`
+}
+
+type createActorResponse struct {
+	ID    string `json:"id"`
+	TaxId string `json:"tax_id"`
+	Type  string `json:"type"`
+}
+
 type Handler struct {
 	CreateActor *createactor.Handler
 }
@@ -17,7 +28,7 @@ func NewHandler(cmd *createactor.Handler) *Handler {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var req CreateActorRequest
+	var req createActorRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request body", http.StatusBadRequest)
 		return
@@ -35,7 +46,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := CreateActorResponse{
+	resp := createActorResponse{
 		ID:    actor.ID.String(),
 		TaxId: actor.TaxId,
 		Type:  string(actor.Type),
