@@ -4,11 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"uuid"
 
 	"exercise/internal/adapters/db/sqlcgen"
 	"exercise/internal/domain/account"
-	"exercise/internal/domain/actor"
+	"uuid"
 
 	"github.com/lib/pq"
 )
@@ -40,15 +39,18 @@ func (r *AccountRepository) Save(ctx context.Context, a *account.Account) error 
 		PublicKey:    a.PublicKey,
 	})
 	if pgErr, ok := errors.AsType[*pq.Error](err); ok && pgErr.Code == uniqueViolation {
-		return actor.ErrActorAlreadyExists
+		return account.ErrAccountAlreadyExists
 	}
 	return err
 }
 
 func (r *AccountRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.Account, error) {
 	a, err := r.db.FindAccountByID(ctx, id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, actor.ErrActorNotFound
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, account.ErrAccountNotFound
+		}
+		return nil, err
 	}
 	return toAccountDomain(a), nil
 }

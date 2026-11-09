@@ -43,8 +43,11 @@ func (r *ActorRepository) Save(ctx context.Context, a *actor.Actor) error {
 
 func (r *ActorRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
 	a, err := r.db.FindActorByID(ctx, id)
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, actor.ErrActorNotFound
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, actor.ErrActorNotFound
+		}
+		return nil, err
 	}
 	return toActorDomain(a), nil
 }
