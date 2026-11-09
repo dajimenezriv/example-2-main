@@ -9,6 +9,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+type Fixture struct {
+	Repo       account.Repository
+	NewActorID func(t *testing.T) uuid.UUID
+}
+
 func newAccount(t *testing.T, actorID uuid.UUID) account.Account {
 	t.Helper()
 	return account.New(uuid.New(), actorID, "DLT account ID", "Private key", "Public key")
@@ -23,16 +28,16 @@ func saveAccount(t *testing.T, repo account.Repository, actorID uuid.UUID) *acco
 	return &a
 }
 
-func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) account.Repository) {
+func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 	t.Run("Save stores the account", func(t *testing.T) {
-		repo := newRepo(t)
+		f := setup(t)
 		want := newAccount(t, uuid.New())
 
-		if err := repo.Save(&want); err != nil {
+		if err := f.Repo.Save(&want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
-		got, err := repo.FindByID(want.ID)
+		got, err := f.Repo.FindByID(want.ID)
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
@@ -42,20 +47,20 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) account.Repo
 	})
 
 	t.Run("Save fails if account already exists", func(t *testing.T) {
-		repo := newRepo(t)
+		f := setup(t)
 		want := newAccount(t, uuid.New())
 
-		if err := repo.Save(&want); err != nil {
+		if err := f.Repo.Save(&want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
 		duplicate := want
 		duplicate.DltAccountId = "Other DLT account ID"
-		if err := repo.Save(&duplicate); !errors.Is(err, account.ErrAccountAlreadyExists) {
+		if err := f.Repo.Save(&duplicate); !errors.Is(err, account.ErrAccountAlreadyExists) {
 			t.Fatalf("Save() = %v, want %v", err, account.ErrAccountAlreadyExists)
 		}
 
-		got, err := repo.FindByID(want.ID)
+		got, err := f.Repo.FindByID(want.ID)
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
@@ -65,8 +70,8 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) account.Repo
 	})
 
 	t.Run("FindByID returns error if account not found", func(t *testing.T) {
-		repo := newRepo(t)
-		a, err := repo.FindByID(uuid.New())
+		f := setup(t)
+		a, err := f.Repo.FindByID(uuid.New())
 
 		if !errors.Is(err, account.ErrAccountNotFound) {
 			t.Errorf("FindByID() = %v, want %v", err, account.ErrAccountNotFound)
@@ -77,14 +82,14 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) account.Repo
 	})
 
 	t.Run("FindAll returns all accounts in inserted order", func(t *testing.T) {
-		repo := newRepo(t)
+		f := setup(t)
 		want := make([]*account.Account, 0, 4)
-		want = append(want, saveAccount(t, repo, uuid.New()))
-		want = append(want, saveAccount(t, repo, uuid.New()))
-		want = append(want, saveAccount(t, repo, uuid.New()))
-		want = append(want, saveAccount(t, repo, uuid.New()))
+		want = append(want, saveAccount(t, f.Repo, uuid.New()))
+		want = append(want, saveAccount(t, f.Repo, uuid.New()))
+		want = append(want, saveAccount(t, f.Repo, uuid.New()))
+		want = append(want, saveAccount(t, f.Repo, uuid.New()))
 
-		got, err := repo.FindAll()
+		got, err := f.Repo.FindAll()
 		if err != nil {
 			t.Errorf("FindAll() = %v, want nil", err)
 		}
@@ -96,14 +101,14 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) account.Repo
 	t.Run("FindByActorIDs returns accounts filtered by actor ID", func(t *testing.T) {
 		actorID1 := uuid.New()
 		actorID2 := uuid.New()
-		repo := newRepo(t)
+		f := setup(t)
 		want := make([]*account.Account, 0, 4)
-		want = append(want, saveAccount(t, repo, actorID1))
-		want = append(want, saveAccount(t, repo, actorID1))
-		want = append(want, saveAccount(t, repo, actorID2))
-		saveAccount(t, repo, uuid.New())
+		want = append(want, saveAccount(t, f.Repo, actorID1))
+		want = append(want, saveAccount(t, f.Repo, actorID1))
+		want = append(want, saveAccount(t, f.Repo, actorID2))
+		saveAccount(t, f.Repo, uuid.New())
 
-		got, err := repo.FindByActorIDs([]uuid.UUID{actorID1, actorID2})
+		got, err := f.Repo.FindByActorIDs([]uuid.UUID{actorID1, actorID2})
 		if err != nil {
 			t.Errorf("FindAll() = %v, want nil", err)
 		}

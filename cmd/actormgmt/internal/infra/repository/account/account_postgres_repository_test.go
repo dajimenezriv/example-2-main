@@ -3,13 +3,22 @@ package accountrepo
 import (
 	"context"
 	"database/sql"
-	"exercise2/cmd/actormgmt/internal/domain/account"
 	"exercise2/cmd/actormgmt/internal/domain/account/accounttest"
 	"testing"
+	"uuid"
 
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
+
+func seedActor(t *testing.T, db *sql.DB) uuid.UUID {
+	t.Helper()
+	id := uuid.New()
+	if _, err := db.Exec("INSERT INTO actors (id, tax_id, type) VALUES ($1, 'Tax ID', 'Type')", id); err != nil {
+		t.Fatalf("seed actor: %v", err)
+	}
+	return id
+}
 
 func TestPostgresRepositoryContract(t *testing.T) {
 	if testing.Short() {
@@ -37,11 +46,18 @@ func TestPostgresRepositoryContract(t *testing.T) {
 	}
 	t.Cleanup(func() { db.Close() })
 
-	accounttest.RunRepositoryContract(t, func(t *testing.T) account.Repository {
+	accounttest.RunRepositoryContract(t, func(t *testing.T) accounttest.Fixture {
 		t.Helper()
-		if _, err := db.Exec("TRUNCATE accounts CASCADE"); err != nil {
-			t.Fatalf("TRUNCATE accounts: %v", err)
+		// Truncating actors also empties accounts through CASCADE.
+		if _, err := db.Exec("TRUNCATE actors CASCADE"); err != nil {
+			t.Fatalf("TRUNCATE actors: %v", err)
 		}
-		return NewPostgresRepository(db)
+		return accounttest.Fixture{
+			Repo: NewPostgresRepository(db),
+			NewActorID: func(t *testing.T) uuid.UUID {
+				t.Helper()
+				return seedActor(t, db)
+			},
+		}
 	})
 }

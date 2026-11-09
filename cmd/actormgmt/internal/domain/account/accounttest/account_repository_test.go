@@ -1,13 +1,19 @@
 package accounttest
 
 import (
-	"exercise2/cmd/actormgmt/internal/domain/account"
 	"testing"
+	"uuid"
 )
 
 func TestFakeRepositoryContract(t *testing.T) {
-	RunRepositoryContract(t, func(t *testing.T) account.Repository {
+	RunRepositoryContract(t, func(t *testing.T) Fixture {
 		t.Helper()
-		return NewFakeRepository()
+		return Fixture{
+			Repo: NewFakeRepository(),
+			NewActorID: func(t *testing.T) uuid.UUID {
+				t.Helper()
+				return uuid.New()
+			},
+		}
 	})
 }
