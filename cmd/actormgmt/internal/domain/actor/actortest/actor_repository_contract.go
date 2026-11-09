@@ -9,10 +9,22 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
+func saveActor(t *testing.T, repo actor.Repository) *actor.Actor {
+	t.Helper()
+	a, err := actor.New(uuid.New(), "TaxID", actor.Issuer)
+	if err != nil {
+		t.Fatalf("actor.New = %v", err)
+	}
+	if err := repo.Save(&a); err != nil {
+		t.Fatalf("repo.Save = %v", err)
+	}
+	return &a
+}
+
 func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
 	t.Run("Save stores the actor", func(t *testing.T) {
 		repo := newRepo(t)
-		want, _ := actor.New("TaxID", actor.Issuer)
+		want, _ := actor.New(uuid.New(), "TaxID", actor.Issuer)
 
 		if err := repo.Save(&want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
@@ -23,13 +35,13 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
 		if diff := cmp.Diff(&want, got); diff != "" {
-			t.Errorf("actor mismatch (-want +got):\n%s", diff)
+			t.Errorf("actor (-want +got):\n%s", diff)
 		}
 	})
 
 	t.Run("Save fails if actor already exists", func(t *testing.T) {
 		repo := newRepo(t)
-		want, _ := actor.New("TaxID", actor.Issuer)
+		want, _ := actor.New(uuid.New(), "TaxID", actor.Issuer)
 
 		if err := repo.Save(&want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
@@ -46,7 +58,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
 		if diff := cmp.Diff(&want, got); diff != "" {
-			t.Errorf("actor mismatch (-want +got):\n%s", diff)
+			t.Errorf("actor (-want +got):\n%s", diff)
 		}
 	})
 
@@ -59,6 +71,23 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		}
 		if a != nil {
 			t.Errorf("FindByID() = %+v, want nil", a)
+		}
+	})
+
+	t.Run("FindAll returns all actors in inserted order", func(t *testing.T) {
+		repo := newRepo(t)
+		want := make([]*actor.Actor, 0, 4)
+		want = append(want, saveActor(t, repo))
+		want = append(want, saveActor(t, repo))
+		want = append(want, saveActor(t, repo))
+		want = append(want, saveActor(t, repo))
+
+		got, err := repo.FindAll()
+		if err != nil {
+			t.Errorf("FindAll() = %v, want nil", err)
+		}
+		if diff := cmp.Diff(want, got); diff != "" {
+			t.Errorf("actors (-want +got):\n%s", diff)
 		}
 	})
 }

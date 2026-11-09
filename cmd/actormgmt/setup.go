@@ -33,7 +33,7 @@ func SetupContext(db *sql.DB) (*Context, error) {
 
 	newID := func() uuid.UUID { return uuid.NewV7() }
 	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo, newID)
-	createActorHandler := createActorCommand.NewHandler(actorRepo)
+	createActorHandler := createActorCommand.NewHandler(actorRepo, newID)
 
 	getAccountsQuery := getaccounts.NewQuery(accountRepo)
 	getActorsQuery := getactors.NewQuery(actorRepo, accountRepo)

@@ -17,13 +17,13 @@ type Actor struct {
 	Type  ActorType
 }
 
-func New(taxId string, t ActorType) (Actor, error) {
+func New(id uuid.UUID, taxId string, t ActorType) (Actor, error) {
 	if !t.IsValid() {
 		return Actor{}, ErrInvalidActorType
 	}
 
 	return Actor{
-		ID:    uuid.New(),
+		ID:    id,
 		TaxId: taxId,
 		Type:  t,
 	}, nil

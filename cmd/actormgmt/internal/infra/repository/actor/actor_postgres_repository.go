@@ -61,5 +61,8 @@ func (r *PostgresRepository) FindAll() ([]*actor.Actor, error) {
 		model.ID, _ = uuid.Parse(idStr)
 		actors = append(actors, ToDomain(&model))
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return actors, nil
 }
