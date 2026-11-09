@@ -6,6 +6,23 @@ import (
 	"net/http"
 )
 
+type getActorsResponse struct {
+	Actors []actorItem `json:"actors"`
+}
+
+type actorItem struct {
+	ID       string        `json:"id"`
+	TaxId    string        `json:"tax_id"`
+	Type     string        `json:"type"`
+	Accounts []accountItem `json:"accounts"`
+}
+
+type accountItem struct {
+	ID           string `json:"id"`
+	DltAccountId string `json:"dlt_account_id"`
+	PublicKey    string `json:"public_key"`
+}
+
 type Handler struct {
 	Query *getactors.Query
 }
@@ -21,6 +38,24 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resp := getActorsResponse{Actors: make([]actorItem, len(actors))}
+	for i, act := range actors {
+		accountItems := make([]accountItem, len(act.Accounts))
+		for j, acc := range act.Accounts {
+			accountItems[j] = accountItem{
+				ID:           acc.ID.String(),
+				DltAccountId: acc.DltAccountId,
+				PublicKey:    acc.PublicKey,
+			}
+		}
+		resp.Actors[i] = actorItem{
+			ID:       act.ID.String(),
+			TaxId:    act.TaxId,
+			Type:     string(act.Type),
+			Accounts: accountItems,
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(actors)
+	json.NewEncoder(w).Encode(resp)
 }
