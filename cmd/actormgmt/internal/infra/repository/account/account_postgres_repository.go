@@ -72,9 +72,14 @@ func (r *PostgresRepository) FindAll() ([]*account.Account, error) {
 }
 
 func (r *PostgresRepository) FindByActorIDs(actorIDs []uuid.UUID) ([]*account.Account, error) {
+	ids := make([]string, len(actorIDs))
+	for i, id := range actorIDs {
+		ids[i] = id.String()
+	}
+
 	rows, err := r.db.Query(
 		"SELECT id, actor_id, dlt_account_id, private_key, public_key FROM accounts WHERE actor_id = ANY($1::uuid[])",
-		pq.Array(actorIDs),
+		pq.Array(ids),
 	)
 	if err != nil {
 		return nil, err
