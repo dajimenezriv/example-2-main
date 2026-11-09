@@ -2,12 +2,15 @@ package accountrepo
 
 import (
 	"database/sql"
+	"errors"
 	"uuid"
 
 	"exercise2/cmd/actormgmt/internal/domain/account"
 
 	"github.com/lib/pq"
 )
+
+const uniqueViolation = "23505"
 
 type PostgresRepository struct {
 	db *sql.DB
@@ -21,6 +24,9 @@ func (r *PostgresRepository) Save(a *account.Account) error {
 	model := ToPersistenceModel(a)
 	_, err := r.db.Exec("INSERT INTO accounts (id, actor_id, dlt_account_id, private_key, public_key) VALUES ($1,$2,$3,$4,$5)",
 		model.ID, model.ActorID, model.DltAccountId, model.PrivateKey, model.PublicKey)
+	if pgErr, ok := errors.AsType[*pq.Error](err); ok && pgErr.Code == uniqueViolation {
+		return account.ErrAccountAlreadyExists
+	}
 	return err
 }
 
@@ -30,6 +36,9 @@ func (r *PostgresRepository) FindByID(id uuid.UUID) (*account.Account, error) {
 	var idStr string
 	var actorIDStr string
 	if err := row.Scan(&idStr, &actorIDStr, &model.DltAccountId, &model.PrivateKey, &model.PublicKey); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, account.ErrAccountNotFound
+		}
 		return nil, err
 	}
 	model.ID, _ = uuid.Parse(idStr)

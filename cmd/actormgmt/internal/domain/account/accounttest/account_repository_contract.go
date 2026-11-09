@@ -31,7 +31,7 @@ func saveAccount(t *testing.T, repo account.Repository, actorID uuid.UUID) *acco
 func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 	t.Run("Save stores the account", func(t *testing.T) {
 		f := setup(t)
-		want := newAccount(t, uuid.New())
+		want := newAccount(t, f.NewActorID(t))
 
 		if err := f.Repo.Save(&want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
@@ -48,7 +48,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 
 	t.Run("Save fails if account already exists", func(t *testing.T) {
 		f := setup(t)
-		want := newAccount(t, uuid.New())
+		want := newAccount(t, f.NewActorID(t))
 
 		if err := f.Repo.Save(&want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
@@ -83,11 +83,12 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 
 	t.Run("FindAll returns all accounts in inserted order", func(t *testing.T) {
 		f := setup(t)
+		actorID := f.NewActorID(t)
 		want := make([]*account.Account, 0, 4)
-		want = append(want, saveAccount(t, f.Repo, uuid.New()))
-		want = append(want, saveAccount(t, f.Repo, uuid.New()))
-		want = append(want, saveAccount(t, f.Repo, uuid.New()))
-		want = append(want, saveAccount(t, f.Repo, uuid.New()))
+		want = append(want, saveAccount(t, f.Repo, actorID))
+		want = append(want, saveAccount(t, f.Repo, actorID))
+		want = append(want, saveAccount(t, f.Repo, actorID))
+		want = append(want, saveAccount(t, f.Repo, actorID))
 
 		got, err := f.Repo.FindAll()
 		if err != nil {
@@ -99,14 +100,14 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 	})
 
 	t.Run("FindByActorIDs returns accounts filtered by actor ID", func(t *testing.T) {
-		actorID1 := uuid.New()
-		actorID2 := uuid.New()
 		f := setup(t)
+		actorID1 := f.NewActorID(t)
+		actorID2 := f.NewActorID(t)
 		want := make([]*account.Account, 0, 4)
 		want = append(want, saveAccount(t, f.Repo, actorID1))
 		want = append(want, saveAccount(t, f.Repo, actorID1))
 		want = append(want, saveAccount(t, f.Repo, actorID2))
-		saveAccount(t, f.Repo, uuid.New())
+		saveAccount(t, f.Repo, f.NewActorID(t))
 
 		got, err := f.Repo.FindByActorIDs([]uuid.UUID{actorID1, actorID2})
 		if err != nil {
