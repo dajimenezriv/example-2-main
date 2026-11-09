@@ -41,14 +41,14 @@ func TestAccountRepository(t *testing.T) {
 	}
 
 	accounttest.RunRepositoryContract(t, setup)
-}
 
-func TestSaveFailsIfActorDoesNotExist(t *testing.T) {
-	f := setup(t)
-	a := accounttest.NewAccount(t, uuid.New())
+	t.Run("Save fails if actor does not exist", func(t *testing.T) {
+		f := setup(t)
+		a := accounttest.NewAccount(t, uuid.New())
 
-	err := f.Repo.Save(t.Context(), &a)
-	if pgErr, ok := errors.AsType[*pgconn.PgError](err); !ok || pgErr.Code != "23503" {
-		t.Errorf("Save() = %v, want FK violation error", err)
-	}
+		err := f.Repo.Save(t.Context(), &a)
+		if pgErr, ok := errors.AsType[*pgconn.PgError](err); !ok || pgErr.Code != "23503" {
+			t.Errorf("Save() = %v, want FK violation error", err)
+		}
+	})
 }

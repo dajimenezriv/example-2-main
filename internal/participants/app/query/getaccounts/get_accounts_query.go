@@ -5,6 +5,13 @@ import (
 	domainAccount "exercise/internal/participants/domain/account"
 )
 
+type AccountDTO struct {
+	ID           string
+	DltAccountId string
+	PrivateKey   string
+	PublicKey    string
+}
+
 type Query struct {
 	Repo domainAccount.Repository
 }
