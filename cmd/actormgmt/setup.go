@@ -1,22 +1,22 @@
-package actormgmt
+package main
 
 import (
 	"database/sql"
-	createAccountCommand "exercise2/cmd/actormgmt/internal/app/command/createaccount"
-	createActorCommand "exercise2/cmd/actormgmt/internal/app/command/createactor"
-	"exercise2/cmd/actormgmt/internal/app/query/getaccounts"
-	"exercise2/cmd/actormgmt/internal/app/query/getactors"
-	createAccountEndpoint "exercise2/cmd/actormgmt/internal/infra/http/createaccount"
-	createActorEndpoint "exercise2/cmd/actormgmt/internal/infra/http/createactor"
-	getAccountsEndpoint "exercise2/cmd/actormgmt/internal/infra/http/getaccounts"
-	getActorsEndpoint "exercise2/cmd/actormgmt/internal/infra/http/getactors"
-	accountrepo "exercise2/cmd/actormgmt/internal/infra/repository/account"
-	actorrepo "exercise2/cmd/actormgmt/internal/infra/repository/actor"
+	createAccountCommand "exercise2/internal/app/command/createaccount"
+	createActorCommand "exercise2/internal/app/command/createactor"
+	"exercise2/internal/app/query/getaccounts"
+	"exercise2/internal/app/query/getactors"
+	createAccountEndpoint "exercise2/internal/infra/http/createaccount"
+	createActorEndpoint "exercise2/internal/infra/http/createactor"
+	getAccountsEndpoint "exercise2/internal/infra/http/getaccounts"
+	getActorsEndpoint "exercise2/internal/infra/http/getactors"
+	accountrepo "exercise2/internal/infra/repository/account"
+	actorrepo "exercise2/internal/infra/repository/actor"
 
 	"uuid"
 )
 
-type Context struct {
+type context struct {
 	CreateActorHandler   *createActorCommand.Handler
 	CreateAccountHandler *createAccountCommand.Handler
 	GetAccountsQuery     *getaccounts.Query
@@ -27,7 +27,7 @@ type Context struct {
 	GetActorsHTTP        *getActorsEndpoint.Handler
 }
 
-func SetupContext(db *sql.DB) (*Context, error) {
+func setupContext(db *sql.DB) (*context, error) {
 	accountRepo := accountrepo.NewPostgresRepository(db)
 	actorRepo := actorrepo.NewPostgresRepository(db)
 
@@ -43,7 +43,7 @@ func SetupContext(db *sql.DB) (*Context, error) {
 	getAccountsHTTP := getAccountsEndpoint.NewHandler(getAccountsQuery)
 	getActorsHTTP := getActorsEndpoint.NewHandler(getActorsQuery)
 
-	return &Context{
+	return &context{
 		CreateAccountHandler: createAccountHandler,
 		CreateActorHandler:   createActorHandler,
 		CreateActorHTTP:      createActorHTTP,
