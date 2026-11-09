@@ -15,7 +15,7 @@ func NewHandler(query *getactors.Query) *Handler {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	actors, err := h.Query.Execute()
+	actors, err := h.Query.Execute(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

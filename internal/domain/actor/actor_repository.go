@@ -1,9 +1,12 @@
 package actor
 
-import "uuid"
+import (
+	"context"
+	"uuid"
+)
 
 type Repository interface {
-	Save(actor *Actor) error
-	FindByID(id uuid.UUID) (*Actor, error)
-	FindAll() ([]*Actor, error)
+	Save(ctx context.Context, actor *Actor) error
+	FindByID(ctx context.Context, id uuid.UUID) (*Actor, error)
+	FindAll(ctx context.Context) ([]*Actor, error)
 }

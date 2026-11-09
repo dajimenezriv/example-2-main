@@ -1,10 +1,13 @@
 package account
 
-import "uuid"
+import (
+	"context"
+	"uuid"
+)
 
 type Repository interface {
-	Save(account *Account) error
-	FindByID(id uuid.UUID) (*Account, error)
-	FindAll() ([]*Account, error)
-	FindByActorIDs(actorIDs []uuid.UUID) ([]*Account, error)
+	Save(ctx context.Context, account *Account) error
+	FindByID(ctx context.Context, id uuid.UUID) (*Account, error)
+	FindAll(ctx context.Context) ([]*Account, error)
+	FindByActorIDs(ctx context.Context, actorIDs []uuid.UUID) ([]*Account, error)
 }

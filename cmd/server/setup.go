@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	createAccountEndpoint "exercise/internal/adapters/http/createaccount"
 	createActorEndpoint "exercise/internal/adapters/http/createactor"
 	getAccountsEndpoint "exercise/internal/adapters/http/getaccounts"
@@ -12,11 +11,14 @@ import (
 	createActorCommand "exercise/internal/app/command/createactor"
 	"exercise/internal/app/query/getaccounts"
 	"exercise/internal/app/query/getactors"
+	"exercise/postgres"
 
 	"uuid"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type context struct {
+type application struct {
 	CreateActorHandler   *createActorCommand.Handler
 	CreateAccountHandler *createAccountCommand.Handler
 	GetAccountsQuery     *getaccounts.Query
@@ -27,9 +29,10 @@ type context struct {
 	GetActorsHTTP        *getActorsEndpoint.Handler
 }
 
-func setupContext(db *sql.DB) (*context, error) {
-	accountRepo := accountrepo.NewPostgresRepository(db)
-	actorRepo := actorrepo.NewPostgresRepository(db)
+func setupApplication(db *pgxpool.Pool) (*application, error) {
+	q := postgres.New(db)
+	accountRepo := accountrepo.NewPostgresRepository(q)
+	actorRepo := actorrepo.NewPostgresRepository(q)
 
 	newID := func() uuid.UUID { return uuid.NewV7() }
 	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo, newID)
@@ -43,7 +46,7 @@ func setupContext(db *sql.DB) (*context, error) {
 	getAccountsHTTP := getAccountsEndpoint.NewHandler(getAccountsQuery)
 	getActorsHTTP := getActorsEndpoint.NewHandler(getActorsQuery)
 
-	return &context{
+	return &application{
 		CreateAccountHandler: createAccountHandler,
 		CreateActorHandler:   createActorHandler,
 		CreateActorHTTP:      createActorHTTP,

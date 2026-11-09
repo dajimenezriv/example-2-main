@@ -9,7 +9,7 @@ import (
 	actorDomain "exercise/internal/domain/actor"
 )
 
-var ErrDltAccountIdRequired = errors.New("DltAccountId is required")
+var ErrDltAccountIdRequired = errors.New("DLT account ID is required")
 
 type Command struct {
 	ActorID      uuid.UUID
@@ -33,14 +33,14 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*accountDomain.Acco
 		return nil, ErrDltAccountIdRequired
 	}
 
-	act, err := h.ActorRepository.FindByID(cmd.ActorID)
+	act, err := h.ActorRepository.FindByID(ctx, cmd.ActorID)
 	if err != nil {
 		return nil, err
 	}
 
 	acc := accountDomain.New(h.newID(), act.ID, cmd.DltAccountId, cmd.PrivateKey, cmd.PublicKey)
 
-	if err := h.AccountRepository.Save(&acc); err != nil {
+	if err := h.AccountRepository.Save(ctx, &acc); err != nil {
 		return nil, err
 	}
 

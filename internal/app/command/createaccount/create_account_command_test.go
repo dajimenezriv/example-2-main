@@ -28,11 +28,11 @@ func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, *accounttest.FakeRe
 	acc := account.New(exitingAccountID, exitingActorID, "DLT account ID", "Private key", "Public key")
 
 	accRepo := accounttest.NewFakeRepository()
-	if err := accRepo.Save(&acc); err != nil {
+	if err := accRepo.Save(t.Context(), &acc); err != nil {
 		t.Fatalf("seeding actor: %v", err)
 	}
 	actRepo := actortest.NewFakeRepository()
-	if err := actRepo.Save(&act); err != nil {
+	if err := actRepo.Save(t.Context(), &act); err != nil {
 		t.Fatalf("seeding actor: %v", err)
 	}
 
@@ -106,7 +106,7 @@ func TestCreatesAccount(t *testing.T) {
 		t.Errorf("Execute() account mismatch (-want +got):\n%s", diff)
 	}
 
-	stored, err := accRepo.FindByID(newAccountID)
+	stored, err := accRepo.FindByID(t.Context(), newAccountID)
 	if err != nil {
 		t.Fatalf("FindByID(%v) = %v, want stored account", newAccountID, err)
 	}

@@ -32,7 +32,7 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*actorDomain.Actor,
 		return nil, err
 	}
 
-	if err := h.ActorRepository.Save(&actor); err != nil {
+	if err := h.ActorRepository.Save(ctx, &actor); err != nil {
 		return nil, err
 	}
 

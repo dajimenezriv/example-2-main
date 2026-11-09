@@ -1,11 +1,14 @@
 package accountrepo
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"uuid"
 
 	"exercise/internal/domain/account"
+	"exercise/internal/domain/actor"
+	"exercise/postgres"
 
 	"github.com/lib/pq"
 )
@@ -13,93 +16,50 @@ import (
 const uniqueViolation = "23505"
 
 type PostgresRepository struct {
-	db *sql.DB
+	db *postgres.Queries
 }
 
-func NewPostgresRepository(db *sql.DB) *PostgresRepository {
+func NewPostgresRepository(db *postgres.Queries) *PostgresRepository {
 	return &PostgresRepository{db: db}
 }
 
-func (r *PostgresRepository) Save(a *account.Account) error {
+func (r *PostgresRepository) Save(ctx context.Context, a *account.Account) error {
 	model := ToPersistenceModel(a)
-	_, err := r.db.Exec("INSERT INTO accounts (id, actor_id, dlt_account_id, private_key, public_key) VALUES ($1,$2,$3,$4,$5)",
-		model.ID, model.ActorID, model.DltAccountId, model.PrivateKey, model.PublicKey)
+	_, err := r.db.CreateAccount(ctx, model)
 	if pgErr, ok := errors.AsType[*pq.Error](err); ok && pgErr.Code == uniqueViolation {
-		return account.ErrAccountAlreadyExists
+		return actor.ErrActorAlreadyExists
 	}
 	return err
 }
 
-func (r *PostgresRepository) FindByID(id uuid.UUID) (*account.Account, error) {
-	row := r.db.QueryRow("SELECT id, actor_id, dlt_account_id, private_key, public_key FROM accounts WHERE id=$1", id)
-	var model Account
-	var idStr string
-	var actorIDStr string
-	if err := row.Scan(&idStr, &actorIDStr, &model.DltAccountId, &model.PrivateKey, &model.PublicKey); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, account.ErrAccountNotFound
-		}
-		return nil, err
+func (r *PostgresRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.Account, error) {
+	a, err := r.db.FindAccountByID(ctx, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, actor.ErrActorNotFound
 	}
-	model.ID, _ = uuid.Parse(idStr)
-	model.ActorID, _ = uuid.Parse(actorIDStr)
-	return ToDomain(&model), nil
+	return ToDomain(a), nil
 }
 
-func (r *PostgresRepository) FindAll() ([]*account.Account, error) {
-	rows, err := r.db.Query("SELECT id, actor_id, dlt_account_id, private_key, public_key FROM accounts")
+func (r *PostgresRepository) FindAll(ctx context.Context) ([]*account.Account, error) {
+	as, err := r.db.FindAccounts(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	var accounts []*account.Account
-	for rows.Next() {
-		var model Account
-		var idStr string
-		var actorIDStr string
-		if err := rows.Scan(&idStr, &actorIDStr, &model.DltAccountId, &model.PrivateKey, &model.PublicKey); err != nil {
-			return nil, err
-		}
-		model.ID, _ = uuid.Parse(idStr)
-		model.ActorID, _ = uuid.Parse(actorIDStr)
-		accounts = append(accounts, ToDomain(&model))
+	res := make([]*account.Account, len(as))
+	for i, a := range as {
+		res[i] = ToDomain(a)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return accounts, nil
+	return res, nil
 }
 
-func (r *PostgresRepository) FindByActorIDs(actorIDs []uuid.UUID) ([]*account.Account, error) {
-	ids := make([]string, len(actorIDs))
-	for i, id := range actorIDs {
-		ids[i] = id.String()
-	}
-
-	rows, err := r.db.Query(
-		"SELECT id, actor_id, dlt_account_id, private_key, public_key FROM accounts WHERE actor_id = ANY($1::uuid[])",
-		pq.Array(ids),
-	)
+func (r *PostgresRepository) FindByActorIDs(ctx context.Context, actorIDs []uuid.UUID) ([]*account.Account, error) {
+	as, err := r.db.FindAccountsByActorIDs(ctx, actorIDs)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	var accounts []*account.Account
-	for rows.Next() {
-		var model Account
-		var idStr string
-		var actorIDStr string
-		if err := rows.Scan(&idStr, &actorIDStr, &model.DltAccountId, &model.PrivateKey, &model.PublicKey); err != nil {
-			return nil, err
-		}
-		model.ID, _ = uuid.Parse(idStr)
-		model.ActorID, _ = uuid.Parse(actorIDStr)
-		accounts = append(accounts, ToDomain(&model))
+	res := make([]*account.Account, len(as))
+	for i, a := range as {
+		res[i] = ToDomain(a)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return accounts, nil
+	return res, nil
 }

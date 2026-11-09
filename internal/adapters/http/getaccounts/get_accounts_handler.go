@@ -15,7 +15,7 @@ func NewHandler(query *getaccounts.Query) *Handler {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	accounts, err := h.Query.Execute()
+	accounts, err := h.Query.Execute(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

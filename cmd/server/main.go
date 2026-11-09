@@ -1,32 +1,34 @@
 package main
 
 import (
-	"database/sql"
+	"context"
 	"log"
 	"net/http"
 
-	_ "github.com/lib/pq"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
-	connStr := "host=localhost port=5432 user=ddd password=ddd dbname=ddd sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		log.Fatalf("failed to connect to DB: %v", err)
-	}
-	defer db.Close()
+	ctx := context.Background()
 
-	if err := db.Ping(); err != nil {
+	connStr := "postgres://ddd:ddd@localhost:5432/ddd?sslmode=disable"
+	pool, err := pgxpool.New(ctx, connStr)
+	if err != nil {
+		log.Fatalf("failed to create DB pool: %v", err)
+	}
+	defer pool.Close()
+
+	if err := pool.Ping(ctx); err != nil {
 		log.Fatalf("failed to ping DB: %v", err)
 	}
 	log.Println("✅ Connected to Postgres")
 
-	ctx, err := setupContext(db)
+	app, err := setupApplication(pool)
 	if err != nil {
 		log.Fatalf("failed to setup context: %v", err)
 	}
 
-	mux := registerHTTPHandlers(ctx)
+	mux := registerHTTPHandlers(app)
 
 	log.Println("🚀 Server running on :8080")
 	if err := http.ListenAndServe(":8080", mux); err != nil {
@@ -34,11 +36,11 @@ func main() {
 	}
 }
 
-func registerHTTPHandlers(ctx *context) *http.ServeMux {
+func registerHTTPHandlers(app *application) *http.ServeMux {
 	mux := http.NewServeMux()
-	mux.HandleFunc("GET /actors", ctx.GetActorsHTTP.ServeHTTP)
-	mux.HandleFunc("POST /actors", ctx.CreateActorHTTP.ServeHTTP)
-	mux.HandleFunc("GET /accounts", ctx.GetAccountsHTTP.ServeHTTP)
-	mux.HandleFunc("POST /accounts", ctx.CreateAccountHTTP.ServeHTTP)
+	mux.HandleFunc("GET /actors", app.GetActorsHTTP.ServeHTTP)
+	mux.HandleFunc("POST /actors", app.CreateActorHTTP.ServeHTTP)
+	mux.HandleFunc("GET /accounts", app.GetAccountsHTTP.ServeHTTP)
+	mux.HandleFunc("POST /accounts", app.CreateAccountHTTP.ServeHTTP)
 	return mux
 }

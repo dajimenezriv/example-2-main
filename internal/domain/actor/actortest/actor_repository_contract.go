@@ -21,7 +21,7 @@ func newActor(t *testing.T) actor.Actor {
 func saveActor(t *testing.T, repo actor.Repository) *actor.Actor {
 	t.Helper()
 	a := newActor(t)
-	if err := repo.Save(&a); err != nil {
+	if err := repo.Save(t.Context(), &a); err != nil {
 		t.Fatalf("repo.Save = %v", err)
 	}
 	return &a
@@ -32,11 +32,11 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		repo := newRepo(t)
 		want := newActor(t)
 
-		if err := repo.Save(&want); err != nil {
+		if err := repo.Save(t.Context(), &want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
-		got, err := repo.FindByID(want.ID)
+		got, err := repo.FindByID(t.Context(), want.ID)
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
@@ -49,17 +49,17 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		repo := newRepo(t)
 		want := newActor(t)
 
-		if err := repo.Save(&want); err != nil {
+		if err := repo.Save(t.Context(), &want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
 		duplicate := want
 		duplicate.TaxId = "Other Tax ID"
-		if err := repo.Save(&duplicate); !errors.Is(err, actor.ErrActorAlreadyExists) {
+		if err := repo.Save(t.Context(), &duplicate); !errors.Is(err, actor.ErrActorAlreadyExists) {
 			t.Fatalf("Save() = %v, want %v", err, actor.ErrActorAlreadyExists)
 		}
 
-		got, err := repo.FindByID(want.ID)
+		got, err := repo.FindByID(t.Context(), want.ID)
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
@@ -70,7 +70,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 
 	t.Run("FindByID returns error if actor not found", func(t *testing.T) {
 		repo := newRepo(t)
-		a, err := repo.FindByID(uuid.New())
+		a, err := repo.FindByID(t.Context(), uuid.New())
 
 		if !errors.Is(err, actor.ErrActorNotFound) {
 			t.Errorf("FindByID() = %v, want %v", err, actor.ErrActorNotFound)
@@ -88,7 +88,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		want = append(want, saveActor(t, repo))
 		want = append(want, saveActor(t, repo))
 
-		got, err := repo.FindAll()
+		got, err := repo.FindAll(t.Context())
 		if err != nil {
 			t.Errorf("FindAll() = %v, want nil", err)
 		}

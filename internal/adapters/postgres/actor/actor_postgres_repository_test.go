@@ -2,11 +2,13 @@ package actorrepo
 
 import (
 	"context"
-	"database/sql"
 	"exercise/internal/domain/actor"
 	"exercise/internal/domain/actor/actortest"
+	pg "exercise/postgres"
+	"log"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
@@ -30,18 +32,18 @@ func TestPostgresRepositoryContract(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ctr.ConnectionString = %v", err)
 	}
-
-	db, err := sql.Open("postgres", dsn)
+	pool, err := pgxpool.New(ctx, dsn)
 	if err != nil {
-		t.Fatalf("sql.Open = %v", err)
+		log.Fatalf("pgxpool.New: %v", err)
 	}
-	t.Cleanup(func() { db.Close() })
+	t.Cleanup(func() { pool.Close() })
+	q := pg.New(pool)
 
 	actortest.RunRepositoryContract(t, func(t *testing.T) actor.Repository {
 		t.Helper()
-		if _, err := db.Exec("TRUNCATE actors CASCADE"); err != nil {
+		if _, err := pool.Exec(t.Context(), "TRUNCATE actors CASCADE"); err != nil {
 			t.Fatalf("TRUNCATE actors: %v", err)
 		}
-		return NewPostgresRepository(db)
+		return NewPostgresRepository(q)
 	})
 }

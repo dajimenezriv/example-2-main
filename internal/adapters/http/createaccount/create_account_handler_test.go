@@ -25,7 +25,7 @@ func newSUT(t *testing.T) (*Handler, *accounttest.FakeRepository) {
 
 	accountRepo := accounttest.NewFakeRepository()
 	actorRepo := actortest.NewFakeRepository()
-	actorRepo.Save(&actor.Actor{
+	actorRepo.Save(t.Context(), &actor.Actor{
 		ID:    existingActorID,
 		TaxId: "Tax ID",
 		Type:  actor.Issuer,
@@ -55,7 +55,7 @@ func TestRejectedRequests(t *testing.T) {
 		{"malformed body", ``, "invalid request body\n"},
 		{"missing actor id", `{}`, "invalid actor id\n"},
 		{"malformed actor id", `{"actor_id":"invalid"}`, "invalid actor id\n"},
-		{"create account error", `{"actor_id":"` + existingActorID.String() + `"}`, "DltAccountId is required\n"},
+		{"create account error", `{"actor_id":"` + existingActorID.String() + `"}`, "DLT account ID is required\n"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

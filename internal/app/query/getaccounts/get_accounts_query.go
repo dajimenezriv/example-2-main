@@ -1,6 +1,7 @@
 package getaccounts
 
 import (
+	"context"
 	domainAccount "exercise/internal/domain/account"
 )
 
@@ -12,8 +13,8 @@ func NewQuery(repo domainAccount.Repository) *Query {
 	return &Query{Repo: repo}
 }
 
-func (q *Query) Execute() ([]*AccountDTO, error) {
-	accounts, err := q.Repo.FindAll()
+func (q *Query) Execute(ctx context.Context) ([]*AccountDTO, error) {
+	accounts, err := q.Repo.FindAll(ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package actortest
 
 import (
+	"context"
 	"exercise/internal/domain/actor"
 	"sync"
 
@@ -18,7 +19,7 @@ func NewFakeRepository() *FakeRepository {
 	}
 }
 
-func (f *FakeRepository) Save(act *actor.Actor) error {
+func (f *FakeRepository) Save(_ context.Context, act *actor.Actor) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, a := range f.Actors {
@@ -30,7 +31,7 @@ func (f *FakeRepository) Save(act *actor.Actor) error {
 	return nil
 }
 
-func (f *FakeRepository) FindByID(id uuid.UUID) (*actor.Actor, error) {
+func (f *FakeRepository) FindByID(_ context.Context, id uuid.UUID) (*actor.Actor, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, a := range f.Actors {
@@ -41,7 +42,7 @@ func (f *FakeRepository) FindByID(id uuid.UUID) (*actor.Actor, error) {
 	return nil, actor.ErrActorNotFound
 }
 
-func (f *FakeRepository) FindAll() ([]*actor.Actor, error) {
+func (f *FakeRepository) FindAll(_ context.Context) ([]*actor.Actor, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	accs := make([]*actor.Actor, len(f.Actors))

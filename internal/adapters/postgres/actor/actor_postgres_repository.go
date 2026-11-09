@@ -1,10 +1,12 @@
 package actorrepo
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 
 	"exercise/internal/domain/actor"
+	"exercise/postgres"
 
 	"uuid"
 
@@ -14,55 +16,38 @@ import (
 const uniqueViolation = "23505"
 
 type PostgresRepository struct {
-	db *sql.DB
+	db *postgres.Queries
 }
 
-func NewPostgresRepository(db *sql.DB) *PostgresRepository {
+func NewPostgresRepository(db *postgres.Queries) *PostgresRepository {
 	return &PostgresRepository{db: db}
 }
 
-func (r *PostgresRepository) Save(a *actor.Actor) error {
+func (r *PostgresRepository) Save(ctx context.Context, a *actor.Actor) error {
 	model := ToPersistenceModel(a)
-	_, err := r.db.Exec("INSERT INTO actors (id, tax_id, type) VALUES ($1,$2,$3)", model.ID, model.TaxId, model.Type)
+	_, err := r.db.CreateActor(ctx, model)
 	if pgErr, ok := errors.AsType[*pq.Error](err); ok && pgErr.Code == uniqueViolation {
 		return actor.ErrActorAlreadyExists
 	}
 	return err
 }
 
-func (r *PostgresRepository) FindByID(id uuid.UUID) (*actor.Actor, error) {
-	row := r.db.QueryRow("SELECT id, tax_id, type FROM actors WHERE id=$1", id)
-	var model Actor
-	var idStr string
-	if err := row.Scan(&idStr, &model.TaxId, &model.Type); err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, actor.ErrActorNotFound
-		}
-		return nil, err
+func (r *PostgresRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
+	a, err := r.db.FindActorByID(ctx, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, actor.ErrActorNotFound
 	}
-	model.ID, _ = uuid.Parse(idStr)
-	return ToDomain(&model), nil
+	return ToDomain(a), nil
 }
 
-func (r *PostgresRepository) FindAll() ([]*actor.Actor, error) {
-	rows, err := r.db.Query("SELECT id, tax_id, type FROM actors")
+func (r *PostgresRepository) FindAll(ctx context.Context) ([]*actor.Actor, error) {
+	as, err := r.db.FindActors(ctx)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	var actors []*actor.Actor
-	for rows.Next() {
-		var model Actor
-		var idStr string
-		if err := rows.Scan(&idStr, &model.TaxId, &model.Type); err != nil {
-			return nil, err
-		}
-		model.ID, _ = uuid.Parse(idStr)
-		actors = append(actors, ToDomain(&model))
+	res := make([]*actor.Actor, len(as))
+	for i, a := range as {
+		res[i] = ToDomain(a)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return actors, nil
+	return res, nil
 }

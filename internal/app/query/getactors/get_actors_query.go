@@ -1,6 +1,7 @@
 package getactors
 
 import (
+	"context"
 	domainAccount "exercise/internal/domain/account"
 	domainActor "exercise/internal/domain/actor"
 	"uuid"
@@ -15,8 +16,8 @@ func NewQuery(actor domainActor.Repository, account domainAccount.Repository) *Q
 	return &Query{RepoActor: actor, RepoAccount: account}
 }
 
-func (q *Query) Execute() ([]*ActorDTO, error) {
-	actors, err := q.RepoActor.FindAll()
+func (q *Query) Execute(ctx context.Context) ([]*ActorDTO, error) {
+	actors, err := q.RepoActor.FindAll(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +26,7 @@ func (q *Query) Execute() ([]*ActorDTO, error) {
 	for i, a := range actors {
 		actorsIDs[i] = a.ID
 	}
-	accounts, err := q.RepoAccount.FindByActorIDs(actorsIDs)
+	accounts, err := q.RepoAccount.FindByActorIDs(ctx, actorsIDs)
 	if err != nil {
 		return nil, err
 	}

@@ -1,19 +1,22 @@
 package actorrepo
 
-import "exercise/internal/domain/actor"
+import (
+	"exercise/internal/domain/actor"
+	"exercise/postgres"
+)
 
-func ToPersistenceModel(a *actor.Actor) *Actor {
-	return &Actor{
+func ToPersistenceModel(a *actor.Actor) postgres.CreateActorParams {
+	return postgres.CreateActorParams{
 		ID:    a.ID,
-		TaxId: a.TaxId,
+		TaxID: a.TaxId,
 		Type:  string(a.Type),
 	}
 }
 
-func ToDomain(d *Actor) *actor.Actor {
+func ToDomain(d postgres.Actor) *actor.Actor {
 	return &actor.Actor{
 		ID:    d.ID,
-		TaxId: d.TaxId,
+		TaxId: d.TaxID,
 		Type:  actor.ActorType(d.Type),
 	}
 }

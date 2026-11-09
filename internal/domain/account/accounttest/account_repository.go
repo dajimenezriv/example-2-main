@@ -1,6 +1,7 @@
 package accounttest
 
 import (
+	"context"
 	"exercise/internal/domain/account"
 	"slices"
 	"sync"
@@ -19,7 +20,7 @@ func NewFakeRepository() *FakeRepository {
 	}
 }
 
-func (f *FakeRepository) Save(acc *account.Account) error {
+func (f *FakeRepository) Save(_ context.Context, acc *account.Account) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, a := range f.Accounts {
@@ -31,7 +32,7 @@ func (f *FakeRepository) Save(acc *account.Account) error {
 	return nil
 }
 
-func (f *FakeRepository) FindByID(id uuid.UUID) (*account.Account, error) {
+func (f *FakeRepository) FindByID(_ context.Context, id uuid.UUID) (*account.Account, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, a := range f.Accounts {
@@ -42,7 +43,7 @@ func (f *FakeRepository) FindByID(id uuid.UUID) (*account.Account, error) {
 	return nil, account.ErrAccountNotFound
 }
 
-func (f *FakeRepository) FindAll() ([]*account.Account, error) {
+func (f *FakeRepository) FindAll(_ context.Context) ([]*account.Account, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	accs := make([]*account.Account, len(f.Accounts))
@@ -52,7 +53,7 @@ func (f *FakeRepository) FindAll() ([]*account.Account, error) {
 	return accs, nil
 }
 
-func (f *FakeRepository) FindByActorIDs(actorIDs []uuid.UUID) ([]*account.Account, error) {
+func (f *FakeRepository) FindByActorIDs(_ context.Context, actorIDs []uuid.UUID) ([]*account.Account, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	var accs []*account.Account
