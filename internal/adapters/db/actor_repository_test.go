@@ -1,28 +1,19 @@
-package accountrepo
+package db
 
 import (
 	"context"
-	"exercise/internal/adapters/postgres/sqlcgen"
-	"exercise/internal/domain/account/accounttest"
+	"exercise/internal/adapters/db/sqlcgen"
+	"exercise/internal/domain/actor"
+	"exercise/internal/domain/actor/actortest"
 	"log"
 	"testing"
-	"uuid"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
-func seedActor(t *testing.T, q *sqlcgen.Queries) uuid.UUID {
-	t.Helper()
-	id := uuid.New()
-	if err := q.CreateActor(t.Context(), sqlcgen.CreateActorParams{ID: id, TaxID: "Tax ID", Type: "Type"}); err != nil {
-		t.Fatalf("seed actor: %v", err)
-	}
-	return id
-}
-
-func TestPostgresRepositoryContract(t *testing.T) {
+func TestActorRepository(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test")
 	}
@@ -48,18 +39,11 @@ func TestPostgresRepositoryContract(t *testing.T) {
 	t.Cleanup(func() { pool.Close() })
 	q := sqlcgen.New(pool)
 
-	accounttest.RunRepositoryContract(t, func(t *testing.T) accounttest.Fixture {
+	actortest.RunRepositoryContract(t, func(t *testing.T) actor.Repository {
 		t.Helper()
-		// Truncating actors also empties accounts through CASCADE.
 		if _, err := pool.Exec(t.Context(), "TRUNCATE actors CASCADE"); err != nil {
 			t.Fatalf("TRUNCATE actors: %v", err)
 		}
-		return accounttest.Fixture{
-			Repo: NewAccountPostgresRepository(q),
-			NewActorID: func(t *testing.T) uuid.UUID {
-				t.Helper()
-				return seedActor(t, q)
-			},
-		}
+		return NewActorRepository(q)
 	})
 }

@@ -1,11 +1,11 @@
-package actorrepo
+package db
 
 import (
 	"context"
 	"database/sql"
 	"errors"
 
-	"exercise/internal/adapters/postgres/sqlcgen"
+	"exercise/internal/adapters/db/sqlcgen"
 	"exercise/internal/domain/actor"
 
 	"uuid"
@@ -13,14 +13,12 @@ import (
 	"github.com/lib/pq"
 )
 
-const uniqueViolation = "23505"
-
-type ActorPostgresRepository struct {
+type ActorRepository struct {
 	db *sqlcgen.Queries
 }
 
-func NewActorPostgresRepository(db *sqlcgen.Queries) *ActorPostgresRepository {
-	return &ActorPostgresRepository{db: db}
+func NewActorRepository(db *sqlcgen.Queries) *ActorRepository {
+	return &ActorRepository{db: db}
 }
 
 func toActorDomain(d sqlcgen.Actor) *actor.Actor {
@@ -31,7 +29,7 @@ func toActorDomain(d sqlcgen.Actor) *actor.Actor {
 	}
 }
 
-func (r *ActorPostgresRepository) Save(ctx context.Context, a *actor.Actor) error {
+func (r *ActorRepository) Save(ctx context.Context, a *actor.Actor) error {
 	err := r.db.CreateActor(ctx, sqlcgen.CreateActorParams{
 		ID:    a.ID,
 		TaxID: a.TaxId,
@@ -43,7 +41,7 @@ func (r *ActorPostgresRepository) Save(ctx context.Context, a *actor.Actor) erro
 	return err
 }
 
-func (r *ActorPostgresRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
+func (r *ActorRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
 	a, err := r.db.FindActorByID(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, actor.ErrActorNotFound
@@ -51,7 +49,7 @@ func (r *ActorPostgresRepository) FindByID(ctx context.Context, id uuid.UUID) (*
 	return toActorDomain(a), nil
 }
 
-func (r *ActorPostgresRepository) FindAll(ctx context.Context) ([]*actor.Actor, error) {
+func (r *ActorRepository) FindAll(ctx context.Context) ([]*actor.Actor, error) {
 	as, err := r.db.FindActors(ctx)
 	if err != nil {
 		return nil, err

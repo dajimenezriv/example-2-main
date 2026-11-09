@@ -1,4 +1,4 @@
-package accountrepo
+package db
 
 import (
 	"context"
@@ -6,21 +6,19 @@ import (
 	"errors"
 	"uuid"
 
-	"exercise/internal/adapters/postgres/sqlcgen"
+	"exercise/internal/adapters/db/sqlcgen"
 	"exercise/internal/domain/account"
 	"exercise/internal/domain/actor"
 
 	"github.com/lib/pq"
 )
 
-const uniqueViolation = "23505"
-
-type AccountPostgresRepository struct {
+type AccountRepository struct {
 	db *sqlcgen.Queries
 }
 
-func NewAccountPostgresRepository(db *sqlcgen.Queries) *AccountPostgresRepository {
-	return &AccountPostgresRepository{db: db}
+func NewAccountRepository(db *sqlcgen.Queries) *AccountRepository {
+	return &AccountRepository{db: db}
 }
 
 func toAccountDomain(d sqlcgen.Account) *account.Account {
@@ -33,7 +31,7 @@ func toAccountDomain(d sqlcgen.Account) *account.Account {
 	}
 }
 
-func (r *AccountPostgresRepository) Save(ctx context.Context, a *account.Account) error {
+func (r *AccountRepository) Save(ctx context.Context, a *account.Account) error {
 	err := r.db.CreateAccount(ctx, sqlcgen.CreateAccountParams{
 		ID:           a.ID,
 		ActorID:      a.ActorID,
@@ -47,7 +45,7 @@ func (r *AccountPostgresRepository) Save(ctx context.Context, a *account.Account
 	return err
 }
 
-func (r *AccountPostgresRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.Account, error) {
+func (r *AccountRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.Account, error) {
 	a, err := r.db.FindAccountByID(ctx, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, actor.ErrActorNotFound
@@ -55,7 +53,7 @@ func (r *AccountPostgresRepository) FindByID(ctx context.Context, id uuid.UUID) 
 	return toAccountDomain(a), nil
 }
 
-func (r *AccountPostgresRepository) FindAll(ctx context.Context) ([]*account.Account, error) {
+func (r *AccountRepository) FindAll(ctx context.Context) ([]*account.Account, error) {
 	as, err := r.db.FindAccounts(ctx)
 	if err != nil {
 		return nil, err
@@ -67,7 +65,7 @@ func (r *AccountPostgresRepository) FindAll(ctx context.Context) ([]*account.Acc
 	return res, nil
 }
 
-func (r *AccountPostgresRepository) FindByActorIDs(ctx context.Context, actorIDs []uuid.UUID) ([]*account.Account, error) {
+func (r *AccountRepository) FindByActorIDs(ctx context.Context, actorIDs []uuid.UUID) ([]*account.Account, error) {
 	as, err := r.db.FindAccountsByActorIDs(ctx, actorIDs)
 	if err != nil {
 		return nil, err

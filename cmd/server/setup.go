@@ -1,13 +1,12 @@
 package main
 
 import (
+	"exercise/internal/adapters/db"
+	"exercise/internal/adapters/db/sqlcgen"
 	createAccountEndpoint "exercise/internal/adapters/http/createaccount"
 	createActorEndpoint "exercise/internal/adapters/http/createactor"
 	getAccountsEndpoint "exercise/internal/adapters/http/getaccounts"
 	getActorsEndpoint "exercise/internal/adapters/http/getactors"
-	accountrepo "exercise/internal/adapters/postgres/account"
-	actorrepo "exercise/internal/adapters/postgres/actor"
-	"exercise/internal/adapters/postgres/sqlcgen"
 	createAccountCommand "exercise/internal/app/command/createaccount"
 	createActorCommand "exercise/internal/app/command/createactor"
 	"exercise/internal/app/query/getaccounts"
@@ -29,10 +28,10 @@ type application struct {
 	GetActorsHTTP        *getActorsEndpoint.Handler
 }
 
-func setupApplication(db *pgxpool.Pool) (*application, error) {
-	q := sqlcgen.New(db)
-	accountRepo := accountrepo.NewAccountPostgresRepository(q)
-	actorRepo := actorrepo.NewActorPostgresRepository(q)
+func setupApplication(pool *pgxpool.Pool) (*application, error) {
+	q := sqlcgen.New(pool)
+	accountRepo := db.NewAccountRepository(q)
+	actorRepo := db.NewActorRepository(q)
 
 	newID := func() uuid.UUID { return uuid.NewV7() }
 	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo, newID)
