@@ -13,7 +13,7 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
-const migrationsGlob = "../../../migrations/*.up.sql"
+const migrationsGlob = "../../../../migrations/*.up.sql"
 
 var testPool *pgxpool.Pool
 
