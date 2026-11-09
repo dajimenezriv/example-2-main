@@ -7,11 +7,11 @@ import (
 	getActorsEndpoint "exercise/internal/adapters/http/getactors"
 	accountrepo "exercise/internal/adapters/postgres/account"
 	actorrepo "exercise/internal/adapters/postgres/actor"
+	"exercise/internal/adapters/postgres/sqlcgen"
 	createAccountCommand "exercise/internal/app/command/createaccount"
 	createActorCommand "exercise/internal/app/command/createactor"
 	"exercise/internal/app/query/getaccounts"
 	"exercise/internal/app/query/getactors"
-	"exercise/postgres"
 
 	"uuid"
 
@@ -30,7 +30,7 @@ type application struct {
 }
 
 func setupApplication(db *pgxpool.Pool) (*application, error) {
-	q := postgres.New(db)
+	q := sqlcgen.New(db)
 	accountRepo := accountrepo.NewPostgresRepository(q)
 	actorRepo := actorrepo.NewPostgresRepository(q)
 

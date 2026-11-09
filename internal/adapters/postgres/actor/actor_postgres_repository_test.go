@@ -2,9 +2,9 @@ package actorrepo
 
 import (
 	"context"
+	"exercise/internal/adapters/postgres/sqlcgen"
 	"exercise/internal/domain/actor"
 	"exercise/internal/domain/actor/actortest"
-	pg "exercise/postgres"
 	"log"
 	"testing"
 
@@ -37,7 +37,7 @@ func TestPostgresRepositoryContract(t *testing.T) {
 		log.Fatalf("pgxpool.New: %v", err)
 	}
 	t.Cleanup(func() { pool.Close() })
-	q := pg.New(pool)
+	q := sqlcgen.New(pool)
 
 	actortest.RunRepositoryContract(t, func(t *testing.T) actor.Repository {
 		t.Helper()

@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
+	"exercise/internal/adapters/postgres/sqlcgen"
 	"exercise/internal/domain/actor"
-	"exercise/postgres"
 
 	"uuid"
 
@@ -16,10 +16,10 @@ import (
 const uniqueViolation = "23505"
 
 type PostgresRepository struct {
-	db *postgres.Queries
+	db *sqlcgen.Queries
 }
 
-func NewPostgresRepository(db *postgres.Queries) *PostgresRepository {
+func NewPostgresRepository(db *sqlcgen.Queries) *PostgresRepository {
 	return &PostgresRepository{db: db}
 }
 

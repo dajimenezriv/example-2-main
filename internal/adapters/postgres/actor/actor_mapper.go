@@ -1,19 +1,19 @@
 package actorrepo
 
 import (
+	"exercise/internal/adapters/postgres/sqlcgen"
 	"exercise/internal/domain/actor"
-	"exercise/postgres"
 )
 
-func ToPersistenceModel(a *actor.Actor) postgres.CreateActorParams {
-	return postgres.CreateActorParams{
+func ToPersistenceModel(a *actor.Actor) sqlcgen.CreateActorParams {
+	return sqlcgen.CreateActorParams{
 		ID:    a.ID,
 		TaxID: a.TaxId,
 		Type:  string(a.Type),
 	}
 }
 
-func ToDomain(d postgres.Actor) *actor.Actor {
+func ToDomain(d sqlcgen.Actor) *actor.Actor {
 	return &actor.Actor{
 		ID:    d.ID,
 		TaxId: d.TaxID,

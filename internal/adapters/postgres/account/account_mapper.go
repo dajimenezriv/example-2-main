@@ -1,12 +1,12 @@
 package accountrepo
 
 import (
+	"exercise/internal/adapters/postgres/sqlcgen"
 	"exercise/internal/domain/account"
-	"exercise/postgres"
 )
 
-func ToPersistenceModel(a *account.Account) postgres.CreateAccountParams {
-	return postgres.CreateAccountParams{
+func ToPersistenceModel(a *account.Account) sqlcgen.CreateAccountParams {
+	return sqlcgen.CreateAccountParams{
 		ID:           a.ID,
 		ActorID:      a.ActorID,
 		DltAccountID: a.DltAccountId,
@@ -15,7 +15,7 @@ func ToPersistenceModel(a *account.Account) postgres.CreateAccountParams {
 	}
 }
 
-func ToDomain(d postgres.Account) *account.Account {
+func ToDomain(d sqlcgen.Account) *account.Account {
 	return &account.Account{
 		ID:           d.ID,
 		ActorID:      d.ActorID,

@@ -2,22 +2,21 @@ package accountrepo
 
 import (
 	"context"
+	"exercise/internal/adapters/postgres/sqlcgen"
 	"exercise/internal/domain/account/accounttest"
 	"log"
 	"testing"
 	"uuid"
-
-	pg "exercise/postgres"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
 
-func seedActor(t *testing.T, q *pg.Queries) uuid.UUID {
+func seedActor(t *testing.T, q *sqlcgen.Queries) uuid.UUID {
 	t.Helper()
 	id := uuid.New()
-	if _, err := q.CreateActor(t.Context(), pg.CreateActorParams{ID: id, TaxID: "Tax ID", Type: "Type"}); err != nil {
+	if _, err := q.CreateActor(t.Context(), sqlcgen.CreateActorParams{ID: id, TaxID: "Tax ID", Type: "Type"}); err != nil {
 		t.Fatalf("seed actor: %v", err)
 	}
 	return id
@@ -47,7 +46,7 @@ func TestPostgresRepositoryContract(t *testing.T) {
 		log.Fatalf("pgxpool.New: %v", err)
 	}
 	t.Cleanup(func() { pool.Close() })
-	q := pg.New(pool)
+	q := sqlcgen.New(pool)
 
 	accounttest.RunRepositoryContract(t, func(t *testing.T) accounttest.Fixture {
 		t.Helper()
