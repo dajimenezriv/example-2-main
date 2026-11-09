@@ -9,7 +9,7 @@ import (
 )
 
 func TestNewInvalidActorType(t *testing.T) {
-	a, err := New(uuid.New(), "TaxID", "invalid")
+	a, err := New(uuid.New(), "Tax ID", "invalid")
 	if !errors.Is(err, ErrInvalidActorType) {
 		t.Errorf("New() = %v, want %v", err, ErrInvalidActorType)
 	}
@@ -20,11 +20,11 @@ func TestNewInvalidActorType(t *testing.T) {
 
 func TestNewCreatesValidActor(t *testing.T) {
 	id := uuid.New()
-	a, err := New(id, "TaxID", Issuer)
+	a, err := New(id, "Tax ID", Issuer)
 	if err != nil {
 		t.Errorf("New() = %v, want nil", err)
 	}
-	want := Actor{ID: id, TaxId: "TaxID", Type: Issuer}
+	want := Actor{ID: id, TaxId: "Tax ID", Type: Issuer}
 	if diff := cmp.Diff(a, want); diff != "" {
 		t.Errorf("actor (-want +got):\n%s", diff)
 	}

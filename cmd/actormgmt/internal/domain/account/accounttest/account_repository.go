@@ -2,7 +2,6 @@ package accounttest
 
 import (
 	"exercise2/cmd/actormgmt/internal/domain/account"
-	accountrepo "exercise2/cmd/actormgmt/internal/infra/repository/account"
 	"slices"
 	"sync"
 
@@ -11,29 +10,34 @@ import (
 
 type FakeRepository struct {
 	mu       sync.Mutex
-	Accounts map[uuid.UUID]*accountrepo.Account
-
-	SaveErr, FindByIDErr, FindAllErr, FindByActorIDsErr error
+	Accounts []account.Account
 }
 
 func NewFakeRepository() *FakeRepository {
 	return &FakeRepository{
-		Accounts: make(map[uuid.UUID]*accountrepo.Account),
+		Accounts: []account.Account{},
 	}
 }
 
-func (f *FakeRepository) Save(account *account.Account) error {
+func (f *FakeRepository) Save(acc *account.Account) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.Accounts[account.ID] = accountrepo.ToPersistenceModel(account)
-	return f.SaveErr
+	for _, a := range f.Accounts {
+		if a.ID == acc.ID {
+			return account.ErrAccountAlreadyExists
+		}
+	}
+	f.Accounts = append(f.Accounts, *acc)
+	return nil
 }
 
 func (f *FakeRepository) FindByID(id uuid.UUID) (*account.Account, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if acc, ok := f.Accounts[id]; ok {
-		return accountrepo.ToDomain(acc), f.FindByIDErr
+	for _, a := range f.Accounts {
+		if a.ID == id {
+			return &a, nil
+		}
 	}
 	return nil, account.ErrAccountNotFound
 }
@@ -41,11 +45,11 @@ func (f *FakeRepository) FindByID(id uuid.UUID) (*account.Account, error) {
 func (f *FakeRepository) FindAll() ([]*account.Account, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	var accs []*account.Account
-	for _, acc := range f.Accounts {
-		accs = append(accs, accountrepo.ToDomain(acc))
+	accs := make([]*account.Account, len(f.Accounts))
+	for i, acc := range f.Accounts {
+		accs[i] = &acc
 	}
-	return accs, f.FindAllErr
+	return accs, nil
 }
 
 func (f *FakeRepository) FindByActorIDs(actorIDs []uuid.UUID) ([]*account.Account, error) {
@@ -54,8 +58,8 @@ func (f *FakeRepository) FindByActorIDs(actorIDs []uuid.UUID) ([]*account.Accoun
 	var accs []*account.Account
 	for _, acc := range f.Accounts {
 		if slices.Contains(actorIDs, acc.ActorID) {
-			accs = append(accs, accountrepo.ToDomain(acc))
+			accs = append(accs, &acc)
 		}
 	}
-	return accs, f.FindByActorIDsErr
+	return accs, nil
 }

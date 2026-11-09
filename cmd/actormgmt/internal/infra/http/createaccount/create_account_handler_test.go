@@ -27,7 +27,7 @@ func newSUT(t *testing.T) (*Handler, *accounttest.FakeRepository) {
 	actorRepo := actortest.NewFakeRepository()
 	actorRepo.Save(&actor.Actor{
 		ID:    existingActorID,
-		TaxId: "TaxID",
+		TaxId: "Tax ID",
 		Type:  actor.Issuer,
 	})
 

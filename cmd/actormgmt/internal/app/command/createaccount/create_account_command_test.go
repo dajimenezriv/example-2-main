@@ -14,18 +14,28 @@ import (
 )
 
 var (
-	errBoom        = errors.New("boom")
-	exitingActorID = uuid.New()
-	newAccountID   = uuid.New()
+	exitingActorID   = uuid.New()
+	exitingAccountID = uuid.New()
 )
 
-func newSUT(t *testing.T) (*Handler, *accounttest.FakeRepository, *actortest.FakeRepository) {
+func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, *accounttest.FakeRepository, *actortest.FakeRepository) {
 	t.Helper()
+
+	act, err := actor.New(exitingActorID, "Tax ID", actor.Issuer)
+	if err != nil {
+		t.Fatalf("actor.New = %v", err)
+	}
+	acc := account.New(exitingAccountID, exitingActorID, "DLT account ID", "Private key", "Public key")
+
 	accRepo := accounttest.NewFakeRepository()
-	actRepo := actortest.NewFakeRepository()
-	if err := actRepo.Save(&actor.Actor{ID: exitingActorID}); err != nil {
+	if err := accRepo.Save(&acc); err != nil {
 		t.Fatalf("seeding actor: %v", err)
 	}
+	actRepo := actortest.NewFakeRepository()
+	if err := actRepo.Save(&act); err != nil {
+		t.Fatalf("seeding actor: %v", err)
+	}
+
 	newID := func() uuid.UUID { return newAccountID }
 	return NewHandler(accRepo, actRepo, newID), accRepo, actRepo
 }
@@ -34,7 +44,6 @@ func TestErrors(t *testing.T) {
 	tests := []struct {
 		name    string
 		cmd     Command
-		saveErr error
 		wantErr error
 	}{
 		{
@@ -48,18 +57,16 @@ func TestErrors(t *testing.T) {
 			wantErr: actor.ErrActorNotFound,
 		},
 		{
-			name:    "account save error",
+			name:    "account already exists",
 			cmd:     Command{ActorID: exitingActorID, DltAccountId: "DLT account ID"},
-			saveErr: errBoom,
-			wantErr: errBoom,
+			wantErr: account.ErrAccountAlreadyExists,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h, accRepo, _ := newSUT(t)
+			h, _, _ := newSUT(t, exitingAccountID)
 
-			accRepo.SaveErr = tt.saveErr
 			got, err := h.Execute(t.Context(), tt.cmd)
 
 			if !errors.Is(err, tt.wantErr) {
@@ -73,7 +80,8 @@ func TestErrors(t *testing.T) {
 }
 
 func TestCreatesAccount(t *testing.T) {
-	h, accRepo, _ := newSUT(t)
+	newAccountID := uuid.New()
+	h, accRepo, _ := newSUT(t, newAccountID)
 	cmd := Command{
 		ActorID:      exitingActorID,
 		DltAccountId: "DLT account ID",
@@ -105,7 +113,7 @@ func TestCreatesAccount(t *testing.T) {
 	if diff := cmp.Diff(want, stored); diff != "" {
 		t.Errorf("stored account mismatch (-want +got):\n%s", diff)
 	}
-	if got := len(accRepo.Accounts); got != 1 {
-		t.Errorf("len(accounts) = %d, want 1", got)
+	if got := len(accRepo.Accounts); got != 2 {
+		t.Errorf("len(accounts) = %d, want 2", got)
 	}
 }

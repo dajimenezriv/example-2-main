@@ -9,12 +9,18 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func saveActor(t *testing.T, repo actor.Repository) *actor.Actor {
+func newActor(t *testing.T) actor.Actor {
 	t.Helper()
-	a, err := actor.New(uuid.New(), "TaxID", actor.Issuer)
+	a, err := actor.New(uuid.New(), "Tax ID", actor.Issuer)
 	if err != nil {
 		t.Fatalf("actor.New = %v", err)
 	}
+	return a
+}
+
+func saveActor(t *testing.T, repo actor.Repository) *actor.Actor {
+	t.Helper()
+	a := newActor(t)
 	if err := repo.Save(&a); err != nil {
 		t.Fatalf("repo.Save = %v", err)
 	}
@@ -24,7 +30,7 @@ func saveActor(t *testing.T, repo actor.Repository) *actor.Actor {
 func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
 	t.Run("Save stores the actor", func(t *testing.T) {
 		repo := newRepo(t)
-		want, _ := actor.New(uuid.New(), "TaxID", actor.Issuer)
+		want := newActor(t)
 
 		if err := repo.Save(&want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
@@ -41,14 +47,14 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 
 	t.Run("Save fails if actor already exists", func(t *testing.T) {
 		repo := newRepo(t)
-		want, _ := actor.New(uuid.New(), "TaxID", actor.Issuer)
+		want := newActor(t)
 
 		if err := repo.Save(&want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
 		duplicate := want
-		duplicate.TaxId = "OtherTaxID"
+		duplicate.TaxId = "Other Tax ID"
 		if err := repo.Save(&duplicate); !errors.Is(err, actor.ErrActorAlreadyExists) {
 			t.Fatalf("Save() = %v, want %v", err, actor.ErrActorAlreadyExists)
 		}

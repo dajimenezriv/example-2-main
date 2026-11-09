@@ -10,8 +10,6 @@ import (
 type FakeRepository struct {
 	mu     sync.Mutex
 	Actors []actor.Actor
-
-	SaveErr, FindByIDErr, FindAllErr error
 }
 
 func NewFakeRepository() *FakeRepository {
@@ -29,7 +27,7 @@ func (f *FakeRepository) Save(act *actor.Actor) error {
 		}
 	}
 	f.Actors = append(f.Actors, *act)
-	return f.SaveErr
+	return nil
 }
 
 func (f *FakeRepository) FindByID(id uuid.UUID) (*actor.Actor, error) {
@@ -37,7 +35,7 @@ func (f *FakeRepository) FindByID(id uuid.UUID) (*actor.Actor, error) {
 	defer f.mu.Unlock()
 	for _, a := range f.Actors {
 		if a.ID == id {
-			return &a, f.FindByIDErr
+			return &a, nil
 		}
 	}
 	return nil, actor.ErrActorNotFound
@@ -50,5 +48,5 @@ func (f *FakeRepository) FindAll() ([]*actor.Actor, error) {
 	for i, acc := range f.Actors {
 		accs[i] = &acc
 	}
-	return accs, f.FindAllErr
+	return accs, nil
 }

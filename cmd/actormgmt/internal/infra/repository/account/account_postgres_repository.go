@@ -56,17 +56,16 @@ func (r *PostgresRepository) FindAll() ([]*account.Account, error) {
 		model.ActorID, _ = uuid.Parse(actorIDStr)
 		accounts = append(accounts, ToDomain(&model))
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return accounts, nil
 }
 
 func (r *PostgresRepository) FindByActorIDs(actorIDs []uuid.UUID) ([]*account.Account, error) {
-	ids := make([]string, len(actorIDs))
-	for i, actorID := range actorIDs {
-		ids[i] = actorID.String()
-	}
 	rows, err := r.db.Query(
 		"SELECT id, actor_id, dlt_account_id, private_key, public_key FROM accounts WHERE actor_id = ANY($1::uuid[])",
-		pq.Array(ids),
+		pq.Array(actorIDs),
 	)
 	if err != nil {
 		return nil, err
@@ -84,6 +83,9 @@ func (r *PostgresRepository) FindByActorIDs(actorIDs []uuid.UUID) ([]*account.Ac
 		model.ID, _ = uuid.Parse(idStr)
 		model.ActorID, _ = uuid.Parse(actorIDStr)
 		accounts = append(accounts, ToDomain(&model))
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return accounts, nil
 }

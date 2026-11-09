@@ -5,7 +5,10 @@ import (
 	"uuid"
 )
 
-var ErrAccountNotFound = errors.New("account not found")
+var (
+	ErrAccountNotFound      = errors.New("account not found")
+	ErrAccountAlreadyExists = errors.New("account already exists")
+)
 
 type Account struct {
 	ID           uuid.UUID
