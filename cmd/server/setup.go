@@ -1,16 +1,16 @@
 package main
 
 import (
-	"exercise/internal/adapters/db"
-	"exercise/internal/adapters/db/sqlcgen"
-	createAccountEndpoint "exercise/internal/adapters/http/createaccount"
-	createActorEndpoint "exercise/internal/adapters/http/createactor"
-	getAccountsEndpoint "exercise/internal/adapters/http/getaccounts"
-	getActorsEndpoint "exercise/internal/adapters/http/getactors"
-	createAccountCommand "exercise/internal/app/command/createaccount"
-	createActorCommand "exercise/internal/app/command/createactor"
-	"exercise/internal/app/query/getaccounts"
-	"exercise/internal/app/query/getactors"
+	"exercise/internal/participants/adapters/db"
+	"exercise/internal/participants/adapters/db/sqlcgen"
+	createAccountEndpoint "exercise/internal/participants/adapters/http/createaccount"
+	createActorEndpoint "exercise/internal/participants/adapters/http/createactor"
+	getAccountsEndpoint "exercise/internal/participants/adapters/http/getaccounts"
+	getActorsEndpoint "exercise/internal/participants/adapters/http/getactors"
+	createAccountCommand "exercise/internal/participants/app/command/createaccount"
+	createActorCommand "exercise/internal/participants/app/command/createactor"
+	"exercise/internal/participants/app/query/getaccounts"
+	"exercise/internal/participants/app/query/getactors"
 
 	"uuid"
 
