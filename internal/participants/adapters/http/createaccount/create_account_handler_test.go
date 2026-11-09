@@ -94,7 +94,7 @@ func TestCreateAccount(t *testing.T) {
 
 	var got map[string]string
 	if err := json.NewDecoder(rec.Body).Decode(&got); err != nil {
-		t.Fatalf("json.Decode = %v", err)
+		t.Fatalf("json decode = %v", err)
 	}
 	want := map[string]string{
 		"id":             newAccountID.String(),
