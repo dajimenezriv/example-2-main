@@ -9,7 +9,7 @@ func Config() huma.Config {
 	return cfg
 }
 
-func Error500InternalServerError(err error) huma.StatusError {
+func Error500InternalServerError(_ error) huma.StatusError {
 	// Log err
 	return huma.Error500InternalServerError("internal server error")
 }

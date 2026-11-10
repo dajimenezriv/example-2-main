@@ -32,8 +32,8 @@ func AssertHumaOutput(t testing.TB, rec *httptest.ResponseRecorder, wantCode int
 	got := rec.Body.String()
 
 	var g, w any
-	json.Unmarshal([]byte(got), &g)
-	json.Unmarshal([]byte(want), &w)
+	_ = json.Unmarshal([]byte(got), &g)
+	_ = json.Unmarshal([]byte(want), &w)
 	if diff := cmp.Diff(w, g); diff != "" {
 		t.Errorf("JSON mismatch (-want +got):\n%s", diff)
 	}
@@ -50,7 +50,7 @@ func AssertHumaError(t testing.TB, rec *httptest.ResponseRecorder, wantCode int,
 	}
 
 	var got huma.ErrorModel
-	json.Unmarshal(rec.Body.Bytes(), &got)
+	_ = json.Unmarshal(rec.Body.Bytes(), &got)
 	want := huma.ErrorModel{
 		Status: wantCode,
 		Title:  http.StatusText(wantCode),

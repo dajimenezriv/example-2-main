@@ -29,9 +29,9 @@ func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, account.Repository)
 	acc, _ := account.New(existingAccountID, existingActorID, "DLT account ID", "Private key", "Public key")
 
 	actorRepo := actortest.NewFakeRepository()
-	actorRepo.Save(t.Context(), &act)
+	_ = actorRepo.Save(t.Context(), &act)
 	accountRepo := accounttest.NewFakeRepository()
-	accountRepo.Save(t.Context(), &acc)
+	_ = accountRepo.Save(t.Context(), &acc)
 
 	h := NewHandler(createaccount.NewHandler(
 		accountRepo,

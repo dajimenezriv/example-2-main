@@ -12,7 +12,7 @@ func TestNewActorErrors(t *testing.T) {
 	tests := []struct {
 		name    string
 		taxID   string
-		t       ActorType
+		t       Type
 		wantErr error
 	}{
 		{"empty taxID", "", Issuer, ErrTaxIDRequired},

@@ -12,18 +12,18 @@ var (
 	ErrActorAlreadyExists = errors.New("actor already exists")
 )
 
-type ActorType string
+type Type string
 
 const (
-	Issuer             ActorType = "issuer"
-	Investor           ActorType = "investor"
-	PlatformAdmin      ActorType = "platform_admin"
-	MarketOperator     ActorType = "market_operator"
-	SettlementOperator ActorType = "settlement_operator"
-	Custom             ActorType = "custom"
+	Issuer             Type = "issuer"
+	Investor           Type = "investor"
+	PlatformAdmin      Type = "platform_admin"
+	MarketOperator     Type = "market_operator"
+	SettlementOperator Type = "settlement_operator"
+	Custom             Type = "custom"
 )
 
-var validTypes = map[ActorType]struct{}{
+var validTypes = map[Type]struct{}{
 	Issuer:             {},
 	Investor:           {},
 	PlatformAdmin:      {},
@@ -32,7 +32,7 @@ var validTypes = map[ActorType]struct{}{
 	Custom:             {},
 }
 
-func (t ActorType) IsValid() bool {
+func (t Type) IsValid() bool {
 	_, ok := validTypes[t]
 	return ok
 }
@@ -40,10 +40,10 @@ func (t ActorType) IsValid() bool {
 type Actor struct {
 	ID    uuid.UUID
 	TaxID string
-	Type  ActorType
+	Type  Type
 }
 
-func New(id uuid.UUID, taxID string, t ActorType) (Actor, error) {
+func New(id uuid.UUID, taxID string, t Type) (Actor, error) {
 	if taxID == "" {
 		return Actor{}, ErrTaxIDRequired
 	}

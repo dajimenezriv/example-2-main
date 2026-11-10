@@ -23,7 +23,7 @@ func newSUT(t *testing.T) account.Repository {
 	return repo
 }
 
-func post(t *testing.T, ctx context.Context, repo account.Repository) *httptest.ResponseRecorder {
+func post(ctx context.Context, t *testing.T, repo account.Repository) *httptest.ResponseRecorder {
 	t.Helper()
 	h := NewHandler(&getaccounts.Query{Repo: repo})
 	api := testhelpers.NewHumaAPI(t)
@@ -36,7 +36,7 @@ func TestContextCanceledReturnsError(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
-	rec := post(t, ctx, repo)
+	rec := post(ctx, t, repo)
 
 	if got, want := rec.Code, http.StatusInternalServerError; got != want {
 		t.Errorf("Code = %d, want %d", got, want)
@@ -45,7 +45,7 @@ func TestContextCanceledReturnsError(t *testing.T) {
 
 func TestReturnsAllAccounts(t *testing.T) {
 	repo := newSUT(t)
-	rec := post(t, t.Context(), repo)
+	rec := post(t.Context(), t, repo)
 
 	want := fmt.Sprintf(`{"accounts": [
 		{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"}

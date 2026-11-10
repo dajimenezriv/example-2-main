@@ -2,15 +2,15 @@ package getactors
 
 import (
 	"context"
-	domainAccount "exercise/internal/participants/domain/account"
-	domainActor "exercise/internal/participants/domain/actor"
+	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/actor"
 	"uuid"
 )
 
 type ActorDTO struct {
 	ID       uuid.UUID
 	TaxID    string
-	Type     domainActor.ActorType
+	Type     actor.Type
 	Accounts []AccountDTO
 }
 
@@ -21,11 +21,11 @@ type AccountDTO struct {
 }
 
 type Query struct {
-	RepoActor   domainActor.Repository
-	RepoAccount domainAccount.Repository
+	RepoActor   actor.Repository
+	RepoAccount account.Repository
 }
 
-func NewQuery(actorRepo domainActor.Repository, accountRepo domainAccount.Repository) *Query {
+func NewQuery(actorRepo actor.Repository, accountRepo account.Repository) *Query {
 	return &Query{RepoActor: actorRepo, RepoAccount: accountRepo}
 }
 

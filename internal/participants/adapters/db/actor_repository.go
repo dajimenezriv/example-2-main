@@ -26,7 +26,7 @@ func toActorDomain(d sqlcgen.Actor) *actor.Actor {
 	return &actor.Actor{
 		ID:    d.ID,
 		TaxID: d.TaxID,
-		Type:  actor.ActorType(d.Type),
+		Type:  actor.Type(d.Type),
 	}
 }
 

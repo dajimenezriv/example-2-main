@@ -13,7 +13,7 @@ import (
 func seedActor(t *testing.T, q *sqlcgen.Queries) uuid.UUID {
 	t.Helper()
 	id := uuid.New()
-	q.CreateActor(t.Context(), sqlcgen.CreateActorParams{ID: id, TaxID: "Tax ID", Type: "Type"})
+	_ = q.CreateActor(t.Context(), sqlcgen.CreateActorParams{ID: id, TaxID: "Tax ID", Type: "Type"})
 	return id
 }
 
@@ -21,7 +21,7 @@ func setup(t *testing.T) accounttest.Fixture {
 	t.Helper()
 	q := sqlcgen.New(testPool)
 	// Truncating actors also empties accounts through CASCADE.
-	testPool.Exec(t.Context(), "TRUNCATE actors CASCADE")
+	_, _ = testPool.Exec(t.Context(), "TRUNCATE actors CASCADE")
 	return accounttest.Fixture{
 		Repo: NewAccountRepository(q),
 		NewActorID: func(t *testing.T) uuid.UUID {

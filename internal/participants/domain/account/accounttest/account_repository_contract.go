@@ -24,7 +24,7 @@ func NewAccount(t *testing.T, actorID uuid.UUID) account.Account {
 func saveAccount(t *testing.T, repo account.Repository, actorID uuid.UUID) *account.Account {
 	t.Helper()
 	a := NewAccount(t, actorID)
-	repo.Save(t.Context(), &a)
+	_ = repo.Save(t.Context(), &a)
 	return &a
 }
 

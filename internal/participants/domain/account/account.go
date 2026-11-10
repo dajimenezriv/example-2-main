@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	ErrDltAccountIdRequired = errors.New("DLT account ID is required")
+	ErrDltAccountIDRequired = errors.New("DLT account ID is required")
 	ErrAccountNotFound      = errors.New("account not found")
 	ErrAccountAlreadyExists = errors.New("account already exists")
 )
@@ -21,7 +21,7 @@ type Account struct {
 
 func New(id, actorID uuid.UUID, dltID, privKey, pubKey string) (Account, error) {
 	if dltID == "" {
-		return Account{}, ErrDltAccountIdRequired
+		return Account{}, ErrDltAccountIDRequired
 	}
 
 	return Account{

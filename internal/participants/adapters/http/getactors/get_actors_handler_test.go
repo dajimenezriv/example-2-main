@@ -40,18 +40,18 @@ func newSUT(t *testing.T) (actor.Repository, account.Repository) {
 func saveActor(t *testing.T, repo actor.Repository, uuid uuid.UUID) *actor.Actor {
 	t.Helper()
 	a, _ := actor.New(uuid, "Tax ID", actor.Issuer)
-	repo.Save(context.Background(), &a)
+	_ = repo.Save(context.Background(), &a)
 	return &a
 }
 
 func saveAccount(t *testing.T, repo account.Repository, uuid, actorID uuid.UUID) *account.Account {
 	t.Helper()
 	a, _ := account.New(uuid, actorID, "DLT account ID", "Private key", "Public key")
-	repo.Save(context.Background(), &a)
+	_ = repo.Save(context.Background(), &a)
 	return &a
 }
 
-func post(t *testing.T, ctx context.Context, actorRepo actor.Repository, accountRepo account.Repository) *httptest.ResponseRecorder {
+func post(ctx context.Context, t *testing.T, actorRepo actor.Repository, accountRepo account.Repository) *httptest.ResponseRecorder {
 	t.Helper()
 	h := NewHandler(getactors.NewQuery(actorRepo, accountRepo))
 	api := testhelpers.NewHumaAPI(t)
@@ -64,14 +64,14 @@ func TestContextCanceledReturnsError(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
-	rec := post(t, ctx, actorRepo, accountRepo)
+	rec := post(ctx, t, actorRepo, accountRepo)
 
 	testhelpers.AssertHumaError(t, rec, http.StatusInternalServerError, "context canceled")
 }
 
 func TestReturnActorsAndAccounts(t *testing.T) {
 	actorRepo, accountRepo := newSUT(t)
-	rec := post(t, t.Context(), actorRepo, accountRepo)
+	rec := post(t.Context(), t, actorRepo, accountRepo)
 
 	want := fmt.Sprintf(`{"actors": [
 		{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": [

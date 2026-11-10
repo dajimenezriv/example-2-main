@@ -23,7 +23,7 @@ func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, actor.Repository) {
 	act, _ := actor.New(existingActorID, "Tax ID", actor.Issuer)
 
 	actorRepo := actortest.NewFakeRepository()
-	actorRepo.Save(t.Context(), &act)
+	_ = actorRepo.Save(t.Context(), &act)
 
 	h := NewHandler(createactor.NewHandler(
 		actorRepo,

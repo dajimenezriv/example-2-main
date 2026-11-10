@@ -53,7 +53,7 @@ func (h *Handler) Register(api huma.API) {
 func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	act, err := h.CreateActor.Execute(ctx, createactor.Command{
 		TaxID: in.Body.TaxID,
-		Type:  actor.ActorType(in.Body.Type),
+		Type:  actor.Type(in.Body.Type),
 	})
 	switch {
 	case err == nil:
