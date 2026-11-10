@@ -24,7 +24,6 @@ type createAccountRequest struct {
 	PrivateKey   string `json:"private_key,omitempty"`
 	PublicKey    string `json:"public_key,omitempty"`
 }
-
 type Output struct {
 	Body createAccountResponse
 }
@@ -57,17 +56,16 @@ func (h *Handler) Register(api huma.API) {
 }
 
 func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
-	var req createAccountRequest
-	actorID, err := uuid.Parse(req.ActorID)
+	actorID, err := uuid.Parse(in.Body.ActorID)
 	if err != nil {
 		return nil, huma.Error400BadRequest("invalid actor id")
 	}
 
 	acc, err := h.CreateAccount.Execute(ctx, createaccount.Command{
 		ActorID:      actorID,
-		DltAccountID: req.DltAccountID,
-		PrivateKey:   req.PrivateKey,
-		PublicKey:    req.PublicKey,
+		DltAccountID: in.Body.DltAccountID,
+		PrivateKey:   in.Body.PrivateKey,
+		PublicKey:    in.Body.PublicKey,
 	})
 	switch {
 	case err == nil:
