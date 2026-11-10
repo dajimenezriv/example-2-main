@@ -14,7 +14,7 @@ import (
 
 type createAccountRequest struct {
 	ActorID      string `json:"actor_id"`
-	DltAccountId string `json:"dlt_account_id"`
+	DltAccountID string `json:"dlt_account_id"`
 	PrivateKey   string `json:"private_key"`
 	PublicKey    string `json:"public_key"`
 }
@@ -22,7 +22,7 @@ type createAccountRequest struct {
 type createAccountResponse struct {
 	ID           string `json:"id"`
 	ActorID      string `json:"actor_id"`
-	DltAccountId string `json:"dlt_account_id"`
+	DltAccountID string `json:"dlt_account_id"`
 	PublicKey    string `json:"public_key"`
 }
 
@@ -48,7 +48,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	acc, err := h.CreateAccount.Execute(r.Context(), createaccount.Command{
 		ActorID:      actorID,
-		DltAccountId: req.DltAccountId,
+		DltAccountID: req.DltAccountID,
 		PrivateKey:   req.PrivateKey,
 		PublicKey:    req.PublicKey,
 	})
@@ -61,14 +61,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusConflict)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	resp := createAccountResponse{
 		ID:           acc.ID.String(),
 		ActorID:      acc.ActorID.String(),
-		DltAccountId: acc.DltAccountId,
+		DltAccountID: acc.DltAccountID,
 		PublicKey:    acc.PublicKey,
 	}
 

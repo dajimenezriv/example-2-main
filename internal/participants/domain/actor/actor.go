@@ -39,7 +39,7 @@ func (t ActorType) IsValid() bool {
 
 type Actor struct {
 	ID    uuid.UUID
-	TaxId string
+	TaxID string
 	Type  ActorType
 }
 
@@ -53,7 +53,7 @@ func New(id uuid.UUID, taxID string, t ActorType) (Actor, error) {
 
 	return Actor{
 		ID:    id,
-		TaxId: taxID,
+		TaxID: taxID,
 		Type:  t,
 	}, nil
 }

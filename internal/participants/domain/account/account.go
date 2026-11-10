@@ -14,7 +14,7 @@ var (
 type Account struct {
 	ID           uuid.UUID
 	ActorID      uuid.UUID
-	DltAccountId string
+	DltAccountID string
 	PrivateKey   string
 	PublicKey    string
 }
@@ -27,7 +27,7 @@ func New(id, actorID uuid.UUID, dltID, privKey, pubKey string) (Account, error) 
 	return Account{
 		ID:           id,
 		ActorID:      actorID,
-		DltAccountId: dltID,
+		DltAccountID: dltID,
 		PrivateKey:   privKey,
 		PublicKey:    pubKey,
 	}, nil

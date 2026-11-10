@@ -9,13 +9,13 @@ import (
 )
 
 type createActorRequest struct {
-	TaxId string `json:"tax_id"`
+	TaxID string `json:"tax_id"`
 	Type  string `json:"type"`
 }
 
 type createActorResponse struct {
 	ID    string `json:"id"`
-	TaxId string `json:"tax_id"`
+	TaxID string `json:"tax_id"`
 	Type  string `json:"type"`
 }
 
@@ -37,7 +37,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	actorType := actor.ActorType(req.Type)
 
 	actor, err := h.CreateActor.Execute(r.Context(), createactor.Command{
-		TaxId: req.TaxId,
+		TaxID: req.TaxID,
 		Type:  actorType,
 	})
 
@@ -48,7 +48,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	resp := createActorResponse{
 		ID:    actor.ID.String(),
-		TaxId: actor.TaxId,
+		TaxID: actor.TaxID,
 		Type:  string(actor.Type),
 	}
 

@@ -9,14 +9,14 @@ import (
 
 type ActorDTO struct {
 	ID       uuid.UUID
-	TaxId    string
+	TaxID    string
 	Type     domainActor.ActorType
 	Accounts []AccountDTO
 }
 
 type AccountDTO struct {
 	ID           uuid.UUID
-	DltAccountId string
+	DltAccountID string
 	PublicKey    string
 }
 
@@ -48,7 +48,7 @@ func (q *Query) Execute(ctx context.Context) ([]ActorDTO, error) {
 	for _, acc := range accounts {
 		byActor[acc.ActorID] = append(byActor[acc.ActorID], AccountDTO{
 			ID:           acc.ID,
-			DltAccountId: acc.DltAccountId,
+			DltAccountID: acc.DltAccountID,
 			PublicKey:    acc.PublicKey,
 		})
 	}
@@ -57,7 +57,7 @@ func (q *Query) Execute(ctx context.Context) ([]ActorDTO, error) {
 	for i, act := range actors {
 		actorDTOs[i] = ActorDTO{
 			ID:       act.ID,
-			TaxId:    act.TaxId,
+			TaxID:    act.TaxID,
 			Type:     act.Type,
 			Accounts: byActor[act.ID],
 		}

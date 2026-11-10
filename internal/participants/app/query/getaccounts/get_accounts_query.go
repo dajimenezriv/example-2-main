@@ -7,7 +7,7 @@ import (
 
 type AccountDTO struct {
 	ID           string
-	DltAccountId string
+	DltAccountID string
 	PrivateKey   string
 	PublicKey    string
 }
@@ -30,7 +30,7 @@ func (q *Query) Execute(ctx context.Context) ([]*AccountDTO, error) {
 	for _, a := range accounts {
 		dtos = append(dtos, &AccountDTO{
 			ID:           a.ID.String(),
-			DltAccountId: a.DltAccountId,
+			DltAccountID: a.DltAccountID,
 			PrivateKey:   a.PrivateKey,
 			PublicKey:    a.PublicKey,
 		})

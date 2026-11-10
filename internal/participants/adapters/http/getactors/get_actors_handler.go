@@ -12,14 +12,14 @@ type getActorsResponse struct {
 
 type actorItem struct {
 	ID       string        `json:"id"`
-	TaxId    string        `json:"tax_id"`
+	TaxID    string        `json:"tax_id"`
 	Type     string        `json:"type"`
 	Accounts []accountItem `json:"accounts"`
 }
 
 type accountItem struct {
 	ID           string `json:"id"`
-	DltAccountId string `json:"dlt_account_id"`
+	DltAccountID string `json:"dlt_account_id"`
 	PublicKey    string `json:"public_key"`
 }
 
@@ -44,13 +44,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for j, acc := range act.Accounts {
 			accountItems[j] = accountItem{
 				ID:           acc.ID.String(),
-				DltAccountId: acc.DltAccountId,
+				DltAccountID: acc.DltAccountID,
 				PublicKey:    acc.PublicKey,
 			}
 		}
 		resp.Actors[i] = actorItem{
 			ID:       act.ID.String(),
-			TaxId:    act.TaxId,
+			TaxID:    act.TaxID,
 			Type:     string(act.Type),
 			Accounts: accountItems,
 		}

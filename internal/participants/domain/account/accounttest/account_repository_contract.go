@@ -60,7 +60,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		}
 
 		duplicate := want
-		duplicate.DltAccountId = "Other DLT account ID"
+		duplicate.DltAccountID = "Other DLT account ID"
 		if err := f.Repo.Save(t.Context(), &duplicate); !errors.Is(err, account.ErrAccountAlreadyExists) {
 			t.Fatalf("Save() = %v, want %v", err, account.ErrAccountAlreadyExists)
 		}

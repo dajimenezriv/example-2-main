@@ -35,7 +35,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for i, a := range accounts {
 		resp.Accounts[i] = accountItem{
 			ID:           a.ID,
-			DltAccountID: a.DltAccountId,
+			DltAccountID: a.DltAccountID,
 			PublicKey:    a.PublicKey,
 		}
 	}

@@ -24,7 +24,7 @@ func toAccountDomain(d sqlcgen.Account) *account.Account {
 	return &account.Account{
 		ID:           d.ID,
 		ActorID:      d.ActorID,
-		DltAccountId: d.DltAccountID,
+		DltAccountID: d.DltAccountID,
 		PrivateKey:   d.PrivateKey,
 		PublicKey:    d.PublicKey,
 	}
@@ -34,7 +34,7 @@ func (r *AccountRepository) Save(ctx context.Context, a *account.Account) error 
 	err := r.db.CreateAccount(ctx, sqlcgen.CreateAccountParams{
 		ID:           a.ID,
 		ActorID:      a.ActorID,
-		DltAccountID: a.DltAccountId,
+		DltAccountID: a.DltAccountID,
 		PrivateKey:   a.PrivateKey,
 		PublicKey:    a.PublicKey,
 	})

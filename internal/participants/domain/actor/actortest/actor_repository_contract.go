@@ -54,7 +54,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		}
 
 		duplicate := want
-		duplicate.TaxId = "Other Tax ID"
+		duplicate.TaxID = "Other Tax ID"
 		if err := repo.Save(t.Context(), &duplicate); !errors.Is(err, actor.ErrActorAlreadyExists) {
 			t.Fatalf("Save() = %v, want %v", err, actor.ErrActorAlreadyExists)
 		}

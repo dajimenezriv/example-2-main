@@ -38,7 +38,7 @@ func TestNewCreatesValidActor(t *testing.T) {
 	if err != nil {
 		t.Errorf("New() = %v, want nil", err)
 	}
-	want := Actor{ID: id, TaxId: "Tax ID", Type: Issuer}
+	want := Actor{ID: id, TaxID: "Tax ID", Type: Issuer}
 	if diff := cmp.Diff(a, want); diff != "" {
 		t.Errorf("actor (-want +got):\n%s", diff)
 	}

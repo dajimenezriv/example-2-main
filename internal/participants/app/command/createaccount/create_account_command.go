@@ -10,7 +10,7 @@ import (
 
 type Command struct {
 	ActorID      uuid.UUID
-	DltAccountId string
+	DltAccountID string
 	PrivateKey   string
 	PublicKey    string
 }
@@ -26,7 +26,7 @@ func NewHandler(account accountDomain.Repository, actor actorDomain.Repository, 
 }
 
 func (h *Handler) Execute(ctx context.Context, cmd Command) (*accountDomain.Account, error) {
-	acc, err := accountDomain.New(h.newID(), cmd.ActorID, cmd.DltAccountId, cmd.PrivateKey, cmd.PublicKey)
+	acc, err := accountDomain.New(h.newID(), cmd.ActorID, cmd.DltAccountID, cmd.PrivateKey, cmd.PublicKey)
 	if err != nil {
 		return nil, err
 	}
