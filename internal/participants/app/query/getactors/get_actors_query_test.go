@@ -7,7 +7,6 @@ import (
 	"exercise/internal/participants/domain/account/accounttest"
 	"exercise/internal/participants/domain/actor"
 	"exercise/internal/participants/domain/actor/actortest"
-	"log"
 	"testing"
 	"uuid"
 
@@ -40,10 +39,10 @@ func saveActor(t *testing.T, repo actor.Repository, uuid uuid.UUID) *actor.Actor
 	t.Helper()
 	a, err := actor.New(uuid, "Tax ID", actor.Issuer)
 	if err != nil {
-		log.Fatalf("new actor = %v", err)
+		t.Fatalf("new actor = %v", err)
 	}
 	if err := repo.Save(context.Background(), &a); err != nil {
-		log.Fatalf("actor repo save = %v", err)
+		t.Fatalf("actor repo save = %v", err)
 	}
 	return &a
 }
@@ -52,7 +51,7 @@ func saveAccount(t *testing.T, repo account.Repository, uuid, actorID uuid.UUID)
 	t.Helper()
 	a := account.New(uuid, actorID, "DLT account ID", "Private key", "Public key")
 	if err := repo.Save(context.Background(), &a); err != nil {
-		log.Fatalf("actor repo save = %v", err)
+		t.Fatalf("actor repo save = %v", err)
 	}
 	return &a
 }
