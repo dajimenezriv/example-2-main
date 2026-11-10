@@ -8,13 +8,27 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestNewInvalidActorType(t *testing.T) {
-	a, err := New(uuid.New(), "Tax ID", "invalid")
-	if !errors.Is(err, ErrInvalidActorType) {
-		t.Errorf("New() = %v, want %v", err, ErrInvalidActorType)
+func TestNewActorErrors(t *testing.T) {
+	tests := []struct {
+		name    string
+		taxID   string
+		t       ActorType
+		wantErr error
+	}{
+		{"empty taxID", "", Issuer, ErrTaxIDRequired},
+		{"invalid actor type", "Tax ID", "invalid", ErrInvalidActorType},
 	}
-	if diff := cmp.Diff(a, Actor{}); diff != "" {
-		t.Errorf("actor (-want +got):\n%s", diff)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			a, err := New(uuid.New(), tt.taxID, tt.t)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("New() = %v, want %v", err, tt.wantErr)
+			}
+			if diff := cmp.Diff(a, Actor{}); diff != "" {
+				t.Errorf("actor (-want +got):\n%s", diff)
+			}
+		})
 	}
 }
 

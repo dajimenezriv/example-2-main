@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	ErrTaxIDRequired      = errors.New("tax ID required")
 	ErrInvalidActorType   = errors.New("invalid actor type")
 	ErrActorNotFound      = errors.New("actor not found")
 	ErrActorAlreadyExists = errors.New("actor already exists")
@@ -17,14 +18,17 @@ type Actor struct {
 	Type  ActorType
 }
 
-func New(id uuid.UUID, taxId string, t ActorType) (Actor, error) {
+func New(id uuid.UUID, taxID string, t ActorType) (Actor, error) {
+	if taxID == "" {
+		return Actor{}, ErrTaxIDRequired
+	}
 	if !t.IsValid() {
 		return Actor{}, ErrInvalidActorType
 	}
 
 	return Actor{
 		ID:    id,
-		TaxId: taxId,
+		TaxId: taxID,
 		Type:  t,
 	}, nil
 }

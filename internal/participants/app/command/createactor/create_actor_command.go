@@ -2,7 +2,6 @@ package createactor
 
 import (
 	"context"
-	"errors"
 	"uuid"
 
 	actorDomain "exercise/internal/participants/domain/actor"
@@ -19,14 +18,10 @@ type Handler struct {
 }
 
 func NewHandler(repo actorDomain.Repository, newID func() uuid.UUID) *Handler {
-	return &Handler{ActorRepository: repo}
+	return &Handler{ActorRepository: repo, newID: newID}
 }
 
 func (h *Handler) Execute(ctx context.Context, cmd Command) (*actorDomain.Actor, error) {
-	if cmd.TaxId == "" {
-		return nil, errors.New("TaxId is required")
-	}
-
 	actor, err := actorDomain.New(h.newID(), cmd.TaxId, cmd.Type)
 	if err != nil {
 		return nil, err
