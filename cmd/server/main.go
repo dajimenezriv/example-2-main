@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	"exercise/internal/platform/httpapi"
+
+	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -40,15 +43,12 @@ func main() {
 func registerHTTPHandlers(app *application) chi.Router {
 	r := chi.NewRouter()
 
-	r.Route("/actors", func(r chi.Router) {
-		r.Method(http.MethodGet, "/", app.GetActorsHTTP)
-		r.Method(http.MethodPost, "/", app.CreateActorHTTP)
-	})
+	api := humachi.New(r, httpapi.Config())
 
-	r.Route("/accounts", func(r chi.Router) {
-		r.Method(http.MethodGet, "/", app.GetAccountsHTTP)
-		r.Method(http.MethodPost, "/", app.CreateAccountHTTP)
-	})
+	app.GetActorsHTTP.Register(api)
+	app.CreateActorHTTP.Register(api)
+	app.GetAccountsHTTP.Register(api)
+	app.CreateAccountHTTP.Register(api)
 
 	return r
 }

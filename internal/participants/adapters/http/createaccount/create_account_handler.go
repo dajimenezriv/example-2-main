@@ -1,7 +1,7 @@
 package createaccount
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
 	"net/http"
 
@@ -10,18 +10,28 @@ import (
 	"exercise/internal/participants/domain/actor"
 
 	"uuid"
+
+	"github.com/danielgtaylor/huma/v2"
 )
 
+type Input struct {
+	Body createAccountRequest
+}
+
 type createAccountRequest struct {
-	ActorID      string `json:"actor_id"`
-	DltAccountID string `json:"dlt_account_id"`
-	PrivateKey   string `json:"private_key"`
-	PublicKey    string `json:"public_key"`
+	ActorID      string `json:"actor_id" format:"uuid" doc:"ID of the actor that owns the account"`
+	DltAccountID string `json:"dlt_account_id" minLength:"1" doc:"Account ID on the DLT"`
+	PrivateKey   string `json:"private_key,omitempty"`
+	PublicKey    string `json:"public_key,omitempty"`
+}
+
+type Output struct {
+	Body createAccountResponse
 }
 
 type createAccountResponse struct {
-	ID           string `json:"id"`
-	ActorID      string `json:"actor_id"`
+	ID           string `json:"id" format:"uuid"`
+	ActorID      string `json:"actor_id" format:"uuid"`
 	DltAccountID string `json:"dlt_account_id"`
 	PublicKey    string `json:"public_key"`
 }
@@ -34,45 +44,45 @@ func NewHandler(handler *createaccount.Handler) *Handler {
 	return &Handler{CreateAccount: handler}
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Register(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID:   "create-account",
+		Method:        http.MethodPost,
+		Path:          "/accounts",
+		Summary:       "Create an account",
+		Tags:          []string{"Accounts"},
+		DefaultStatus: http.StatusCreated,
+		Errors:        []int{http.StatusBadRequest, http.StatusNotFound, http.StatusConflict},
+	}, h.Handle)
+}
+
+func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	var req createAccountRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
-		return
-	}
 	actorID, err := uuid.Parse(req.ActorID)
 	if err != nil {
-		http.Error(w, "invalid actor id", http.StatusBadRequest)
-		return
+		return nil, huma.Error400BadRequest("invalid actor id")
 	}
 
-	acc, err := h.CreateAccount.Execute(r.Context(), createaccount.Command{
+	acc, err := h.CreateAccount.Execute(ctx, createaccount.Command{
 		ActorID:      actorID,
 		DltAccountID: req.DltAccountID,
 		PrivateKey:   req.PrivateKey,
 		PublicKey:    req.PublicKey,
 	})
-	if err != nil {
-		if errors.Is(err, actor.ErrActorNotFound) {
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
-		if errors.Is(err, account.ErrAccountAlreadyExists) {
-			http.Error(w, err.Error(), http.StatusConflict)
-			return
-		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	switch {
+	case err == nil:
+	case errors.Is(err, actor.ErrActorNotFound):
+		return nil, huma.Error404NotFound(err.Error())
+	case errors.Is(err, account.ErrAccountAlreadyExists):
+		return nil, huma.Error409Conflict(err.Error())
+	default:
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
-	resp := createAccountResponse{
+	return &Output{Body: createAccountResponse{
 		ID:           acc.ID.String(),
 		ActorID:      acc.ActorID.String(),
 		DltAccountID: acc.DltAccountID,
 		PublicKey:    acc.PublicKey,
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(resp)
+	}}, nil
 }
