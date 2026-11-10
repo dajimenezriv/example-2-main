@@ -1,35 +1,42 @@
 package createaccount
 
 import (
-	"encoding/json"
 	"exercise/internal/participants/app/command/createaccount"
+	"exercise/internal/participants/domain/account"
 	"exercise/internal/participants/domain/account/accounttest"
 	"exercise/internal/participants/domain/actor"
 	"exercise/internal/participants/domain/actor/actortest"
+	"exercise/internal/tests"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"uuid"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 var (
-	existingActorID = uuid.New()
-	newAccountID    = uuid.New()
+	existingActorID   = uuid.New()
+	existingAccountID = uuid.New()
 )
 
-func newSUT(t *testing.T) (*Handler, *accounttest.FakeRepository) {
+func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, *accounttest.FakeRepository) {
 	t.Helper()
 
+	act, err := actor.New(existingActorID, "Tax ID", actor.Issuer)
+	if err != nil {
+		t.Fatalf("actor.New = %v", err)
+	}
+	acc := account.New(existingAccountID, existingActorID, "DLT account ID", "Private key", "Public key")
+
 	accountRepo := accounttest.NewFakeRepository()
+	if err := accountRepo.Save(t.Context(), &acc); err != nil {
+		t.Fatalf("seeding actor: %v", err)
+	}
 	actorRepo := actortest.NewFakeRepository()
-	actorRepo.Save(t.Context(), &actor.Actor{
-		ID:    existingActorID,
-		TaxId: "Tax ID",
-		Type:  actor.Issuer,
-	})
+	if err := actorRepo.Save(t.Context(), &act); err != nil {
+		t.Fatalf("seeding actor: %v", err)
+	}
 
 	h := NewHandler(createaccount.NewHandler(
 		accountRepo,
@@ -48,41 +55,82 @@ func post(h *Handler, body string) *httptest.ResponseRecorder {
 
 func TestRejectedRequests(t *testing.T) {
 	tests := []struct {
-		name     string
-		body     string
-		wantBody string
+		name         string
+		body         string
+		newAccountID uuid.UUID
+		wantCode     int
+		wantBody     string
 	}{
-		{"malformed body", ``, "invalid request body\n"},
-		{"missing actor id", `{}`, "invalid actor id\n"},
-		{"malformed actor id", `{"actor_id":"invalid"}`, "invalid actor id\n"},
-		{"create account error", `{"actor_id":"` + existingActorID.String() + `"}`, "DLT account ID is required\n"},
+		{
+			name:         "malformed body",
+			body:         ``,
+			newAccountID: uuid.New(),
+			wantCode:     http.StatusBadRequest,
+			wantBody:     "invalid request body\n",
+		},
+		{
+			name:         "missing actor id",
+			body:         `{}`,
+			newAccountID: uuid.New(),
+			wantCode:     http.StatusBadRequest,
+			wantBody:     "invalid actor id\n",
+		},
+		{
+			name:         "malformed actor id",
+			body:         `{"actor_id": "invalid"}`,
+			newAccountID: uuid.New(),
+			wantCode:     http.StatusBadRequest,
+			wantBody:     "invalid actor id\n",
+		},
+		{
+			name:         "empty dlt account id",
+			body:         `{"actor_id":"` + existingActorID.String() + `"}`,
+			newAccountID: uuid.New(),
+			wantCode:     http.StatusBadRequest,
+			wantBody:     "DLT account ID is required\n",
+		},
+		{
+			name:         "actor not found",
+			body:         `{"actor_id":"` + uuid.New().String() + `","dlt_account_id":"DLT account ID"}`,
+			newAccountID: uuid.New(),
+			wantCode:     http.StatusNotFound,
+			wantBody:     "actor not found\n",
+		},
+		{
+			name:         "account already exists",
+			body:         `{"actor_id":"` + existingActorID.String() + `","dlt_account_id":"DLT account ID"}`,
+			newAccountID: existingAccountID,
+			wantCode:     http.StatusConflict,
+			wantBody:     "account already exists\n",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h, accountRepo := newSUT(t)
+			h, accountRepo := newSUT(t, tt.newAccountID)
 			rec := post(h, tt.body)
 
-			if got, want := rec.Code, http.StatusBadRequest; got != want {
-				t.Errorf("Code = %d, want %d", got, want)
+			if got := rec.Code; got != tt.wantCode {
+				t.Errorf("Code = %d, want %d", got, tt.wantCode)
 			}
 			if got := rec.Body.String(); got != tt.wantBody {
 				t.Errorf("Body = %q, want %q", got, tt.wantBody)
 			}
-			if got := len(accountRepo.Accounts); got != 0 {
-				t.Errorf("len(accounts) = %d, want 0", got)
+			if got := len(accountRepo.Accounts); got != 1 {
+				t.Errorf("len(accounts) = %d, want 1", got)
 			}
 		})
 	}
 }
 
-func TestCreateAccount(t *testing.T) {
-	body := `{
-		"actor_id": "` + existingActorID.String() + `",
+func TestCreatesAccount(t *testing.T) {
+	body := fmt.Sprintf(`{
+		"actor_id": %q,
 		"dlt_account_id": "DLT account ID",
 		"public_key": "Public key"
-	}`
+	}`, existingActorID)
 
-	h, accountRepo := newSUT(t)
+	newAccountID := uuid.New()
+	h, accountRepo := newSUT(t, newAccountID)
 	rec := post(h, body)
 
 	if got, want := rec.Code, http.StatusCreated; got != want {
@@ -92,21 +140,15 @@ func TestCreateAccount(t *testing.T) {
 		t.Errorf("Content-Type = %q, want %q", got, want)
 	}
 
-	var got map[string]string
-	if err := json.NewDecoder(rec.Body).Decode(&got); err != nil {
-		t.Fatalf("json decode = %v", err)
-	}
-	want := map[string]string{
-		"id":             newAccountID.String(),
-		"actor_id":       existingActorID.String(),
+	want := fmt.Sprintf(`{
+		"id": %q,
+		"actor_id": %q,
 		"dlt_account_id": "DLT account ID",
-		"public_key":     "Public key",
-	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("response mismatch (-want +got):\n%s", diff)
-	}
+		"public_key": "Public key"
+	}`, newAccountID.String(), existingActorID.String())
+	tests.AssertJSONEqual(t, rec.Body.String(), want)
 
-	if got := len(accountRepo.Accounts); got != 1 {
-		t.Errorf("len(accounts) = %d, want 1", got)
+	if got := len(accountRepo.Accounts); got != 2 {
+		t.Errorf("len(accounts) = %d, want 2", got)
 	}
 }

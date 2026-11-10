@@ -2,9 +2,12 @@ package createaccount
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"exercise/internal/participants/app/command/createaccount"
+	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/actor"
 
 	"uuid"
 )
@@ -43,22 +46,30 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	account, err := h.CreateAccount.Execute(r.Context(), createaccount.Command{
+	acc, err := h.CreateAccount.Execute(r.Context(), createaccount.Command{
 		ActorID:      actorID,
 		DltAccountId: req.DltAccountId,
 		PrivateKey:   req.PrivateKey,
 		PublicKey:    req.PublicKey,
 	})
 	if err != nil {
+		if errors.Is(err, actor.ErrActorNotFound) {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, account.ErrAccountAlreadyExists) {
+			http.Error(w, err.Error(), http.StatusConflict)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	resp := createAccountResponse{
-		ID:           account.ID.String(),
-		ActorID:      account.ActorID.String(),
-		DltAccountId: account.DltAccountId,
-		PublicKey:    account.PublicKey,
+		ID:           acc.ID.String(),
+		ActorID:      acc.ActorID.String(),
+		DltAccountId: acc.DltAccountId,
+		PublicKey:    acc.PublicKey,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

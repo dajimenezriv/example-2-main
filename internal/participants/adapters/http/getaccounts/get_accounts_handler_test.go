@@ -34,7 +34,7 @@ func post(t *testing.T, ctx context.Context, repo account.Repository) *httptest.
 	return rec
 }
 
-func TestGetAccountsQueryFails(t *testing.T) {
+func TestContextCanceledReturnsError(t *testing.T) {
 	repo := newSUT(t)
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
@@ -46,7 +46,7 @@ func TestGetAccountsQueryFails(t *testing.T) {
 	}
 }
 
-func TestGetAccountsReturnsAllAccounts(t *testing.T) {
+func TestReturnsAllAccounts(t *testing.T) {
 	repo := newSUT(t)
 	rec := post(t, t.Context(), repo)
 

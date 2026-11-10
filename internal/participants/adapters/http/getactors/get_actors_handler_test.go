@@ -67,7 +67,7 @@ func post(t *testing.T, ctx context.Context, actorRepo actor.Repository, account
 	return rec
 }
 
-func TestGetActorsQueryFails(t *testing.T) {
+func TestContextCanceledReturnsError(t *testing.T) {
 	actorRepo, accountRepo := newSUT(t)
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
@@ -76,13 +76,13 @@ func TestGetActorsQueryFails(t *testing.T) {
 	if got, want := rec.Code, http.StatusInternalServerError; got != want {
 		t.Errorf("Code = %d, want %d", got, want)
 	}
-	want := ""
+	want := "context canceled\n"
 	if got := rec.Body.String(); got != want {
 		t.Errorf("Body = %q, want %q", got, want)
 	}
 }
 
-func TestGetActorsReturnActors(t *testing.T) {
+func TestReturnActorsAndAccounts(t *testing.T) {
 	actorRepo, accountRepo := newSUT(t)
 	rec := post(t, t.Context(), actorRepo, accountRepo)
 
