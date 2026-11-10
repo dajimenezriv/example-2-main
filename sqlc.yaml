@@ -1,0 +1,15 @@
+version: "2"
+sql:
+  - engine: "postgresql"
+    schema: "migrations"
+    queries: "internal/participants/adapters/db/queries/*.sql"
+    gen:
+      go:
+        package: "sqlcgen"
+        out: "internal/participants/adapters/db/sqlcgen"
+        sql_package: "pgx/v5"
+        overrides:
+          - db_type: "uuid"
+            go_type:
+              import: "uuid"
+              type: "UUID"

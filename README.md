@@ -3,6 +3,7 @@
 This project is a Go DDD base template with `Account` and `Actor` aggregates, using Postgres as persistence.
 
 The project follows a Domain-Driven Design (DDD) approach with:
+
 - Commands and Queries
 - HTTP adapters
 - Postgres repositories using persistence models and mappers
@@ -15,11 +16,13 @@ The project follows a Domain-Driven Design (DDD) approach with:
 When opening the project in GoLand or IntelliJ, you may need to enable Go modules:
 
 #### Goland
+
 1. Open `Settings` > `Go` > `Go Modules`
 2. Check `Enable Go Modules`
 3. Click `Apply`
 
 #### IntelliJ
+
 1. Open `File` > `Settings` > `Build, Execution, Deployment` > `Go` > `Go Modules`
 2. Check `Enable Go Modules`
 3. Click `Apply`
@@ -77,7 +80,7 @@ http://localhost:8080
 
 ## 📬 Postman Collection
 
-A Postman collection is available in the root directory: `exercise2.postman_collection.json`
+A Postman collection is available in the root directory: `exercise.postman_collection.json`
 
 Import this file into Postman to easily test all available endpoints.
 
@@ -129,9 +132,11 @@ curl http://localhost:8080/accounts
 This project is designed for conducting 1-hour live coding interviews. Below are proposed challenges ordered by difficulty.
 
 ### 1. Add Actor-Account Association ⭐⭐⭐
+
 **Objective:** Create a one-to-many relationship where an Actor can own multiple Accounts
 
 **Sub-tasks:**
+
 - Add `actor_id` foreign key to `accounts` table
 - Update Account domain model to include ActorID
 - Modify CreateAccount command to require actor_id
@@ -144,9 +149,11 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 ---
 
 ### 2. Add Validation & Business Rules ⭐⭐
+
 **Objective:** Implement proper validation throughout the application
 
 **Sub-tasks:**
+
 - Validate TaxId format (e.g., 9-digit numeric for tax IDs)
 - Ensure TaxId uniqueness per Actor
 - Add validation for ActorType enum values
@@ -159,9 +166,11 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 ---
 
 ### 3. Add Update Actor Endpoint ⭐⭐
+
 **Objective:** Implement PUT/PATCH `/actors/{id}` to update Actor details
 
 **Sub-tasks:**
+
 - Create UpdateActor command
 - Add HTTP handler with proper routing
 - Implement update logic in repository
@@ -174,9 +183,11 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 ---
 
 ### 4. Add Pagination to GET Endpoints ⭐⭐
+
 **Objective:** Add limit/offset pagination to GET /actors and GET /accounts
 
 **Sub-tasks:**
+
 - Accept query params: `?limit=10&offset=0`
 - Update repository queries with LIMIT/OFFSET
 - Return metadata: total_count, has_next, has_previous
@@ -188,9 +199,11 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 ---
 
 ### 5. Add Actor Deletion with Cascade Logic ⭐⭐⭐
+
 **Objective:** Implement DELETE `/actors/{id}` with proper account handling
 
 **Sub-tasks:**
+
 - Decide: cascade delete accounts OR prevent deletion if accounts exist
 - Implement soft delete vs hard delete
 - Add transaction handling
@@ -203,9 +216,11 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 ---
 
 ### 6. Add Filtering & Search ⭐⭐
+
 **Objective:** Add filtering to GET /actors by type and/or tax_id
 
 **Sub-tasks:**
+
 - Accept query params: `?type=investor&tax_id=123`
 - Build dynamic SQL queries safely (avoid SQL injection)
 - Update DTO to include filter parameters
@@ -217,9 +232,11 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 ---
 
 ### 7. Add Audit Trail / Created/Updated Timestamps ⭐
+
 **Objective:** Track when entities are created/modified
 
 **Sub-tasks:**
+
 - Add `created_at` and `updated_at` columns to both tables
 - Update persistence models and mappers
 - Ensure timestamps are set on insert/update
@@ -231,9 +248,11 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 ---
 
 ### 8. Add Health Check Endpoint ⭐
+
 **Objective:** Implement GET /health that checks DB connectivity
 
 **Sub-tasks:**
+
 - Create `/health` endpoint
 - Check database connection with `db.Ping()`
 - Return JSON: `{"status": "ok", "database": "connected"}`
@@ -245,9 +264,11 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 ---
 
 ### 9. Add Integration Tests ⭐⭐⭐
+
 **Objective:** Write integration tests for API endpoints
 
 **Sub-tasks:**
+
 - Set up test database connection
 - Write tests for POST /actors with success/error cases
 - Test GET endpoints with various scenarios
@@ -259,9 +280,11 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 ---
 
 ### 10. Error handling and mapping ⭐⭐⭐
+
 **Objective:** Handle errors gracefully and map them to appropriate HTTP status codes
 
 **Sub-tasks:**
+
 - Create domain error sentinels (or) types
 - Map domain errors to HTTP status codes
 - Handle errors gracefully
@@ -273,16 +296,18 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 ---
 
 ### 11. Parallel batch creation ⭐⭐⭐⭐
+
 **Objective:** Add a POST /actors/batch endpoint that persists multiple actors concurrently and returns a per-item result
 
 **Sub-tasks:**
+
 - Accept a JSON array of actors and fan out persistence across goroutines
 - Synchronize results without data races (sync.WaitGroup + per-index slice or channel)
 - Bound concurrency with a worker pool or semaphore
 - Return per-item outcomes (created vs. failed) with partial-failure semantics
 - (Bonus) Test concurrent creation, including failure cases, with go test -race
 
-**Skills tested:**  Goroutines, channels, sync primitives, concurrency control
+**Skills tested:** Goroutines, channels, sync primitives, concurrency control
 
 ---
 
@@ -292,4 +317,3 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 2. Run the Go application
 3. Use curl or Postman to create and fetch actors and accounts
 4. Choose an appropriate interview challenge based on candidate level
-
