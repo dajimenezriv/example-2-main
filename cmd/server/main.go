@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -28,19 +29,26 @@ func main() {
 		log.Fatalf("failed to setup context: %v", err)
 	}
 
-	mux := registerHTTPHandlers(app)
+	router := registerHTTPHandlers(app)
 
 	log.Println("🚀 Server running on :8080")
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	if err := http.ListenAndServe(":8080", router); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}
 }
 
-func registerHTTPHandlers(app *application) *http.ServeMux {
-	mux := http.NewServeMux()
-	mux.HandleFunc("GET /actors", app.GetActorsHTTP.ServeHTTP)
-	mux.HandleFunc("POST /actors", app.CreateActorHTTP.ServeHTTP)
-	mux.HandleFunc("GET /accounts", app.GetAccountsHTTP.ServeHTTP)
-	mux.HandleFunc("POST /accounts", app.CreateAccountHTTP.ServeHTTP)
-	return mux
+func registerHTTPHandlers(app *application) chi.Router {
+	r := chi.NewRouter()
+
+	r.Route("/actors", func(r chi.Router) {
+		r.Method(http.MethodGet, "/", app.GetActorsHTTP)
+		r.Method(http.MethodPost, "/", app.CreateActorHTTP)
+	})
+
+	r.Route("/accounts", func(r chi.Router) {
+		r.Method(http.MethodGet, "/", app.GetAccountsHTTP)
+		r.Method(http.MethodPost, "/", app.CreateAccountHTTP)
+	})
+
+	return r
 }
