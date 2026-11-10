@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 	"uuid"
+
+	"github.com/danielgtaylor/huma/v2"
 )
 
 var (
@@ -53,6 +55,7 @@ func TestRejectedRequests(t *testing.T) {
 		newAccountID uuid.UUID
 		wantCode     int
 		wantDetail   string
+		wantErrors   []*huma.ErrorDetail
 	}{
 		{
 			name:         "malformed body",
@@ -67,6 +70,10 @@ func TestRejectedRequests(t *testing.T) {
 			newAccountID: uuid.New(),
 			wantCode:     http.StatusUnprocessableEntity,
 			wantDetail:   "validation failed",
+			wantErrors: []*huma.ErrorDetail{
+				{Message: "expected required property actor_id to be present", Location: "body", Value: map[string]any{}},
+				{Message: "expected required property dlt_account_id to be present", Location: "body", Value: map[string]any{}},
+			},
 		},
 		{
 			// Huma accepts an uppercase "URN:UUID:" prefix, but uuid.Parse does not.
@@ -96,7 +103,7 @@ func TestRejectedRequests(t *testing.T) {
 			h, accountRepo := newSUT(t, tt.newAccountID)
 			rec := post(t, h, tt.body)
 
-			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail)
+			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail, tt.wantErrors...)
 
 			if got := len(accountRepo.Accounts); got != 1 {
 				t.Errorf("len(accounts) = %d, want 1", got)

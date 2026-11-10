@@ -2,13 +2,13 @@ package testhelpers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"exercise/internal/platform/httpapi"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/humatest"
 	"github.com/google/go-cmp/cmp"
 )
@@ -39,7 +39,7 @@ func AssertHumaOutput(t testing.TB, rec *httptest.ResponseRecorder, wantCode int
 	}
 }
 
-func AssertHumaError(t testing.TB, rec *httptest.ResponseRecorder, wantCode int, wantDetail string) {
+func AssertHumaError(t testing.TB, rec *httptest.ResponseRecorder, wantCode int, wantDetail string, wantErrors ...*huma.ErrorDetail) {
 	t.Helper()
 
 	if got := rec.Code; got != wantCode {
@@ -49,16 +49,15 @@ func AssertHumaError(t testing.TB, rec *httptest.ResponseRecorder, wantCode int,
 		t.Errorf("Content-Type = %q, want %q", got, want)
 	}
 
-	var g, w any
-	got := rec.Body.String()
-	want := fmt.Sprintf(`{"status": %d, "title": %q, "detail": %q}`,
-		wantCode,
-		http.StatusText(wantCode),
-		wantDetail)
-
-	json.Unmarshal([]byte(got), &g)
-	json.Unmarshal([]byte(want), &w)
-	if diff := cmp.Diff(w, g); diff != "" {
-		t.Errorf("JSON mismatch (-want +got):\n%s", diff)
+	var got huma.ErrorModel
+	json.Unmarshal(rec.Body.Bytes(), &got)
+	want := huma.ErrorModel{
+		Status: wantCode,
+		Title:  http.StatusText(wantCode),
+		Detail: wantDetail,
+		Errors: wantErrors,
+	}
+	if diff := cmp.Diff(want, got); diff != "" {
+		t.Errorf("error body mismatch (-want +got):\n%s", diff)
 	}
 }
