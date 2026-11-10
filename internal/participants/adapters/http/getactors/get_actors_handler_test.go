@@ -7,7 +7,7 @@ import (
 	"exercise/internal/participants/domain/account/accounttest"
 	"exercise/internal/participants/domain/actor"
 	"exercise/internal/participants/domain/actor/actortest"
-	"exercise/internal/tests"
+	"exercise/internal/testhelpers"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -64,10 +64,9 @@ func saveAccount(t *testing.T, repo account.Repository, uuid, actorID uuid.UUID)
 func post(t *testing.T, ctx context.Context, actorRepo actor.Repository, accountRepo account.Repository) *httptest.ResponseRecorder {
 	t.Helper()
 	h := NewHandler(getactors.NewQuery(actorRepo, accountRepo))
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequestWithContext(ctx, "GET", "/actors", nil)
-	h.ServeHTTP(rec, req)
-	return rec
+	api := testhelpers.NewHumaAPI(t)
+	h.Register(api)
+	return api.GetCtx(ctx, "/actors")
 }
 
 func TestContextCanceledReturnsError(t *testing.T) {
@@ -76,25 +75,12 @@ func TestContextCanceledReturnsError(t *testing.T) {
 	cancel()
 	rec := post(t, ctx, actorRepo, accountRepo)
 
-	if got, want := rec.Code, http.StatusInternalServerError; got != want {
-		t.Errorf("Code = %d, want %d", got, want)
-	}
-	want := "context canceled\n"
-	if got := rec.Body.String(); got != want {
-		t.Errorf("Body = %q, want %q", got, want)
-	}
+	testhelpers.AssertHumaError(t, rec, http.StatusInternalServerError, "context canceled")
 }
 
 func TestReturnActorsAndAccounts(t *testing.T) {
 	actorRepo, accountRepo := newSUT(t)
 	rec := post(t, t.Context(), actorRepo, accountRepo)
-
-	if got, want := rec.Code, http.StatusOK; got != want {
-		t.Errorf("Code = %d, want %d", got, want)
-	}
-	if got, want := rec.Header().Get("Content-Type"), "application/json"; got != want {
-		t.Errorf("Content-Type = %q, want %q", got, want)
-	}
 
 	want := fmt.Sprintf(`{"actors": [
 		{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": [
@@ -106,5 +92,6 @@ func TestReturnActorsAndAccounts(t *testing.T) {
 		]},
 		{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": []}
 	]}`, actorID1, accountID1, accountID2, actorID2, accountID3, actorID3)
-	tests.AssertJSONEqual(t, rec.Body.String(), want)
+
+	testhelpers.AssertHumaOutput(t, rec, http.StatusOK, want)
 }

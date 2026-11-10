@@ -6,7 +6,7 @@ import (
 	"exercise/internal/participants/domain/account/accounttest"
 	"exercise/internal/participants/domain/actor"
 	"exercise/internal/participants/domain/actor/actortest"
-	"exercise/internal/tests"
+	"exercise/internal/testhelpers"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -49,11 +49,11 @@ func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, *accounttest.FakeRe
 	return h, accountRepo
 }
 
-func post(h *Handler, body string) *httptest.ResponseRecorder {
-	rec := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodPost, "/accounts", strings.NewReader(body))
-	h.ServeHTTP(rec, req)
-	return rec
+func post(t *testing.T, h *Handler, body string) *httptest.ResponseRecorder {
+	t.Helper()
+	api := testhelpers.NewHumaAPI(t)
+	h.Register(api)
+	return api.Post("/accounts", strings.NewReader(body))
 }
 
 func TestRejectedRequests(t *testing.T) {
@@ -62,62 +62,52 @@ func TestRejectedRequests(t *testing.T) {
 		body         string
 		newAccountID uuid.UUID
 		wantCode     int
-		wantBody     string
+		wantDetail   string
 	}{
 		{
 			name:         "malformed body",
 			body:         ``,
 			newAccountID: uuid.New(),
 			wantCode:     http.StatusBadRequest,
-			wantBody:     "invalid request body\n",
+			wantDetail:   "request body is required",
 		},
 		{
-			name:         "missing actor id",
+			name:         "empty body",
 			body:         `{}`,
 			newAccountID: uuid.New(),
-			wantCode:     http.StatusBadRequest,
-			wantBody:     "invalid actor id\n",
+			wantCode:     http.StatusUnprocessableEntity,
+			wantDetail:   "validation failed",
 		},
 		{
-			name:         "malformed actor id",
-			body:         `{"actor_id": "invalid"}`,
+			// Huma accepts an uppercase "URN:UUID:" prefix, but uuid.Parse does not.
+			name:         "actor id rejected by uuid.Parse",
+			body:         `{"actor_id":"URN:UUID:` + existingActorID.String() + `","dlt_account_id":"DLT account ID"}`,
 			newAccountID: uuid.New(),
 			wantCode:     http.StatusBadRequest,
-			wantBody:     "invalid actor id\n",
-		},
-		{
-			name:         "empty dlt account id",
-			body:         `{"actor_id":"` + existingActorID.String() + `"}`,
-			newAccountID: uuid.New(),
-			wantCode:     http.StatusBadRequest,
-			wantBody:     "DLT account ID is required\n",
+			wantDetail:   "invalid actor id",
 		},
 		{
 			name:         "actor not found",
 			body:         `{"actor_id":"` + uuid.New().String() + `","dlt_account_id":"DLT account ID"}`,
 			newAccountID: uuid.New(),
 			wantCode:     http.StatusNotFound,
-			wantBody:     "actor not found\n",
+			wantDetail:   "actor not found",
 		},
 		{
 			name:         "account already exists",
 			body:         `{"actor_id":"` + existingActorID.String() + `","dlt_account_id":"DLT account ID"}`,
 			newAccountID: existingAccountID,
 			wantCode:     http.StatusConflict,
-			wantBody:     "account already exists\n",
+			wantDetail:   "account already exists",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			h, accountRepo := newSUT(t, tt.newAccountID)
-			rec := post(h, tt.body)
+			rec := post(t, h, tt.body)
 
-			if got := rec.Code; got != tt.wantCode {
-				t.Errorf("Code = %d, want %d", got, tt.wantCode)
-			}
-			if got := rec.Body.String(); got != tt.wantBody {
-				t.Errorf("Body = %q, want %q", got, tt.wantBody)
-			}
+			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail)
+
 			if got := len(accountRepo.Accounts); got != 1 {
 				t.Errorf("len(accounts) = %d, want 1", got)
 			}
@@ -134,14 +124,7 @@ func TestCreatesAccount(t *testing.T) {
 
 	newAccountID := uuid.New()
 	h, accountRepo := newSUT(t, newAccountID)
-	rec := post(h, body)
-
-	if got, want := rec.Code, http.StatusCreated; got != want {
-		t.Errorf("Code = %d, want %d", got, want)
-	}
-	if got, want := rec.Header().Get("Content-Type"), "application/json"; got != want {
-		t.Errorf("Content-Type = %q, want %q", got, want)
-	}
+	rec := post(t, h, body)
 
 	want := fmt.Sprintf(`{
 		"id": %q,
@@ -149,7 +132,8 @@ func TestCreatesAccount(t *testing.T) {
 		"dlt_account_id": "DLT account ID",
 		"public_key": "Public key"
 	}`, newAccountID, existingActorID)
-	tests.AssertJSONEqual(t, rec.Body.String(), want)
+
+	testhelpers.AssertHumaOutput(t, rec, http.StatusCreated, want)
 
 	if got := len(accountRepo.Accounts); got != 2 {
 		t.Errorf("len(accounts) = %d, want 2", got)
