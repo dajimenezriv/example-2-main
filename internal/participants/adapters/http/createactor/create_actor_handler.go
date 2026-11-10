@@ -2,6 +2,7 @@ package createactor
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"exercise/internal/participants/app/command/createactor"
@@ -53,7 +54,11 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 		TaxID: in.Body.TaxID,
 		Type:  actor.ActorType(in.Body.Type),
 	})
-	if err != nil {
+	switch {
+	case err == nil:
+	case errors.Is(err, actor.ErrActorAlreadyExists):
+		return nil, huma.Error409Conflict(err.Error())
+	default:
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
