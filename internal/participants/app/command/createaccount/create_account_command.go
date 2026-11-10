@@ -4,8 +4,8 @@ import (
 	"context"
 	"uuid"
 
-	accountDomain "exercise/internal/participants/domain/account"
-	actorDomain "exercise/internal/participants/domain/actor"
+	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/actor"
 )
 
 type Command struct {
@@ -16,17 +16,21 @@ type Command struct {
 }
 
 type Handler struct {
-	AccountRepository accountDomain.Repository
-	ActorRepository   actorDomain.Repository
+	AccountRepository account.Repository
+	ActorRepository   actor.Repository
 	newID             func() uuid.UUID
 }
 
-func NewHandler(account accountDomain.Repository, actor actorDomain.Repository, newID func() uuid.UUID) *Handler {
-	return &Handler{AccountRepository: account, ActorRepository: actor, newID: newID}
+func NewHandler(accountRepo account.Repository, actorRepo actor.Repository, newID func() uuid.UUID) *Handler {
+	return &Handler{
+		AccountRepository: accountRepo,
+		ActorRepository:   actorRepo,
+		newID:             newID,
+	}
 }
 
-func (h *Handler) Execute(ctx context.Context, cmd Command) (*accountDomain.Account, error) {
-	acc, err := accountDomain.New(h.newID(), cmd.ActorID, cmd.DltAccountID, cmd.PrivateKey, cmd.PublicKey)
+func (h *Handler) Execute(ctx context.Context, cmd Command) (*account.Account, error) {
+	acc, err := account.New(h.newID(), cmd.ActorID, cmd.DltAccountID, cmd.PrivateKey, cmd.PublicKey)
 	if err != nil {
 		return nil, err
 	}
