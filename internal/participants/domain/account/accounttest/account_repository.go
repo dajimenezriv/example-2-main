@@ -9,39 +9,39 @@ import (
 	"uuid"
 )
 
-type FakeRepository struct {
+type fakeRepository struct {
 	mu       sync.Mutex
-	Accounts []account.Account
+	accounts []account.Account
 }
 
-func NewFakeRepository() *FakeRepository {
-	return &FakeRepository{
-		Accounts: []account.Account{},
+func NewFakeRepository() *fakeRepository {
+	return &fakeRepository{
+		accounts: []account.Account{},
 	}
 }
 
-func (f *FakeRepository) Save(ctx context.Context, acc *account.Account) error {
+func (f *fakeRepository) Save(ctx context.Context, acc *account.Account) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	for _, a := range f.Accounts {
+	for _, a := range f.accounts {
 		if a.ID == acc.ID {
 			return account.ErrAccountAlreadyExists
 		}
 	}
-	f.Accounts = append(f.Accounts, *acc)
+	f.accounts = append(f.accounts, *acc)
 	return nil
 }
 
-func (f *FakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.Account, error) {
+func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.Account, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	for _, a := range f.Accounts {
+	for _, a := range f.accounts {
 		if a.ID == id {
 			return &a, nil
 		}
@@ -49,27 +49,27 @@ func (f *FakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.A
 	return nil, account.ErrAccountNotFound
 }
 
-func (f *FakeRepository) FindAll(ctx context.Context) ([]*account.Account, error) {
+func (f *fakeRepository) FindAll(ctx context.Context) ([]*account.Account, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	accs := make([]*account.Account, len(f.Accounts))
-	for i, acc := range f.Accounts {
+	accs := make([]*account.Account, len(f.accounts))
+	for i, acc := range f.accounts {
 		accs[i] = &acc
 	}
 	return accs, nil
 }
 
-func (f *FakeRepository) FindByActorIDs(ctx context.Context, actorIDs []uuid.UUID) ([]*account.Account, error) {
+func (f *fakeRepository) FindByActorIDs(ctx context.Context, actorIDs []uuid.UUID) ([]*account.Account, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	var accs []*account.Account
-	for _, acc := range f.Accounts {
+	for _, acc := range f.accounts {
 		if slices.Contains(actorIDs, acc.ActorID) {
 			accs = append(accs, &acc)
 		}
