@@ -22,7 +22,7 @@ var (
 	existingAccountID = uuid.New()
 )
 
-func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, *accounttest.FakeRepository) {
+func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, account.Repository) {
 	t.Helper()
 
 	act, _ := actor.New(existingActorID, "Tax ID", actor.Issuer)
@@ -78,21 +78,21 @@ func TestRejectedRequests(t *testing.T) {
 		{
 			// Huma accepts an uppercase "URN:UUID:" prefix, but uuid.Parse does not.
 			name:         "actor id rejected by uuid.Parse",
-			body:         `{"actor_id":"URN:UUID:` + existingActorID.String() + `","dlt_account_id":"DLT account ID"}`,
+			body:         fmt.Sprintf(`{"actor_id": "URN:UUID:%s", "dlt_account_id": "DLT account ID"}`, uuid.New()),
 			newAccountID: uuid.New(),
 			wantCode:     http.StatusBadRequest,
 			wantDetail:   "invalid actor id",
 		},
 		{
 			name:         "actor not found",
-			body:         `{"actor_id":"` + uuid.New().String() + `","dlt_account_id":"DLT account ID"}`,
+			body:         fmt.Sprintf(`{"actor_id": %q, "dlt_account_id": "DLT account ID"}`, uuid.New()),
 			newAccountID: uuid.New(),
 			wantCode:     http.StatusNotFound,
 			wantDetail:   "actor not found",
 		},
 		{
 			name:         "account already exists",
-			body:         `{"actor_id":"` + existingActorID.String() + `","dlt_account_id":"DLT account ID"}`,
+			body:         fmt.Sprintf(`{"actor_id": %q, "dlt_account_id": "DLT account ID"}`, existingActorID),
 			newAccountID: existingAccountID,
 			wantCode:     http.StatusConflict,
 			wantDetail:   "account already exists",
@@ -105,7 +105,8 @@ func TestRejectedRequests(t *testing.T) {
 
 			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail, tt.wantErrors...)
 
-			if got := len(accountRepo.Accounts); got != 1 {
+			accounts, _ := accountRepo.FindAll(t.Context())
+			if got := len(accounts); got != 1 {
 				t.Errorf("len(accounts) = %d, want 1", got)
 			}
 		})
@@ -132,7 +133,8 @@ func TestCreatesAccount(t *testing.T) {
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusCreated, want)
 
-	if got := len(accountRepo.Accounts); got != 2 {
+	accounts, _ := accountRepo.FindAll(t.Context())
+	if got := len(accounts); got != 2 {
 		t.Errorf("len(accounts) = %d, want 2", got)
 	}
 }
