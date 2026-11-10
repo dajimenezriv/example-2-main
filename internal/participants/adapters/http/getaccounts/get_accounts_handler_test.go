@@ -5,6 +5,7 @@ import (
 	"exercise/internal/participants/app/query/getaccounts"
 	"exercise/internal/participants/domain/account"
 	"exercise/internal/participants/domain/account/accounttest"
+	"exercise/internal/tests"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -40,8 +41,8 @@ func TestGetAccountsQueryFails(t *testing.T) {
 
 	rec := post(t, ctx, repo)
 
-	if rec.Code != http.StatusInternalServerError {
-		t.Errorf("Code = %d, want %d", rec.Code, http.StatusInternalServerError)
+	if got, want := rec.Code, http.StatusInternalServerError; got != want {
+		t.Errorf("Code = %d, want %d", got, want)
 	}
 }
 
@@ -49,18 +50,15 @@ func TestGetAccountsReturnsAllAccounts(t *testing.T) {
 	repo := newSUT(t)
 	rec := post(t, t.Context(), repo)
 
-	if rec.Code != http.StatusOK {
-		t.Errorf("Code = %d, want %d", rec.Code, http.StatusOK)
+	if got, want := rec.Code, http.StatusOK; got != want {
+		t.Errorf("Code = %d, want %d", got, want)
 	}
 	if got, want := rec.Header().Get("Content-Type"), "application/json"; got != want {
 		t.Errorf("Content-Type = %q, want %q", got, want)
 	}
 
-	want := fmt.Sprintf(
-		`{"accounts":[{"id":%q,"dlt_account_id":"DLT account ID","public_key":"Public key"}]}`+"\n",
-		existingAccountID.String(),
-	)
-	if got := rec.Body.String(); got != want {
-		t.Errorf("body = %s, want %s", got, want)
-	}
+	want := fmt.Sprintf(`{"accounts":[
+	{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"}
+]}`, existingAccountID.String())
+	tests.AssertJSONEqual(t, rec.Body.String(), want)
 }
