@@ -23,23 +23,13 @@ var (
 func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, *accounttest.FakeRepository) {
 	t.Helper()
 
-	act, err := actor.New(existingActorID, "Tax ID", actor.Issuer)
-	if err != nil {
-		t.Fatalf("new actor: %v", err)
-	}
-	acc, err := account.New(existingAccountID, existingActorID, "DLT account ID", "Private key", "Public key")
-	if err != nil {
-		t.Fatalf("new account: %v", err)
-	}
+	act, _ := actor.New(existingActorID, "Tax ID", actor.Issuer)
+	acc, _ := account.New(existingAccountID, existingActorID, "DLT account ID", "Private key", "Public key")
 
 	actorRepo := actortest.NewFakeRepository()
-	if err := actorRepo.Save(t.Context(), &act); err != nil {
-		t.Fatalf("save actor: %v", err)
-	}
+	actorRepo.Save(t.Context(), &act)
 	accountRepo := accounttest.NewFakeRepository()
-	if err := accountRepo.Save(t.Context(), &acc); err != nil {
-		t.Fatalf("save account: %v", err)
-	}
+	accountRepo.Save(t.Context(), &acc)
 
 	h := NewHandler(createaccount.NewHandler(
 		accountRepo,

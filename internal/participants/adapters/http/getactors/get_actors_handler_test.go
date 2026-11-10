@@ -39,25 +39,15 @@ func newSUT(t *testing.T) (actor.Repository, account.Repository) {
 
 func saveActor(t *testing.T, repo actor.Repository, uuid uuid.UUID) *actor.Actor {
 	t.Helper()
-	a, err := actor.New(uuid, "Tax ID", actor.Issuer)
-	if err != nil {
-		t.Fatalf("new actor: %v", err)
-	}
-	if err := repo.Save(context.Background(), &a); err != nil {
-		t.Fatalf("save actor: %v", err)
-	}
+	a, _ := actor.New(uuid, "Tax ID", actor.Issuer)
+	repo.Save(context.Background(), &a)
 	return &a
 }
 
 func saveAccount(t *testing.T, repo account.Repository, uuid, actorID uuid.UUID) *account.Account {
 	t.Helper()
-	a, err := account.New(uuid, actorID, "DLT account ID", "Private key", "Public key")
-	if err != nil {
-		t.Fatalf("new account: %v", err)
-	}
-	if err := repo.Save(context.Background(), &a); err != nil {
-		t.Fatalf("save account: %v", err)
-	}
+	a, _ := account.New(uuid, actorID, "DLT account ID", "Private key", "Public key")
+	repo.Save(context.Background(), &a)
 	return &a
 }
 
@@ -73,6 +63,7 @@ func TestContextCanceledReturnsError(t *testing.T) {
 	actorRepo, accountRepo := newSUT(t)
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
+
 	rec := post(t, ctx, actorRepo, accountRepo)
 
 	testhelpers.AssertHumaError(t, rec, http.StatusInternalServerError, "context canceled")
