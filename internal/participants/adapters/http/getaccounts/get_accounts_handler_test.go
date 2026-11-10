@@ -18,9 +18,12 @@ var existingAccountID = uuid.New()
 func newSUT(t *testing.T) account.Repository {
 	t.Helper()
 	repo := accounttest.NewFakeRepository()
-	a := account.New(existingAccountID, uuid.New(), "DLT account ID", "Private key", "Public key")
+	a, err := account.New(existingAccountID, uuid.New(), "DLT account ID", "Private key", "Public key")
+	if err != nil {
+		t.Fatalf("new account: %v", err)
+	}
 	if err := repo.Save(t.Context(), &a); err != nil {
-		t.Fatalf("account repo save = %v", err)
+		t.Fatalf("save account: %v", err)
 	}
 	return repo
 }
@@ -57,8 +60,8 @@ func TestReturnsAllAccounts(t *testing.T) {
 		t.Errorf("Content-Type = %q, want %q", got, want)
 	}
 
-	want := fmt.Sprintf(`{"accounts":[
-	{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"}
-]}`, existingAccountID.String())
+	want := fmt.Sprintf(`{"accounts": [
+		{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"}
+	]}`, existingAccountID.String())
 	tests.AssertJSONEqual(t, rec.Body.String(), want)
 }

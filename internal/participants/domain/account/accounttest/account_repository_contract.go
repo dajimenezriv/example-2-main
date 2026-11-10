@@ -17,14 +17,18 @@ type Fixture struct {
 
 func NewAccount(t *testing.T, actorID uuid.UUID) account.Account {
 	t.Helper()
-	return account.New(uuid.New(), actorID, "DLT account ID", "Private key", "Public key")
+	a, err := account.New(uuid.New(), actorID, "DLT account ID", "Private key", "Public key")
+	if err != nil {
+		t.Fatalf("new account: %v", err)
+	}
+	return a
 }
 
 func saveAccount(t *testing.T, repo account.Repository, actorID uuid.UUID) *account.Account {
 	t.Helper()
 	a := NewAccount(t, actorID)
 	if err := repo.Save(t.Context(), &a); err != nil {
-		t.Fatalf("repo.Save = %v", err)
+		t.Fatalf("save account: %v", err)
 	}
 	return &a
 }

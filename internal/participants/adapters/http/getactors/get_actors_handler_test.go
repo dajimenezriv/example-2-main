@@ -41,19 +41,22 @@ func saveActor(t *testing.T, repo actor.Repository, uuid uuid.UUID) *actor.Actor
 	t.Helper()
 	a, err := actor.New(uuid, "Tax ID", actor.Issuer)
 	if err != nil {
-		t.Fatalf("new actor = %v", err)
+		t.Fatalf("new actor: %v", err)
 	}
 	if err := repo.Save(context.Background(), &a); err != nil {
-		t.Fatalf("actor repo save = %v", err)
+		t.Fatalf("save actor: %v", err)
 	}
 	return &a
 }
 
 func saveAccount(t *testing.T, repo account.Repository, uuid, actorID uuid.UUID) *account.Account {
 	t.Helper()
-	a := account.New(uuid, actorID, "DLT account ID", "Private key", "Public key")
+	a, err := account.New(uuid, actorID, "DLT account ID", "Private key", "Public key")
+	if err != nil {
+		t.Fatalf("new account: %v", err)
+	}
 	if err := repo.Save(context.Background(), &a); err != nil {
-		t.Fatalf("actor repo save = %v", err)
+		t.Fatalf("save account: %v", err)
 	}
 	return &a
 }
@@ -94,14 +97,14 @@ func TestReturnActorsAndAccounts(t *testing.T) {
 	}
 
 	want := fmt.Sprintf(`{"actors": [
-	{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": [
-		{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"},
-		{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"}
-	]},
-	{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": [
-		{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"}
-	]},
-	{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": []}
-]}`, actorID1, accountID1, accountID2, actorID2, accountID3, actorID3)
+		{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": [
+			{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"},
+			{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"}
+		]},
+		{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": [
+			{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"}
+		]},
+		{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": []}
+	]}`, actorID1, accountID1, accountID2, actorID2, accountID3, actorID3)
 	tests.AssertJSONEqual(t, rec.Body.String(), want)
 }
