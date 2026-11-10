@@ -7,6 +7,7 @@ import (
 
 	"exercise/internal/participants/app/command/createactor"
 	"exercise/internal/participants/domain/actor"
+	"exercise/internal/platform/httpapi"
 
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -57,9 +58,9 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	switch {
 	case err == nil:
 	case errors.Is(err, actor.ErrActorAlreadyExists):
-		return nil, huma.Error409Conflict(err.Error())
+		return nil, huma.Error409Conflict("actor already exists")
 	default:
-		return nil, huma.Error500InternalServerError(err.Error())
+		return nil, httpapi.Error500InternalServerError(err)
 	}
 
 	return &Output{Body: createActorResponse{

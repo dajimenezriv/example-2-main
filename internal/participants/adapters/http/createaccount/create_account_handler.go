@@ -8,6 +8,7 @@ import (
 	"exercise/internal/participants/app/command/createaccount"
 	"exercise/internal/participants/domain/account"
 	"exercise/internal/participants/domain/actor"
+	"exercise/internal/platform/httpapi"
 
 	"uuid"
 
@@ -69,11 +70,11 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	switch {
 	case err == nil:
 	case errors.Is(err, actor.ErrActorNotFound):
-		return nil, huma.Error404NotFound(err.Error())
+		return nil, huma.Error404NotFound("actor not found")
 	case errors.Is(err, account.ErrAccountAlreadyExists):
-		return nil, huma.Error409Conflict(err.Error())
+		return nil, huma.Error409Conflict("account already exists")
 	default:
-		return nil, huma.Error500InternalServerError(err.Error())
+		return nil, httpapi.Error500InternalServerError(err)
 	}
 
 	return &Output{Body: createAccountResponse{

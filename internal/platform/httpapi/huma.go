@@ -8,3 +8,8 @@ func Config() huma.Config {
 	cfg.CreateHooks = nil
 	return cfg
 }
+
+func Error500InternalServerError(err error) huma.StatusError {
+	// Log err
+	return huma.Error500InternalServerError("internal server error")
+}

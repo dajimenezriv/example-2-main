@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"exercise/internal/participants/adapters/db/sqlcgen"
 	"exercise/internal/participants/domain/account"
@@ -38,10 +39,13 @@ func (r *AccountRepository) Save(ctx context.Context, a *account.Account) error 
 		PrivateKey:   a.PrivateKey,
 		PublicKey:    a.PublicKey,
 	})
-	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
-		return account.ErrAccountAlreadyExists
+	if err != nil {
+		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
+			return account.ErrAccountAlreadyExists
+		}
+		return fmt.Errorf("save account: %w", err)
 	}
-	return err
+	return nil
 }
 
 func (r *AccountRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.Account, error) {
@@ -50,7 +54,7 @@ func (r *AccountRepository) FindByID(ctx context.Context, id uuid.UUID) (*accoun
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, account.ErrAccountNotFound
 		}
-		return nil, err
+		return nil, fmt.Errorf("find account by id: %w", err)
 	}
 	return toAccountDomain(a), nil
 }
@@ -58,7 +62,7 @@ func (r *AccountRepository) FindByID(ctx context.Context, id uuid.UUID) (*accoun
 func (r *AccountRepository) FindAll(ctx context.Context) ([]*account.Account, error) {
 	as, err := r.db.FindAccounts(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find accounts: %w", err)
 	}
 	res := make([]*account.Account, len(as))
 	for i, a := range as {
@@ -73,7 +77,7 @@ func (r *AccountRepository) FindByActorIDs(ctx context.Context, actorIDs []uuid.
 	}
 	as, err := r.db.FindAccountsByActorIDs(ctx, actorIDs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find accounts by actor ids: %w", err)
 	}
 	res := make([]*account.Account, len(as))
 	for i, a := range as {
