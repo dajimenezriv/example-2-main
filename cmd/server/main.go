@@ -15,7 +15,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	connStr := "postgres://ddd:ddd@localhost:5432/ddd?sslmode=disable"
+	connStr := "postgres://ddd:ddd@localhost:5555/ddd?sslmode=disable"
 	pool, err := pgxpool.New(ctx, connStr)
 	if err != nil {
 		log.Fatalf("failed to create DB pool: %v", err)

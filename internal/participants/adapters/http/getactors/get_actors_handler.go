@@ -1,24 +1,31 @@
 package getactors
 
 import (
-	"encoding/json"
-	"exercise/internal/participants/app/query/getactors"
+	"context"
 	"net/http"
+
+	"exercise/internal/participants/app/query/getactors"
+
+	"github.com/danielgtaylor/huma/v2"
 )
+
+type Output struct {
+	Body getActorsResponse
+}
 
 type getActorsResponse struct {
 	Actors []actorItem `json:"actors"`
 }
 
 type actorItem struct {
-	ID       string        `json:"id"`
-	TaxID    string        `json:"tax_id"`
-	Type     string        `json:"type"`
-	Accounts []accountItem `json:"accounts"`
+	ID       string             `json:"id" format:"uuid"`
+	TaxID    string             `json:"tax_id"`
+	Type     string             `json:"type"`
+	Accounts []actorAccountItem `json:"accounts"`
 }
 
-type accountItem struct {
-	ID           string `json:"id"`
+type actorAccountItem struct {
+	ID           string `json:"id" format:"uuid"`
 	DltAccountID string `json:"dlt_account_id"`
 	PublicKey    string `json:"public_key"`
 }
@@ -31,18 +38,27 @@ func NewHandler(query *getactors.Query) *Handler {
 	return &Handler{Query: query}
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	actors, err := h.Query.Execute(r.Context())
+func (h *Handler) Register(api huma.API) {
+	huma.Register(api, huma.Operation{
+		OperationID: "list-actors",
+		Method:      http.MethodGet,
+		Path:        "/actors",
+		Summary:     "List actors with their accounts",
+		Tags:        []string{"Actors"},
+	}, h.Handle)
+}
+
+func (h *Handler) Handle(ctx context.Context, _ *struct{}) (*Output, error) {
+	actors, err := h.Query.Execute(ctx)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	resp := getActorsResponse{Actors: make([]actorItem, len(actors))}
 	for i, act := range actors {
-		accountItems := make([]accountItem, len(act.Accounts))
+		accountItems := make([]actorAccountItem, len(act.Accounts))
 		for j, acc := range act.Accounts {
-			accountItems[j] = accountItem{
+			accountItems[j] = actorAccountItem{
 				ID:           acc.ID.String(),
 				DltAccountID: acc.DltAccountID,
 				PublicKey:    acc.PublicKey,
@@ -55,7 +71,5 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Accounts: accountItems,
 		}
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	return &Output{Body: resp}, nil
 }

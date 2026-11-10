@@ -1,17 +1,24 @@
 package getaccounts
 
 import (
-	"encoding/json"
-	"exercise/internal/participants/app/query/getaccounts"
+	"context"
 	"net/http"
+
+	"exercise/internal/participants/app/query/getaccounts"
+
+	"github.com/danielgtaylor/huma/v2"
 )
+
+type Output struct {
+	Body getAccountsResponse
+}
 
 type getAccountsResponse struct {
 	Accounts []accountItem `json:"accounts"`
 }
 
 type accountItem struct {
-	ID           string `json:"id"`
+	ID           string `json:"id" format:"uuid"`
 	DltAccountID string `json:"dlt_account_id"`
 	PublicKey    string `json:"public_key"`
 }
@@ -24,11 +31,19 @@ func NewHandler(query *getaccounts.Query) *Handler {
 	return &Handler{Query: query}
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	accounts, err := h.Query.Execute(r.Context())
+func (h *Handler) Register(api huma.API) {
+	huma.Register(api, huma.Operation{
+		Method:  http.MethodGet,
+		Path:    "/accounts",
+		Summary: "List accounts",
+		Tags:    []string{"Accounts"},
+	}, h.Handle)
+}
+
+func (h *Handler) Handle(ctx context.Context, _ *struct{}) (*Output, error) {
+	accounts, err := h.Query.Execute(ctx)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	resp := getAccountsResponse{Accounts: make([]accountItem, len(accounts))}
@@ -39,7 +54,5 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			PublicKey:    a.PublicKey,
 		}
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	return &Output{Body: resp}, nil
 }
