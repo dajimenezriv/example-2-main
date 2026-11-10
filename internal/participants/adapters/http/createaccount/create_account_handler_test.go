@@ -25,7 +25,7 @@ func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, *accounttest.FakeRe
 
 	act, err := actor.New(existingActorID, "Tax ID", actor.Issuer)
 	if err != nil {
-		t.Fatalf("actor.New = %v", err)
+		t.Fatalf("new actor: %v", err)
 	}
 	acc := account.New(existingAccountID, existingActorID, "DLT account ID", "Private key", "Public key")
 
@@ -145,7 +145,7 @@ func TestCreatesAccount(t *testing.T) {
 		"actor_id": %q,
 		"dlt_account_id": "DLT account ID",
 		"public_key": "Public key"
-	}`, newAccountID.String(), existingActorID.String())
+	}`, newAccountID, existingActorID)
 	tests.AssertJSONEqual(t, rec.Body.String(), want)
 
 	if got := len(accountRepo.Accounts); got != 2 {
