@@ -1,20 +1,30 @@
 package createactor
 
 import (
-	"encoding/json"
-	"exercise/internal/participants/app/command/createactor"
+	"context"
 	"net/http"
 
+	"exercise/internal/participants/app/command/createactor"
 	"exercise/internal/participants/domain/actor"
+
+	"github.com/danielgtaylor/huma/v2"
 )
 
+type Input struct {
+	Body createActorRequest
+}
+
 type createActorRequest struct {
-	TaxID string `json:"tax_id"`
-	Type  string `json:"type"`
+	TaxID string `json:"tax_id" minLength:"1"`
+	Type  string `json:"type" enum:"issuer,investor,platform_admin,market_operator,settlement_operator,custom"`
+}
+
+type Output struct {
+	Body createActorResponse
 }
 
 type createActorResponse struct {
-	ID    string `json:"id"`
+	ID    string `json:"id" format:"uuid"`
 	TaxID string `json:"tax_id"`
 	Type  string `json:"type"`
 }
@@ -27,32 +37,29 @@ func NewHandler(cmd *createactor.Handler) *Handler {
 	return &Handler{CreateActor: cmd}
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var req createActorRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
-		return
-	}
+func (h *Handler) Register(api huma.API) {
+	huma.Register(api, huma.Operation{
+		Method:        http.MethodPost,
+		Path:          "/actors",
+		Summary:       "Create an actor",
+		Tags:          []string{"Actors"},
+		DefaultStatus: http.StatusCreated,
+		Errors:        []int{http.StatusBadRequest},
+	}, h.Handle)
+}
 
-	actorType := actor.ActorType(req.Type)
-
-	actor, err := h.CreateActor.Execute(r.Context(), createactor.Command{
-		TaxID: req.TaxID,
-		Type:  actorType,
+func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
+	act, err := h.CreateActor.Execute(ctx, createactor.Command{
+		TaxID: in.Body.TaxID,
+		Type:  actor.ActorType(in.Body.Type),
 	})
-
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, huma.Error400BadRequest(err.Error())
 	}
 
-	resp := createActorResponse{
-		ID:    actor.ID.String(),
-		TaxID: actor.TaxID,
-		Type:  string(actor.Type),
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(resp)
+	return &Output{Body: createActorResponse{
+		ID:    act.ID.String(),
+		TaxID: act.TaxID,
+		Type:  string(act.Type),
+	}}, nil
 }
