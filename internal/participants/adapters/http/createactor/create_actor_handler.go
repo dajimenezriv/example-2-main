@@ -54,7 +54,7 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 		Type:  actor.ActorType(in.Body.Type),
 	})
 	if err != nil {
-		return nil, huma.Error400BadRequest(err.Error())
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
 	return &Output{Body: createActorResponse{
