@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -13,9 +14,11 @@ import (
 
 	"exercise/internal/platform/httpapi"
 
+	"github.com/caarlos0/env/v11"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
 
 const (
@@ -25,6 +28,10 @@ const (
 	idleTimeout       = 120 * time.Second
 	shutdownTimeout   = 10 * time.Second
 )
+
+type config struct {
+	DatabaseURL string `env:"DATABASE_URL,required,notEmpty"`
+}
 
 func main() {
 	if err := run(); err != nil {
@@ -37,8 +44,15 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	connStr := "postgres://ddd:ddd@localhost:5555/ddd?sslmode=disable"
-	pool, err := pgxpool.New(ctx, connStr)
+	if err := godotenv.Load(); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return fmt.Errorf("load .env: %w", err)
+	}
+	cfg, err := env.ParseAs[config]()
+	if err != nil {
+		return fmt.Errorf("parse config: %w", err)
+	}
+
+	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("create DB pool: %w", err)
 	}

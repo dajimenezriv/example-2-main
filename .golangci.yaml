@@ -48,8 +48,7 @@ linters:
     generated: strict
     warn-unused: true
     presets:
-      - common-false-positives
-      - comments # ignore export comments
+      - comments
     rules:
       - path: (_test\.go$|test/|testhelpers/)
         linters:
@@ -58,7 +57,7 @@ linters:
 
 formatters:
   enable:
-    - gofumpt # more strict than gofmt
+    - gofumpt
     - goimports
   settings:
     gofumpt:
@@ -70,5 +69,5 @@ formatters:
         - exercise
 
 issues:
-  max-issues-per-linter: 0 # show everything, don't truncate
+  max-issues-per-linter: 0
   max-same-issues: 0
