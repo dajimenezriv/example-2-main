@@ -10,17 +10,17 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func newActor(t *testing.T) actor.Actor {
+func newActor(t *testing.T) *actor.Actor {
 	t.Helper()
 	a, _ := actor.New(uuid.New(), "Tax ID", actor.Issuer)
-	return a
+	return &a
 }
 
 func saveActor(t *testing.T, repo actor.Repository) *actor.Actor {
 	t.Helper()
 	a := newActor(t)
-	_ = repo.Save(t.Context(), &a)
-	return &a
+	_ = repo.Save(t.Context(), a)
+	return a
 }
 
 func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
@@ -30,7 +30,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		repo := newRepo(t)
 		want := newActor(t)
 
-		if err := repo.Save(t.Context(), &want); err != nil {
+		if err := repo.Save(t.Context(), want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
@@ -38,7 +38,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
-		if diff := cmp.Diff(&want, got); diff != "" {
+		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("actor (-want +got):\n%s", diff)
 		}
 	})
@@ -47,11 +47,11 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		repo := newRepo(t)
 		want := newActor(t)
 
-		if err := repo.Save(t.Context(), &want); err != nil {
+		if err := repo.Save(t.Context(), want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
-		duplicate := want
+		duplicate := *want
 		duplicate.TaxID = "Other Tax ID"
 		if err := repo.Save(t.Context(), &duplicate); !errors.Is(err, actor.ErrActorAlreadyExists) {
 			t.Fatalf("Save() = %v, want %v", err, actor.ErrActorAlreadyExists)
@@ -61,7 +61,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
-		if diff := cmp.Diff(&want, got); diff != "" {
+		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("actor (-want +got):\n%s", diff)
 		}
 	})

@@ -6,6 +6,7 @@ linters:
     - depguard
     - exhaustruct
     - exhaustruct_v5
+    - gomodguard
     - ireturn
     - lll
     - nlreturn
@@ -21,29 +22,15 @@ linters:
     errcheck:
       check-type-assertions: true
       check-blank: true
-    govet:
-      enable-all: true
-      disable:
-        - fieldalignment
     gocritic:
       enable-all: true
       disabled-checks:
         - hugeParam
         - unnamedResult
-    wrapcheck:
-      # Overrides the defaults, so they are restated here.
-      ignore-sigs:
-        - .Errorf(
-        - errors.New(
-        - errors.Unwrap(
-        - errors.Join(
-        - .Wrap(
-        - .Wrapf(
-        - .WithMessage(
-        - .WithMessagef(
-        - .WithStack(
-        # Returning ctx.Err() as-is is idiomatic (context.Canceled / DeadlineExceeded).
-        - func (context.Context).Err() error
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
 
   exclusions:
     generated: strict
@@ -53,11 +40,12 @@ linters:
     rules:
       - path: (_test\.go$|test/|testhelpers/)
         linters:
-          - errcheck
-          - gochecknoglobals
           - cyclop
+          - errcheck
           - funlen
+          - gochecknoglobals
           - gocognit
+          - wrapcheck
 
 formatters:
   enable:

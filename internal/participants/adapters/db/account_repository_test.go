@@ -21,7 +21,7 @@ func seedActor(t *testing.T, q *sqlcgen.Queries) uuid.UUID {
 func setup(t *testing.T) accounttest.Fixture {
 	t.Helper()
 	q := sqlcgen.New(testPool)
-	// Truncating actors also empties accounts through CASCADE.
+	// Truncating actors also empties accounts.
 	_, _ = testPool.Exec(t.Context(), "TRUNCATE actors CASCADE")
 	return accounttest.Fixture{
 		Repo: NewAccountRepository(q),
@@ -43,7 +43,7 @@ func TestAccountRepository(t *testing.T) {
 		f := setup(t)
 		a := accounttest.NewAccount(t, uuid.New())
 
-		err := f.Repo.Save(t.Context(), &a)
+		err := f.Repo.Save(t.Context(), a)
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); !ok || pgErr.Code != "23503" {
 			t.Errorf("Save() = %v, want FK violation error", err)
 		}

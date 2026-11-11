@@ -16,17 +16,17 @@ type Fixture struct {
 	NewActorID func(t *testing.T) uuid.UUID
 }
 
-func NewAccount(t *testing.T, actorID uuid.UUID) account.Account {
+func NewAccount(t *testing.T, actorID uuid.UUID) *account.Account {
 	t.Helper()
 	a, _ := account.New(uuid.New(), actorID, "DLT account ID", "Private key", "Public key")
-	return a
+	return &a
 }
 
 func saveAccount(t *testing.T, repo account.Repository, actorID uuid.UUID) *account.Account {
 	t.Helper()
 	a := NewAccount(t, actorID)
-	_ = repo.Save(t.Context(), &a)
-	return &a
+	_ = repo.Save(t.Context(), a)
+	return a
 }
 
 func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
@@ -36,7 +36,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		f := setup(t)
 		want := NewAccount(t, f.NewActorID(t))
 
-		if err := f.Repo.Save(t.Context(), &want); err != nil {
+		if err := f.Repo.Save(t.Context(), want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
@@ -44,7 +44,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
-		if diff := cmp.Diff(&want, got); diff != "" {
+		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("account (-want +got):\n%s", diff)
 		}
 	})
@@ -53,11 +53,11 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		f := setup(t)
 		want := NewAccount(t, f.NewActorID(t))
 
-		if err := f.Repo.Save(t.Context(), &want); err != nil {
+		if err := f.Repo.Save(t.Context(), want); err != nil {
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
-		duplicate := want
+		duplicate := *want
 		duplicate.DltAccountID = "Other DLT account ID"
 		if err := f.Repo.Save(t.Context(), &duplicate); !errors.Is(err, account.ErrAccountAlreadyExists) {
 			t.Fatalf("Save() = %v, want %v", err, account.ErrAccountAlreadyExists)
@@ -67,7 +67,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
-		if diff := cmp.Diff(&want, got); diff != "" {
+		if diff := cmp.Diff(want, got); diff != "" {
 			t.Errorf("account (-want +got):\n%s", diff)
 		}
 	})
@@ -77,7 +77,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
-		err := f.Repo.Save(ctx, new(NewAccount(t, uuid.New())))
+		err := f.Repo.Save(ctx, NewAccount(t, uuid.New()))
 
 		if !errors.Is(err, context.Canceled) {
 			t.Errorf("Save() = %v, want %v", err, context.Canceled)
