@@ -67,7 +67,7 @@ func TestContextCanceledReturnsError(t *testing.T) {
 
 	rec := post(ctx, t, actorRepo, accountRepo)
 
-	testhelpers.AssertHumaError(t, rec, http.StatusInternalServerError, "context canceled")
+	testhelpers.AssertHumaError(t, rec, http.StatusInternalServerError, "find actors: context canceled")
 }
 
 func TestReturnActorsAndAccounts(t *testing.T) {

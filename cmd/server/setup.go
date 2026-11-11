@@ -28,7 +28,7 @@ type application struct {
 	GetActorsHTTP        *getActorsEndpoint.Handler
 }
 
-func setupApplication(pool *pgxpool.Pool) (*application, error) {
+func setupApplication(pool *pgxpool.Pool) *application {
 	q := sqlcgen.New(pool)
 	accountRepo := db.NewAccountRepository(q)
 	actorRepo := db.NewActorRepository(q)
@@ -52,5 +52,5 @@ func setupApplication(pool *pgxpool.Pool) (*application, error) {
 		CreateAccountHTTP:    createAccountHTTP,
 		GetAccountsHTTP:      getAccountsHTTP,
 		GetActorsHTTP:        getActorsHTTP,
-	}, nil
+	}
 }

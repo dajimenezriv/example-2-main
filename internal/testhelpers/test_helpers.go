@@ -19,7 +19,7 @@ func NewHumaAPI(t *testing.T) humatest.TestAPI {
 	return api
 }
 
-func AssertHumaOutput(t testing.TB, rec *httptest.ResponseRecorder, wantCode int, want string) {
+func AssertHumaOutput(t *testing.T, rec *httptest.ResponseRecorder, wantCode int, want string) {
 	t.Helper()
 
 	if rec.Code != wantCode {
@@ -39,7 +39,7 @@ func AssertHumaOutput(t testing.TB, rec *httptest.ResponseRecorder, wantCode int
 	}
 }
 
-func AssertHumaError(t testing.TB, rec *httptest.ResponseRecorder, wantCode int, wantDetail string, wantErrors ...*huma.ErrorDetail) {
+func AssertHumaError(t *testing.T, rec *httptest.ResponseRecorder, wantCode int, wantDetail string, wantErrors ...*huma.ErrorDetail) {
 	t.Helper()
 
 	if got := rec.Code; got != wantCode {

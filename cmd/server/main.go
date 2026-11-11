@@ -27,11 +27,7 @@ func main() {
 	}
 	log.Println("✅ Connected to Postgres")
 
-	app, err := setupApplication(pool)
-	if err != nil {
-		log.Fatalf("failed to setup context: %v", err)
-	}
-
+	app := setupApplication(pool)
 	router := registerHTTPHandlers(app)
 
 	log.Println("🚀 Server running on :8080")

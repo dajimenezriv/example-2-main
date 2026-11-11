@@ -2,6 +2,7 @@ package getactors
 
 import (
 	"context"
+	"fmt"
 	"uuid"
 
 	"exercise/internal/participants/domain/account"
@@ -33,7 +34,7 @@ func NewQuery(actorRepo actor.Repository, accountRepo account.Repository) *Query
 func (q *Query) Execute(ctx context.Context) ([]ActorDTO, error) {
 	actors, err := q.RepoActor.FindAll(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find actors: %w", err)
 	}
 
 	actorsIDs := make([]uuid.UUID, len(actors))
@@ -42,7 +43,7 @@ func (q *Query) Execute(ctx context.Context) ([]ActorDTO, error) {
 	}
 	accounts, err := q.RepoAccount.FindByActorIDs(ctx, actorsIDs)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("find accounts by actor IDs: %w", err)
 	}
 
 	byActor := make(map[uuid.UUID][]AccountDTO, len(actors))
