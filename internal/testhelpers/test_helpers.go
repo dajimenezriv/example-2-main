@@ -19,7 +19,7 @@ func NewHumaAPI(t *testing.T) humatest.TestAPI {
 	return api
 }
 
-func AssertHumaOutput(t *testing.T, rec *httptest.ResponseRecorder, wantCode int, want string) {
+func AssertHumaOutput(t *testing.T, rec *httptest.ResponseRecorder, wantCode int, wantBody string) {
 	t.Helper()
 
 	if rec.Code != wantCode {
@@ -33,7 +33,7 @@ func AssertHumaOutput(t *testing.T, rec *httptest.ResponseRecorder, wantCode int
 
 	var g, w any
 	_ = json.Unmarshal([]byte(got), &g)
-	_ = json.Unmarshal([]byte(want), &w)
+	_ = json.Unmarshal([]byte(wantBody), &w)
 	if diff := cmp.Diff(w, g); diff != "" {
 		t.Errorf("JSON mismatch (-want +got):\n%s", diff)
 	}
@@ -51,6 +51,7 @@ func AssertHumaError(t *testing.T, rec *httptest.ResponseRecorder, wantCode int,
 
 	var got huma.ErrorModel
 	_ = json.Unmarshal(rec.Body.Bytes(), &got)
+
 	want := huma.ErrorModel{
 		Status: wantCode,
 		Title:  http.StatusText(wantCode),

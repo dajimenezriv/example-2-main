@@ -6,20 +6,16 @@ linters:
     - depguard
     - exhaustruct
     - exhaustruct_v5
-    - varnamelen # complains about i, err, ctx, etc.
-    - ireturn # "accept interfaces, return structs" taken too literally
+    - ireturn
+    - lll
+    - nlreturn
+    - noinlineerr
+    - paralleltest
+    - tagalign
+    - testpackage
+    - varnamelen
     - wsl
     - wsl_v5
-    - nlreturn
-    - lll # let a formatter handle line length
-    - gocyclo # overlaps with cyclop + gocognit
-    - testpackage
-    - paralleltest # demands t.Parallel() on every test
-    - tagalign # column-aligns and alphabetically sorts struct tags; noisy diffs
-    - noinlineerr # bans idiomatic `if err := f(); err != nil`
-    # Situational, so remove these only if they bother you:
-    # - tagliatelle   # json tag casing; disable if your API format is external
-    # - gochecknoglobals
 
   settings:
     errcheck:
@@ -28,25 +24,11 @@ linters:
     govet:
       enable-all: true
       disable:
-        - fieldalignment # struct-packing micro-optimisation, very noisy
+        - fieldalignment
     gocritic:
-      enabled-tags: [diagnostic, style, performance, experimental, opinionated]
-    exhaustive:
-      default-signifies-exhaustive: true
-    cyclop:
-      max-complexity: 15
-    gocognit:
-      min-complexity: 20
-    funlen:
-      lines: 80
-      statements: 50
-      ignore-comments: true
-    nolintlint:
-      require-explanation: true # //nolint must say why
-      require-specific: true # //nolint:errcheck, not bare //nolint
-      allow-unused: false
-    misspell:
-      locale: US
+      enable-all: true
+      disabled-checks:
+        - hugeParam
     wrapcheck:
       # Overrides the defaults, so they are restated here.
       ignore-sigs:

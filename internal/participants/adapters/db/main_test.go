@@ -39,8 +39,8 @@ func run(m *testing.M) int {
 		postgres.WithInitScripts(migrations...),
 		postgres.BasicWaitStrategies())
 	defer func() {
-		if err := testcontainers.TerminateContainer(ctr); err != nil {
-			log.Printf("terminate postgres container: %v", err)
+		if termErr := testcontainers.TerminateContainer(ctr); termErr != nil {
+			log.Printf("terminate postgres container: %v", termErr)
 		}
 	}()
 	if err != nil {
