@@ -34,7 +34,7 @@ func setupApplication(pool *pgxpool.Pool) *application {
 	actorRepo := db.NewActorRepository(q)
 
 	newID := uuid.NewV7
-	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo, newID)
+	createAccountHandler := createAccountCommand.NewHandler(db.NewUnitOfWork(pool), newID)
 	createActorHandler := createActorCommand.NewHandler(actorRepo, newID)
 
 	getAccountsQuery := getaccounts.NewQuery(accountRepo)

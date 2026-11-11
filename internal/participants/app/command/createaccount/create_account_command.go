@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"uuid"
 
+	"exercise/internal/participants/app/uow"
 	"exercise/internal/participants/domain/account"
-	"exercise/internal/participants/domain/actor"
 )
 
 type Command struct {
@@ -17,29 +17,34 @@ type Command struct {
 }
 
 type Handler struct {
-	AccountRepository account.Repository
-	ActorRepository   actor.Repository
-	newID             func() uuid.UUID
+	UnitOfWork uow.UnitOfWork
+	newID      func() uuid.UUID
 }
 
-func NewHandler(accountRepo account.Repository, actorRepo actor.Repository, newID func() uuid.UUID) *Handler {
+func NewHandler(unitOfWork uow.UnitOfWork, newID func() uuid.UUID) *Handler {
 	return &Handler{
-		AccountRepository: accountRepo,
-		ActorRepository:   actorRepo,
-		newID:             newID,
+		UnitOfWork: unitOfWork,
+		newID:      newID,
 	}
 }
 
 func (h *Handler) Execute(ctx context.Context, cmd Command) (*account.Account, error) {
-	acc, err := account.New(h.newID(), cmd.ActorID, cmd.DltAccountID, cmd.PrivateKey, cmd.PublicKey)
+	acc, buildErr := account.New(h.newID(), cmd.ActorID, cmd.DltAccountID, cmd.PrivateKey, cmd.PublicKey)
+	if buildErr != nil {
+		return nil, fmt.Errorf("build account: %w", buildErr)
+	}
+
+	err := h.UnitOfWork.Do(ctx, func(ctx context.Context, repos uow.Repositories) error {
+		if _, err := repos.Actors.FindByID(ctx, cmd.ActorID); err != nil {
+			return fmt.Errorf("find actor %s: %w", cmd.ActorID, err)
+		}
+		if err := repos.Accounts.Save(ctx, &acc); err != nil {
+			return fmt.Errorf("save account: %w", err)
+		}
+		return nil
+	})
 	if err != nil {
-		return nil, fmt.Errorf("build account: %w", err)
-	}
-	if _, err := h.ActorRepository.FindByID(ctx, cmd.ActorID); err != nil {
-		return nil, fmt.Errorf("find actor %s: %w", cmd.ActorID, err)
-	}
-	if err := h.AccountRepository.Save(ctx, &acc); err != nil {
-		return nil, fmt.Errorf("save account: %w", err)
+		return nil, fmt.Errorf("unit of work: %w", err)
 	}
 	return &acc, nil
 }

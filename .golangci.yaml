@@ -31,6 +31,9 @@ linters:
       enable-all: true
       disable:
         - fieldalignment
+    nolintlint:
+      require-explanation: true
+      require-specific: true
 
   exclusions:
     generated: strict

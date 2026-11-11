@@ -9,6 +9,8 @@ import (
 	"uuid"
 
 	"exercise/internal/participants/app/command/createaccount"
+	"exercise/internal/participants/app/uow"
+	"exercise/internal/participants/app/uow/uowtest"
 	"exercise/internal/participants/domain/account"
 	"exercise/internal/participants/domain/account/accounttest"
 	"exercise/internal/participants/domain/actor"
@@ -35,8 +37,7 @@ func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, account.Repository)
 	_ = accountRepo.Save(t.Context(), &acc)
 
 	h := NewHandler(createaccount.NewHandler(
-		accountRepo,
-		actorRepo,
+		uowtest.NewFake(uow.Repositories{Accounts: accountRepo, Actors: actorRepo}),
 		func() uuid.UUID { return newAccountID },
 	))
 	return h, accountRepo
