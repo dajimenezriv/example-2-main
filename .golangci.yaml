@@ -1,0 +1,91 @@
+version: "2"
+
+linters:
+  default: all
+  disable:
+    - depguard
+    - exhaustruct
+    - exhaustruct_v5
+    - varnamelen # complains about i, err, ctx, etc.
+    - ireturn # "accept interfaces, return structs" taken too literally
+    - wsl
+    - wsl_v5
+    - nlreturn
+    - lll # let a formatter handle line length
+    - gocyclo # overlaps with cyclop + gocognit
+    - testpackage
+    - paralleltest # demands t.Parallel() on every test
+    - tagalign # column-aligns and alphabetically sorts struct tags; noisy diffs
+    - noinlineerr # bans idiomatic `if err := f(); err != nil`
+    # Situational, so remove these only if they bother you:
+    # - tagliatelle   # json tag casing; disable if your API format is external
+    # - gochecknoglobals
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment # struct-packing micro-optimisation, very noisy
+    gocritic:
+      enabled-tags: [diagnostic, style, performance, experimental, opinionated]
+    exhaustive:
+      default-signifies-exhaustive: true
+    cyclop:
+      max-complexity: 15
+    gocognit:
+      min-complexity: 20
+    funlen:
+      lines: 80
+      statements: 50
+      ignore-comments: true
+    nolintlint:
+      require-explanation: true # //nolint must say why
+      require-specific: true # //nolint:errcheck, not bare //nolint
+      allow-unused: false
+    misspell:
+      locale: US
+    wrapcheck:
+      # Overrides the defaults, so they are restated here.
+      ignore-sigs:
+        - .Errorf(
+        - errors.New(
+        - errors.Unwrap(
+        - errors.Join(
+        - .Wrap(
+        - .Wrapf(
+        - .WithMessage(
+        - .WithMessagef(
+        - .WithStack(
+        # Returning ctx.Err() as-is is idiomatic (context.Canceled / DeadlineExceeded).
+        - func (context.Context).Err() error
+
+  exclusions:
+    generated: strict
+    warn-unused: true
+    presets:
+      - common-false-positives
+      - comments # ignore export comments
+    rules:
+      - path: (_test\.go$|test/|testhelpers/)
+        linters:
+          - errcheck
+
+formatters:
+  enable:
+    - gofumpt # more strict than gofmt
+    - goimports
+  settings:
+    gofumpt:
+      module-path: exercise
+      extra:
+        group-params: true
+    goimports:
+      local-prefixes:
+        - exercise
+
+issues:
+  max-issues-per-linter: 0 # show everything, don't truncate
+  max-same-issues: 0
