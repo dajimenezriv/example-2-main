@@ -19,10 +19,10 @@ type Input struct {
 }
 
 type createAccountRequest struct {
-	ActorID      string `json:"actor_id" format:"uuid" doc:"ID of the actor that owns the account"`
-	DltAccountID string `json:"dlt_account_id" minLength:"1" doc:"Account ID on the DLT"`
-	PrivateKey   string `json:"private_key,omitempty"`
-	PublicKey    string `json:"public_key,omitempty"`
+	ActorID      string `json:"actorId" format:"uuid" doc:"ID of the actor that owns the account"`
+	DltAccountID string `json:"dltAccountId" minLength:"1" doc:"Account ID on the DLT"`
+	PrivateKey   string `json:"privateKey,omitempty"`
+	PublicKey    string `json:"publicKey,omitempty"`
 }
 type Output struct {
 	Body createAccountResponse
@@ -30,9 +30,9 @@ type Output struct {
 
 type createAccountResponse struct {
 	ID           string `json:"id" format:"uuid"`
-	ActorID      string `json:"actor_id" format:"uuid"`
-	DltAccountID string `json:"dlt_account_id"`
-	PublicKey    string `json:"public_key"`
+	ActorID      string `json:"actorId" format:"uuid"`
+	DltAccountID string `json:"dltAccountId"`
+	PublicKey    string `json:"publicKey"`
 }
 
 type Handler struct {

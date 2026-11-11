@@ -19,15 +19,15 @@ type getActorsResponse struct {
 
 type actorItem struct {
 	ID       string             `json:"id" format:"uuid"`
-	TaxID    string             `json:"tax_id"`
+	TaxID    string             `json:"taxId"`
 	Type     string             `json:"type"`
 	Accounts []actorAccountItem `json:"accounts"`
 }
 
 type actorAccountItem struct {
 	ID           string `json:"id" format:"uuid"`
-	DltAccountID string `json:"dlt_account_id"`
-	PublicKey    string `json:"public_key"`
+	DltAccountID string `json:"dltAccountId"`
+	PublicKey    string `json:"publicKey"`
 }
 
 type Handler struct {

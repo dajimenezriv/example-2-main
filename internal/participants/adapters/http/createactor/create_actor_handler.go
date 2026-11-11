@@ -17,7 +17,7 @@ type Input struct {
 }
 
 type createActorRequest struct {
-	TaxID string `json:"tax_id" minLength:"1"`
+	TaxID string `json:"taxId" minLength:"1"`
 	Type  string `json:"type" enum:"issuer,investor,platform_admin,market_operator,settlement_operator,custom"`
 }
 
@@ -27,7 +27,7 @@ type Output struct {
 
 type createActorResponse struct {
 	ID    string `json:"id" format:"uuid"`
-	TaxID string `json:"tax_id"`
+	TaxID string `json:"taxId"`
 	Type  string `json:"type"`
 }
 

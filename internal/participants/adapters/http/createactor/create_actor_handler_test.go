@@ -63,13 +63,13 @@ func TestRejectedRequests(t *testing.T) {
 			wantCode:     http.StatusUnprocessableEntity,
 			wantDetail:   "validation failed",
 			wantErrors: []*huma.ErrorDetail{
-				{Message: "expected required property tax_id to be present", Location: "body", Value: map[string]any{}},
+				{Message: "expected required property taxId to be present", Location: "body", Value: map[string]any{}},
 				{Message: "expected required property type to be present", Location: "body", Value: map[string]any{}},
 			},
 		},
 		{
 			name:         "invalid type",
-			body:         `{"tax_id": "Tax ID", "type": "invalid"}`,
+			body:         `{"taxId": "Tax ID", "type": "invalid"}`,
 			newAccountID: uuid.New(),
 			wantCode:     http.StatusUnprocessableEntity,
 			wantDetail:   "validation failed",
@@ -79,7 +79,7 @@ func TestRejectedRequests(t *testing.T) {
 		},
 		{
 			name:         "actor already exists",
-			body:         `{"tax_id": "Tax ID", "type": "issuer"}`,
+			body:         `{"taxId": "Tax ID", "type": "issuer"}`,
 			newAccountID: existingActorID,
 			wantCode:     http.StatusConflict,
 			wantDetail:   "actor already exists",
@@ -101,7 +101,7 @@ func TestRejectedRequests(t *testing.T) {
 }
 
 func TestCreatesActor(t *testing.T) {
-	body := `{"tax_id": "Tax ID", "type": "issuer"}`
+	body := `{"taxId": "Tax ID", "type": "issuer"}`
 
 	newAccountID := uuid.New()
 	h, actorRepo := newSUT(t, newAccountID)
@@ -109,7 +109,7 @@ func TestCreatesActor(t *testing.T) {
 
 	want := fmt.Sprintf(`{
 		"id": %q,
-		"tax_id": "Tax ID",
+		"taxId": "Tax ID",
 		"type": "issuer"
 	}`, newAccountID)
 

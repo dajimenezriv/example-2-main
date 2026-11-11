@@ -49,7 +49,7 @@ func TestReturnsAllAccounts(t *testing.T) {
 	rec := post(t.Context(), t, repo)
 
 	want := fmt.Sprintf(`{"accounts": [
-		{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"}
+		{"id": %q, "dltAccountId": "DLT account ID", "publicKey": "Public key"}
 	]}`, existingAccountID.String())
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusOK, want)

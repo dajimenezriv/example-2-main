@@ -72,28 +72,28 @@ func TestRejectedRequests(t *testing.T) {
 			wantCode:     http.StatusUnprocessableEntity,
 			wantDetail:   "validation failed",
 			wantErrors: []*huma.ErrorDetail{
-				{Message: "expected required property actor_id to be present", Location: "body", Value: map[string]any{}},
-				{Message: "expected required property dlt_account_id to be present", Location: "body", Value: map[string]any{}},
+				{Message: "expected required property actorId to be present", Location: "body", Value: map[string]any{}},
+				{Message: "expected required property dltAccountId to be present", Location: "body", Value: map[string]any{}},
 			},
 		},
 		{
 			// Huma accepts an uppercase "URN:UUID:" prefix, but uuid.Parse does not.
 			name:         "actor id rejected by uuid.Parse",
-			body:         fmt.Sprintf(`{"actor_id": "URN:UUID:%s", "dlt_account_id": "DLT account ID"}`, uuid.New()),
+			body:         fmt.Sprintf(`{"actorId": "URN:UUID:%s", "dltAccountId": "DLT account ID"}`, uuid.New()),
 			newAccountID: uuid.New(),
 			wantCode:     http.StatusBadRequest,
 			wantDetail:   "invalid actor id",
 		},
 		{
 			name:         "actor not found",
-			body:         fmt.Sprintf(`{"actor_id": %q, "dlt_account_id": "DLT account ID"}`, uuid.New()),
+			body:         fmt.Sprintf(`{"actorId": %q, "dltAccountId": "DLT account ID"}`, uuid.New()),
 			newAccountID: uuid.New(),
 			wantCode:     http.StatusNotFound,
 			wantDetail:   "actor not found",
 		},
 		{
 			name:         "account already exists",
-			body:         fmt.Sprintf(`{"actor_id": %q, "dlt_account_id": "DLT account ID"}`, existingActorID),
+			body:         fmt.Sprintf(`{"actorId": %q, "dltAccountId": "DLT account ID"}`, existingActorID),
 			newAccountID: existingAccountID,
 			wantCode:     http.StatusConflict,
 			wantDetail:   "account already exists",
@@ -116,9 +116,9 @@ func TestRejectedRequests(t *testing.T) {
 
 func TestCreatesAccount(t *testing.T) {
 	body := fmt.Sprintf(`{
-		"actor_id": %q,
-		"dlt_account_id": "DLT account ID",
-		"public_key": "Public key"
+		"actorId": %q,
+		"dltAccountId": "DLT account ID",
+		"publicKey": "Public key"
 	}`, existingActorID)
 
 	newAccountID := uuid.New()
@@ -127,9 +127,9 @@ func TestCreatesAccount(t *testing.T) {
 
 	want := fmt.Sprintf(`{
 		"id": %q,
-		"actor_id": %q,
-		"dlt_account_id": "DLT account ID",
-		"public_key": "Public key"
+		"actorId": %q,
+		"dltAccountId": "DLT account ID",
+		"publicKey": "Public key"
 	}`, newAccountID, existingActorID)
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusCreated, want)

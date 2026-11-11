@@ -75,14 +75,14 @@ func TestReturnActorsAndAccounts(t *testing.T) {
 	rec := post(t.Context(), t, actorRepo, accountRepo)
 
 	want := fmt.Sprintf(`{"actors": [
-		{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": [
-			{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"},
-			{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"}
+		{"id": %q, "taxId": "Tax ID", "type": "issuer", "accounts": [
+			{"id": %q, "dltAccountId": "DLT account ID", "publicKey": "Public key"},
+			{"id": %q, "dltAccountId": "DLT account ID", "publicKey": "Public key"}
 		]},
-		{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": [
-			{"id": %q, "dlt_account_id": "DLT account ID", "public_key": "Public key"}
+		{"id": %q, "taxId": "Tax ID", "type": "issuer", "accounts": [
+			{"id": %q, "dltAccountId": "DLT account ID", "publicKey": "Public key"}
 		]},
-		{"id": %q, "tax_id": "Tax ID", "type": "issuer", "accounts": []}
+		{"id": %q, "taxId": "Tax ID", "type": "issuer", "accounts": []}
 	]}`, actorID1, accountID1, accountID2, actorID2, accountID3, actorID3)
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusOK, want)

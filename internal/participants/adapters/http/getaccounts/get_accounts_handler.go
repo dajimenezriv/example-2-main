@@ -19,8 +19,8 @@ type getAccountsResponse struct {
 
 type accountItem struct {
 	ID           string `json:"id" format:"uuid"`
-	DltAccountID string `json:"dlt_account_id"`
-	PublicKey    string `json:"public_key"`
+	DltAccountID string `json:"dltAccountId"`
+	PublicKey    string `json:"publicKey"`
 }
 
 type Handler struct {
