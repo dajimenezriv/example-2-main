@@ -24,6 +24,8 @@ func saveActor(t *testing.T, repo actor.Repository) *actor.Actor {
 }
 
 func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
+	t.Helper()
+
 	t.Run("Save stores the actor", func(t *testing.T) {
 		repo := newRepo(t)
 		want := newActor(t)

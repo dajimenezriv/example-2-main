@@ -14,7 +14,7 @@ type fakeRepository struct {
 	accounts []account.Account
 }
 
-func NewFakeRepository() *fakeRepository {
+func NewFakeRepository() account.Repository {
 	return &fakeRepository{
 		accounts: []account.Account{},
 	}

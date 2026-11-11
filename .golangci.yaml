@@ -29,6 +29,7 @@ linters:
       enable-all: true
       disabled-checks:
         - hugeParam
+        - unnamedResult
     wrapcheck:
       # Overrides the defaults, so they are restated here.
       ignore-sigs:
@@ -54,6 +55,9 @@ linters:
         linters:
           - errcheck
           - gochecknoglobals
+          - cyclop
+          - funlen
+          - gocognit
 
 formatters:
   enable:

@@ -13,7 +13,7 @@ type fakeRepository struct {
 	actors []actor.Actor
 }
 
-func NewFakeRepository() *fakeRepository {
+func NewFakeRepository() actor.Repository {
 	return &fakeRepository{
 		actors: []actor.Actor{},
 	}

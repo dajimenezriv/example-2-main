@@ -30,6 +30,8 @@ func saveAccount(t *testing.T, repo account.Repository, actorID uuid.UUID) *acco
 }
 
 func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
+	t.Helper()
+
 	t.Run("Save stores the account", func(t *testing.T) {
 		f := setup(t)
 		want := NewAccount(t, f.NewActorID(t))
@@ -78,7 +80,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		err := f.Repo.Save(ctx, new(NewAccount(t, uuid.New())))
 
 		if !errors.Is(err, context.Canceled) {
-			t.Errorf("FindByID() = %v, want %v", err, context.Canceled)
+			t.Errorf("Save() = %v, want %v", err, context.Canceled)
 		}
 	})
 
