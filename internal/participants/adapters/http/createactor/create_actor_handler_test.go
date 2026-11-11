@@ -16,19 +16,19 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
-var existingActorID = uuid.New()
+var actorID = uuid.New()
 
-func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, actor.Repository) {
+func newSUT(t *testing.T, newActorID uuid.UUID) (*Handler, actor.Repository) {
 	t.Helper()
 
-	act, _ := actor.New(existingActorID, "Tax ID", actor.Issuer)
+	act, _ := actor.New(actorID, "Tax ID", actor.Issuer)
 
 	actorRepo := actortest.NewFakeRepository()
 	_ = actorRepo.Save(t.Context(), &act)
 
 	h := NewHandler(createactor.NewHandler(
 		actorRepo,
-		func() uuid.UUID { return newAccountID },
+		func() uuid.UUID { return newActorID },
 	))
 	return h, actorRepo
 }
@@ -42,52 +42,52 @@ func post(t *testing.T, h *Handler, body string) *httptest.ResponseRecorder {
 
 func TestRejectedRequests(t *testing.T) {
 	tests := []struct {
-		name         string
-		body         string
-		newAccountID uuid.UUID
-		wantCode     int
-		wantDetail   string
-		wantErrors   []*huma.ErrorDetail
+		name       string
+		body       string
+		newActorID uuid.UUID
+		wantCode   int
+		wantDetail string
+		wantErrors []*huma.ErrorDetail
 	}{
 		{
-			name:         "malformed body",
-			body:         ``,
-			newAccountID: uuid.New(),
-			wantCode:     http.StatusBadRequest,
-			wantDetail:   "request body is required",
+			name:       "malformed body",
+			body:       ``,
+			newActorID: uuid.New(),
+			wantCode:   http.StatusBadRequest,
+			wantDetail: "request body is required",
 		},
 		{
-			name:         "empty body",
-			body:         `{}`,
-			newAccountID: uuid.New(),
-			wantCode:     http.StatusUnprocessableEntity,
-			wantDetail:   "validation failed",
+			name:       "empty body",
+			body:       `{}`,
+			newActorID: uuid.New(),
+			wantCode:   http.StatusUnprocessableEntity,
+			wantDetail: "validation failed",
 			wantErrors: []*huma.ErrorDetail{
 				{Message: "expected required property taxId to be present", Location: "body", Value: map[string]any{}},
 				{Message: "expected required property type to be present", Location: "body", Value: map[string]any{}},
 			},
 		},
 		{
-			name:         "invalid type",
-			body:         `{"taxId": "Tax ID", "type": "invalid"}`,
-			newAccountID: uuid.New(),
-			wantCode:     http.StatusUnprocessableEntity,
-			wantDetail:   "validation failed",
+			name:       "invalid type",
+			body:       `{"taxId": "Tax ID", "type": "invalid"}`,
+			newActorID: uuid.New(),
+			wantCode:   http.StatusUnprocessableEntity,
+			wantDetail: "validation failed",
 			wantErrors: []*huma.ErrorDetail{
 				{Message: `expected value to be one of "issuer, investor, platform_admin, market_operator, settlement_operator, custom"`, Location: "body.type", Value: "invalid"},
 			},
 		},
 		{
-			name:         "actor already exists",
-			body:         `{"taxId": "Tax ID", "type": "issuer"}`,
-			newAccountID: existingActorID,
-			wantCode:     http.StatusConflict,
-			wantDetail:   "actor already exists",
+			name:       "actor already exists",
+			body:       `{"taxId": "Tax ID", "type": "issuer"}`,
+			newActorID: actorID,
+			wantCode:   http.StatusConflict,
+			wantDetail: "actor already exists",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h, actorRepo := newSUT(t, tt.newAccountID)
+			h, actorRepo := newSUT(t, tt.newActorID)
 			rec := post(t, h, tt.body)
 
 			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail, tt.wantErrors...)
@@ -103,15 +103,15 @@ func TestRejectedRequests(t *testing.T) {
 func TestCreatesActor(t *testing.T) {
 	body := `{"taxId": "Tax ID", "type": "issuer"}`
 
-	newAccountID := uuid.New()
-	h, actorRepo := newSUT(t, newAccountID)
+	newActorID := uuid.New()
+	h, actorRepo := newSUT(t, newActorID)
 	rec := post(t, h, body)
 
 	want := fmt.Sprintf(`{
 		"id": %q,
 		"taxId": "Tax ID",
 		"type": "issuer"
-	}`, newAccountID)
+	}`, newActorID)
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusCreated, want)
 

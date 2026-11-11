@@ -23,18 +23,12 @@ const (
 	Custom             Type = "custom"
 )
 
-var validTypes = map[Type]struct{}{
-	Issuer:             {},
-	Investor:           {},
-	PlatformAdmin:      {},
-	MarketOperator:     {},
-	SettlementOperator: {},
-	Custom:             {},
-}
-
 func (t Type) IsValid() bool {
-	_, ok := validTypes[t]
-	return ok
+	switch t {
+	case Issuer, Investor, PlatformAdmin, MarketOperator, SettlementOperator, Custom:
+		return true
+	}
+	return false
 }
 
 type Actor struct {

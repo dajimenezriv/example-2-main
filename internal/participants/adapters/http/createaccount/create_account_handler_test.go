@@ -19,19 +19,19 @@ import (
 )
 
 var (
-	existingActorID   = uuid.New()
-	existingAccountID = uuid.New()
+	actorID   = uuid.New()
+	accountID = uuid.New()
 )
 
 func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, account.Repository) {
 	t.Helper()
 
-	act, _ := actor.New(existingActorID, "Tax ID", actor.Issuer)
-	acc, _ := account.New(existingAccountID, existingActorID, "DLT account ID", "Private key", "Public key")
+	act, _ := actor.New(actorID, "Tax ID", actor.Issuer)
+	acc, _ := account.New(accountID, actorID, "DLT account ID", "Private key", "Public key")
 
 	actorRepo := actortest.NewFakeRepository()
-	_ = actorRepo.Save(t.Context(), &act)
 	accountRepo := accounttest.NewFakeRepository()
+	_ = actorRepo.Save(t.Context(), &act)
 	_ = accountRepo.Save(t.Context(), &acc)
 
 	h := NewHandler(createaccount.NewHandler(
@@ -93,8 +93,8 @@ func TestRejectedRequests(t *testing.T) {
 		},
 		{
 			name:         "account already exists",
-			body:         fmt.Sprintf(`{"actorId": %q, "dltAccountId": "DLT account ID"}`, existingActorID),
-			newAccountID: existingAccountID,
+			body:         fmt.Sprintf(`{"actorId": %q, "dltAccountId": "DLT account ID"}`, actorID),
+			newAccountID: accountID,
 			wantCode:     http.StatusConflict,
 			wantDetail:   "account already exists",
 		},
@@ -119,7 +119,7 @@ func TestCreatesAccount(t *testing.T) {
 		"actorId": %q,
 		"dltAccountId": "DLT account ID",
 		"publicKey": "Public key"
-	}`, existingActorID)
+	}`, actorID)
 
 	newAccountID := uuid.New()
 	h, accountRepo := newSUT(t, newAccountID)
@@ -130,7 +130,7 @@ func TestCreatesAccount(t *testing.T) {
 		"actorId": %q,
 		"dltAccountId": "DLT account ID",
 		"publicKey": "Public key"
-	}`, newAccountID, existingActorID)
+	}`, newAccountID, actorID)
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusCreated, want)
 
