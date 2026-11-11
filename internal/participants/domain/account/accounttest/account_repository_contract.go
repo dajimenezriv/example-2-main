@@ -3,9 +3,10 @@ package accounttest
 import (
 	"context"
 	"errors"
-	"exercise/internal/participants/domain/account"
 	"testing"
 	"uuid"
+
+	"exercise/internal/participants/domain/account"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -163,7 +164,6 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		f := setup(t)
 
 		got, err := f.Repo.FindByActorIDs(t.Context(), []uuid.UUID{})
-
 		if err != nil {
 			t.Errorf("FindByActorIDs() = %v, want nil", err)
 		}

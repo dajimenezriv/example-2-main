@@ -2,15 +2,16 @@ package getaccounts
 
 import (
 	"context"
-	"exercise/internal/participants/app/query/getaccounts"
-	"exercise/internal/participants/domain/account"
-	"exercise/internal/participants/domain/account/accounttest"
-	"exercise/internal/testhelpers"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"uuid"
+
+	"exercise/internal/participants/app/query/getaccounts"
+	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/account/accounttest"
+	"exercise/internal/testhelpers"
 )
 
 var existingAccountID = uuid.New()

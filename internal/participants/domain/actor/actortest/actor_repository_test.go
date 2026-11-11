@@ -1,8 +1,9 @@
 package actortest
 
 import (
-	"exercise/internal/participants/domain/actor"
 	"testing"
+
+	"exercise/internal/participants/domain/actor"
 )
 
 func TestFakeRepositoryContract(t *testing.T) {

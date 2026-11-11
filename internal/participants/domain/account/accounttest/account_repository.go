@@ -2,11 +2,11 @@ package accounttest
 
 import (
 	"context"
-	"exercise/internal/participants/domain/account"
 	"slices"
 	"sync"
-
 	"uuid"
+
+	"exercise/internal/participants/domain/account"
 )
 
 type fakeRepository struct {

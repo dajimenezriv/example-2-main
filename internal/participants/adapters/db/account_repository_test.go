@@ -2,10 +2,11 @@ package db
 
 import (
 	"errors"
-	"exercise/internal/participants/adapters/db/sqlcgen"
-	"exercise/internal/participants/domain/account/accounttest"
 	"testing"
 	"uuid"
+
+	"exercise/internal/participants/adapters/db/sqlcgen"
+	"exercise/internal/participants/domain/account/accounttest"
 
 	"github.com/jackc/pgx/v5/pgconn"
 )

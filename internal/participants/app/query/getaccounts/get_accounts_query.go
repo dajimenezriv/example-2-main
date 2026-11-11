@@ -2,6 +2,7 @@ package getaccounts
 
 import (
 	"context"
+
 	domainAccount "exercise/internal/participants/domain/account"
 )
 

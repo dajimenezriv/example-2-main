@@ -1,18 +1,19 @@
 package createaccount
 
 import (
-	"exercise/internal/participants/app/command/createaccount"
-	"exercise/internal/participants/domain/account"
-	"exercise/internal/participants/domain/account/accounttest"
-	"exercise/internal/participants/domain/actor"
-	"exercise/internal/participants/domain/actor/actortest"
-	"exercise/internal/testhelpers"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"uuid"
+
+	"exercise/internal/participants/app/command/createaccount"
+	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/account/accounttest"
+	"exercise/internal/participants/domain/actor"
+	"exercise/internal/participants/domain/actor/actortest"
+	"exercise/internal/testhelpers"
 
 	"github.com/danielgtaylor/huma/v2"
 )

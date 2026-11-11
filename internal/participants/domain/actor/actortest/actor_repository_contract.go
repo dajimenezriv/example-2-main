@@ -2,9 +2,10 @@ package actortest
 
 import (
 	"errors"
-	"exercise/internal/participants/domain/actor"
 	"testing"
 	"uuid"
+
+	"exercise/internal/participants/domain/actor"
 
 	"github.com/google/go-cmp/cmp"
 )

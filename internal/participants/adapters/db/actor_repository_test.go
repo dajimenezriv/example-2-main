@@ -1,10 +1,11 @@
 package db
 
 import (
+	"testing"
+
 	"exercise/internal/participants/adapters/db/sqlcgen"
 	"exercise/internal/participants/domain/actor"
 	"exercise/internal/participants/domain/actor/actortest"
-	"testing"
 )
 
 func TestActorRepository(t *testing.T) {

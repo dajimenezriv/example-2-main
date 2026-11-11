@@ -2,9 +2,10 @@ package getactors
 
 import (
 	"context"
+	"uuid"
+
 	"exercise/internal/participants/domain/account"
 	"exercise/internal/participants/domain/actor"
-	"uuid"
 )
 
 type ActorDTO struct {

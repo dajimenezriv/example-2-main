@@ -2,10 +2,10 @@ package actortest
 
 import (
 	"context"
-	"exercise/internal/participants/domain/actor"
 	"sync"
-
 	"uuid"
+
+	"exercise/internal/participants/domain/actor"
 )
 
 type fakeRepository struct {

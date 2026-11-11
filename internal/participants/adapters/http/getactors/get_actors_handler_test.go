@@ -2,17 +2,18 @@ package getactors
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+	"uuid"
+
 	"exercise/internal/participants/app/query/getactors"
 	"exercise/internal/participants/domain/account"
 	"exercise/internal/participants/domain/account/accounttest"
 	"exercise/internal/participants/domain/actor"
 	"exercise/internal/participants/domain/actor/actortest"
 	"exercise/internal/testhelpers"
-	"fmt"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"uuid"
 )
 
 var (

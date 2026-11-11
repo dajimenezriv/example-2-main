@@ -4,13 +4,12 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"uuid"
 
 	"exercise/internal/participants/app/command/createaccount"
 	"exercise/internal/participants/domain/account"
 	"exercise/internal/participants/domain/actor"
 	"exercise/internal/platform/httpapi"
-
-	"uuid"
 
 	"github.com/danielgtaylor/huma/v2"
 )

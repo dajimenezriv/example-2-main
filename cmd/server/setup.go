@@ -1,6 +1,8 @@
 package main
 
 import (
+	"uuid"
+
 	"exercise/internal/participants/adapters/db"
 	"exercise/internal/participants/adapters/db/sqlcgen"
 	createAccountEndpoint "exercise/internal/participants/adapters/http/createaccount"
@@ -11,8 +13,6 @@ import (
 	createActorCommand "exercise/internal/participants/app/command/createactor"
 	"exercise/internal/participants/app/query/getaccounts"
 	"exercise/internal/participants/app/query/getactors"
-
-	"uuid"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
