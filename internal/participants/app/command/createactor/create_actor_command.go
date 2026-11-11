@@ -23,12 +23,12 @@ func NewHandler(repo actor.Repository, newID func() uuid.UUID) *Handler {
 }
 
 func (h *Handler) Execute(ctx context.Context, cmd Command) (*actor.Actor, error) {
-	actor, err := actor.New(h.newID(), cmd.TaxID, cmd.Type)
+	a, err := actor.New(h.newID(), cmd.TaxID, cmd.Type)
 	if err != nil {
 		return nil, fmt.Errorf("build actor: %w", err)
 	}
-	if err := h.ActorRepository.Save(ctx, &actor); err != nil {
+	if err := h.ActorRepository.Save(ctx, &a); err != nil {
 		return nil, fmt.Errorf("save actor: %w", err)
 	}
-	return &actor, nil
+	return &a, nil
 }

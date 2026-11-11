@@ -38,18 +38,16 @@ func newSUT(t *testing.T) (actor.Repository, account.Repository) {
 	return actorRepo, accountRepo
 }
 
-func saveActor(t *testing.T, repo actor.Repository, uuid uuid.UUID) *actor.Actor {
+func saveActor(t *testing.T, repo actor.Repository, id uuid.UUID) {
 	t.Helper()
-	a, _ := actor.New(uuid, "Tax ID", actor.Issuer)
+	a, _ := actor.New(id, "Tax ID", actor.Issuer)
 	_ = repo.Save(context.Background(), &a)
-	return &a
 }
 
-func saveAccount(t *testing.T, repo account.Repository, uuid, actorID uuid.UUID) *account.Account {
+func saveAccount(t *testing.T, repo account.Repository, id, actorID uuid.UUID) {
 	t.Helper()
-	a, _ := account.New(uuid, actorID, "DLT account ID", "Private key", "Public key")
+	a, _ := account.New(id, actorID, "DLT account ID", "Private key", "Public key")
 	_ = repo.Save(context.Background(), &a)
-	return &a
 }
 
 func post(ctx context.Context, t *testing.T, actorRepo actor.Repository, accountRepo account.Repository) *httptest.ResponseRecorder {

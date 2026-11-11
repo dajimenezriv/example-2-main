@@ -33,7 +33,7 @@ func setupApplication(pool *pgxpool.Pool) *application {
 	accountRepo := db.NewAccountRepository(q)
 	actorRepo := db.NewActorRepository(q)
 
-	newID := func() uuid.UUID { return uuid.NewV7() }
+	newID := uuid.NewV7
 	createAccountHandler := createAccountCommand.NewHandler(accountRepo, actorRepo, newID)
 	createActorHandler := createActorCommand.NewHandler(actorRepo, newID)
 

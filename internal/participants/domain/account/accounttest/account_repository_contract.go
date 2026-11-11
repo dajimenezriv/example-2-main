@@ -111,11 +111,12 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 
 	t.Run("FindAll returns all accounts in inserted order", func(t *testing.T) {
 		f := setup(t)
-		want := make([]*account.Account, 0, 4)
-		want = append(want, saveAccount(t, f.Repo, f.NewActorID(t)))
-		want = append(want, saveAccount(t, f.Repo, f.NewActorID(t)))
-		want = append(want, saveAccount(t, f.Repo, f.NewActorID(t)))
-		want = append(want, saveAccount(t, f.Repo, f.NewActorID(t)))
+		want := []*account.Account{
+			saveAccount(t, f.Repo, f.NewActorID(t)),
+			saveAccount(t, f.Repo, f.NewActorID(t)),
+			saveAccount(t, f.Repo, f.NewActorID(t)),
+			saveAccount(t, f.Repo, f.NewActorID(t)),
+		}
 
 		got, err := f.Repo.FindAll(t.Context())
 		if err != nil {
@@ -145,10 +146,11 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		f := setup(t)
 		actorID1 := f.NewActorID(t)
 		actorID2 := f.NewActorID(t)
-		want := make([]*account.Account, 0, 4)
-		want = append(want, saveAccount(t, f.Repo, actorID1))
-		want = append(want, saveAccount(t, f.Repo, actorID1))
-		want = append(want, saveAccount(t, f.Repo, actorID2))
+		want := []*account.Account{
+			saveAccount(t, f.Repo, actorID1),
+			saveAccount(t, f.Repo, actorID1),
+			saveAccount(t, f.Repo, actorID2),
+		}
 		saveAccount(t, f.Repo, f.NewActorID(t))
 
 		got, err := f.Repo.FindByActorIDs(t.Context(), []uuid.UUID{actorID1, actorID2})
