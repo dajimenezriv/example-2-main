@@ -78,3 +78,19 @@ func Reconstitute(id uuid.UUID, taxID string, typ Type) *Actor {
 func (a *Actor) ID() uuid.UUID { return a.id }
 func (a *Actor) TaxID() TaxID  { return a.taxID }
 func (a *Actor) Type() Type    { return a.typ }
+
+func (a *Actor) ChangeTaxID(taxID string) error {
+	if !taxIDRegex.MatchString(taxID) {
+		return ErrInvalidTaxID
+	}
+	a.taxID = TaxID(taxID)
+	return nil
+}
+
+func (a *Actor) ChangeType(typ Type) error {
+	if !typ.IsValid() {
+		return ErrInvalidType
+	}
+	a.typ = typ
+	return nil
+}

@@ -62,7 +62,7 @@ func (h *Handler) Register(api huma.API) {
 }
 
 func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
-	act, err := h.CreateActor.Execute(ctx, createactor.Command{
+	a, err := h.CreateActor.Execute(ctx, createactor.Command{
 		TaxID: string(in.Body.TaxID),
 		Type:  actor.Type(in.Body.Type),
 	})
@@ -77,8 +77,8 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	}
 
 	return &Output{Body: createActorResponse{
-		ID:    act.ID().String(),
-		TaxID: string(act.TaxID()),
-		Type:  string(act.Type()),
+		ID:    a.ID().String(),
+		TaxID: string(a.TaxID()),
+		Type:  string(a.Type()),
 	}}, nil
 }

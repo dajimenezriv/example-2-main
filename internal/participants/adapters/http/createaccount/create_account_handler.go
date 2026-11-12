@@ -19,8 +19,8 @@ type Input struct {
 }
 
 type createAccountRequest struct {
-	ActorID      string `json:"actorId" format:"uuid" doc:"ID of the actor that owns the account"`
-	DltAccountID string `json:"dltAccountId" minLength:"1" doc:"Account ID on the DLT"`
+	ActorID      string `json:"actorId" format:"uuid"`
+	DltAccountID string `json:"dltAccountId" minLength:"1"`
 	PrivateKey   string `json:"privateKey" minLength:"1"`
 	PublicKey    string `json:"publicKey" minLength:"1"`
 }
