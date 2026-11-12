@@ -1,6 +1,5 @@
 # Exercise2 - Go DDD Base
 
-- Transactions in the application level
 - Aggregates
 - Option types
 

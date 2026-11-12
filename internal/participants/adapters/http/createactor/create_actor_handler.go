@@ -17,8 +17,19 @@ type Input struct {
 }
 
 type createActorRequest struct {
-	TaxID string `json:"taxId" minLength:"1"`
+	TaxID taxID  `json:"taxId"`
 	Type  string `json:"type" enum:"issuer,investor,platform_admin,market_operator,settlement_operator,custom"`
+}
+
+type taxID string
+
+func (taxID) Schema(huma.Registry) *huma.Schema {
+	return &huma.Schema{
+		Type:               huma.TypeString,
+		Pattern:            actor.TaxIDPattern,
+		PatternDescription: actor.TaxIDPatternDescription,
+		Examples:           []any{actor.TaxIDExample},
+	}
 }
 
 type Output struct {
@@ -46,18 +57,20 @@ func (h *Handler) Register(api huma.API) {
 		Summary:       "Create an actor",
 		Tags:          []string{"Actors"},
 		DefaultStatus: http.StatusCreated,
-		Errors:        []int{http.StatusBadRequest},
+		Errors:        []int{http.StatusBadRequest, http.StatusConflict, http.StatusUnprocessableEntity},
 	}, h.Handle)
 }
 
 func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	act, err := h.CreateActor.Execute(ctx, createactor.Command{
-		TaxID: in.Body.TaxID,
+		TaxID: string(in.Body.TaxID),
 		Type:  actor.Type(in.Body.Type),
 	})
 	switch {
 	case err == nil:
-	case errors.Is(err, actor.ErrActorAlreadyExists):
+	case errors.Is(err, actor.ErrTaxIDAlreadyExists):
+		return nil, huma.Error409Conflict("actor with this tax ID already exists")
+	case errors.Is(err, actor.ErrAlreadyExists):
 		return nil, huma.Error409Conflict("actor already exists")
 	default:
 		return nil, httpapi.Error500InternalServerError(err)
@@ -65,7 +78,7 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 
 	return &Output{Body: createActorResponse{
 		ID:    act.ID().String(),
-		TaxID: act.TaxID(),
+		TaxID: string(act.TaxID()),
 		Type:  string(act.Type()),
 	}}, nil
 }

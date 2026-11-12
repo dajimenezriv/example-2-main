@@ -21,7 +21,7 @@ var actorID = uuid.New()
 func newSUT(t *testing.T, newActorID uuid.UUID) (*Handler, actor.Repository) {
 	t.Helper()
 
-	act, _ := actor.New(actorID, "Tax ID", actor.Issuer)
+	act, _ := actor.New(actorID, "000000000", actor.Issuer)
 
 	actorRepo := actortest.NewFakeRepository()
 	_ = actorRepo.Save(t.Context(), act)
@@ -31,6 +31,10 @@ func newSUT(t *testing.T, newActorID uuid.UUID) (*Handler, actor.Repository) {
 		func() uuid.UUID { return newActorID },
 	))
 	return h, actorRepo
+}
+
+func requestBody(taxID, typ string) string {
+	return fmt.Sprintf(`{"taxId": %q, "type": %q}`, taxID, typ)
 }
 
 func post(t *testing.T, h *Handler, body string) *httptest.ResponseRecorder {
@@ -68,8 +72,18 @@ func TestRejectedRequests(t *testing.T) {
 			},
 		},
 		{
+			name:       "invalid tax ID",
+			body:       requestBody("invalid", "issuer"),
+			newActorID: uuid.New(),
+			wantCode:   http.StatusUnprocessableEntity,
+			wantDetail: "validation failed",
+			wantErrors: []*huma.ErrorDetail{
+				{Message: `expected string to be 9 digits`, Location: "body.taxId", Value: "invalid"},
+			},
+		},
+		{
 			name:       "invalid type",
-			body:       `{"taxId": "Tax ID", "type": "invalid"}`,
+			body:       requestBody("123456789", "invalid"),
 			newActorID: uuid.New(),
 			wantCode:   http.StatusUnprocessableEntity,
 			wantDetail: "validation failed",
@@ -79,10 +93,17 @@ func TestRejectedRequests(t *testing.T) {
 		},
 		{
 			name:       "actor already exists",
-			body:       `{"taxId": "Tax ID", "type": "issuer"}`,
+			body:       requestBody("123456789", "issuer"),
 			newActorID: actorID,
 			wantCode:   http.StatusConflict,
 			wantDetail: "actor already exists",
+		},
+		{
+			name:       "tax ID already exists",
+			body:       requestBody("000000000", "issuer"),
+			newActorID: uuid.New(),
+			wantCode:   http.StatusConflict,
+			wantDetail: "actor with this tax ID already exists",
 		},
 	}
 	for _, tt := range tests {
@@ -101,7 +122,7 @@ func TestRejectedRequests(t *testing.T) {
 }
 
 func TestCreatesActor(t *testing.T) {
-	body := `{"taxId": "Tax ID", "type": "issuer"}`
+	body := requestBody("999999999", "issuer")
 
 	newActorID := uuid.New()
 	h, actorRepo := newSUT(t, newActorID)
@@ -109,7 +130,7 @@ func TestCreatesActor(t *testing.T) {
 
 	want := fmt.Sprintf(`{
 		"id": %q,
-		"taxId": "Tax ID",
+		"taxId": "999999999",
 		"type": "issuer"
 	}`, newActorID)
 

@@ -27,7 +27,10 @@ func (f *fakeRepository) Save(ctx context.Context, act *actor.Actor) error {
 	defer f.mu.Unlock()
 	for _, a := range f.actors {
 		if a.ID() == act.ID() {
-			return actor.ErrActorAlreadyExists
+			return actor.ErrAlreadyExists
+		}
+		if a.TaxID() == act.TaxID() {
+			return actor.ErrTaxIDAlreadyExists
 		}
 	}
 	f.actors = append(f.actors, *act)
@@ -45,7 +48,7 @@ func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Act
 			return &a, nil
 		}
 	}
-	return nil, actor.ErrActorNotFound
+	return nil, actor.ErrNotFound
 }
 
 func (f *fakeRepository) FindAll(ctx context.Context) ([]*actor.Actor, error) {

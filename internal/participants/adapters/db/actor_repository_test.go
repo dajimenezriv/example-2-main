@@ -18,7 +18,7 @@ func TestActorRepository(t *testing.T) {
 	actortest.RunRepositoryContract(t, func(t *testing.T) actor.Repository {
 		t.Helper()
 		if _, err := testPool.Exec(t.Context(), "TRUNCATE actors CASCADE"); err != nil {
-			t.Fatalf("TRUNCATE actors: %v", err)
+			t.Fatalf("truncate actors: %v", err)
 		}
 		return NewActorRepository(q)
 	})

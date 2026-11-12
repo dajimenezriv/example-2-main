@@ -6,9 +6,11 @@ import (
 )
 
 var (
-	ErrDltAccountIDRequired = errors.New("DLT account ID is required")
-	ErrAccountNotFound      = errors.New("account not found")
-	ErrAccountAlreadyExists = errors.New("account already exists")
+	ErrDltAccountIDRequired = errors.New("account: DLT account ID is required")
+	ErrPrivateKeyRequired   = errors.New("account: private key is required")
+	ErrPublicKeyRequired    = errors.New("account: public key is required")
+	ErrNotFound             = errors.New("account: not found")
+	ErrAlreadyExists        = errors.New("account: already exists")
 )
 
 type Account struct {
@@ -20,8 +22,13 @@ type Account struct {
 }
 
 func New(id, actorID uuid.UUID, dltID, privKey, pubKey string) (*Account, error) {
-	if dltID == "" {
+	switch {
+	case dltID == "":
 		return nil, ErrDltAccountIDRequired
+	case privKey == "":
+		return nil, ErrPrivateKeyRequired
+	case pubKey == "":
+		return nil, ErrPublicKeyRequired
 	}
 
 	return &Account{

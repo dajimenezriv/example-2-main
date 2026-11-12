@@ -16,7 +16,7 @@ type Fixture struct {
 
 func NewAccount(t *testing.T, actorID uuid.UUID) *account.Account {
 	t.Helper()
-	a, _ := account.New(uuid.New(), actorID, "DLT account ID", "Private key", "Public key")
+	a, _ := account.New(uuid.New(), actorID, "dltID", "privKey", "pubKey")
 	return a
 }
 
@@ -56,12 +56,12 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		duplicate, _ := account.New(
 			want.ID(),
 			want.ActorID(),
-			"Other DLT account ID",
+			"Other dltID",
 			want.PrivateKey(),
 			want.PublicKey(),
 		)
-		if err := f.Repo.Save(t.Context(), duplicate); !errors.Is(err, account.ErrAccountAlreadyExists) {
-			t.Fatalf("Save() = %v, want %v", err, account.ErrAccountAlreadyExists)
+		if err := f.Repo.Save(t.Context(), duplicate); !errors.Is(err, account.ErrAlreadyExists) {
+			t.Fatalf("Save() = %v, want %v", err, account.ErrAlreadyExists)
 		}
 
 		got, err := f.Repo.FindByID(t.Context(), want.ID())
@@ -87,8 +87,8 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		f := setup(t)
 		a, err := f.Repo.FindByID(t.Context(), uuid.New())
 
-		if !errors.Is(err, account.ErrAccountNotFound) {
-			t.Errorf("FindByID() = %v, want %v", err, account.ErrAccountNotFound)
+		if !errors.Is(err, account.ErrNotFound) {
+			t.Errorf("FindByID() = %v, want %v", err, account.ErrNotFound)
 		}
 		if a != nil {
 			t.Errorf("FindByID() = %+v, want nil", a)

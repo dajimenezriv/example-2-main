@@ -41,7 +41,7 @@ func (r *AccountRepository) Save(ctx context.Context, a *account.Account) error 
 	})
 	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
-			return account.ErrAccountAlreadyExists
+			return account.ErrAlreadyExists
 		}
 		return fmt.Errorf("save account: %w", err)
 	}
@@ -52,7 +52,7 @@ func (r *AccountRepository) FindByID(ctx context.Context, id uuid.UUID) (*accoun
 	a, err := r.db.FindAccountByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, account.ErrAccountNotFound
+			return nil, account.ErrNotFound
 		}
 		return nil, fmt.Errorf("find account by id: %w", err)
 	}
