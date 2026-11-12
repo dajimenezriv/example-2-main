@@ -39,10 +39,26 @@ func (f *fakeRepository) Save(ctx context.Context, act *actor.Actor) error {
 }
 
 func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor) error {
-	if err := f.Delete(ctx, act.ID()); err != nil {
+	if err := ctx.Err(); err != nil {
 		return err
 	}
-	return f.Save(ctx, act)
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	idx := -1
+	for i, a := range f.actors {
+		if a.ID() == act.ID() {
+			idx = i
+			continue
+		}
+		if a.TaxID() == act.TaxID() {
+			return actor.ErrTaxIDAlreadyExists
+		}
+	}
+	if idx == -1 {
+		return actor.ErrNotFound
+	}
+	f.actors[idx] = *act
+	return nil
 }
 
 func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
