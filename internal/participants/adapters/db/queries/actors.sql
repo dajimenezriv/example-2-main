@@ -4,6 +4,15 @@ INSERT INTO
 VALUES
   (@id, @tax_id, @type);
 
+-- name: UpdateActor :exec
+UPDATE
+  actors
+SET
+  tax_id = @tax_id,
+  type = @type
+WHERE
+  id = @id;
+
 -- name: FindActorByID :one
 SELECT
   *

@@ -9,8 +9,10 @@ import (
 	createActorEndpoint "exercise/internal/participants/adapters/http/createactor"
 	getAccountsEndpoint "exercise/internal/participants/adapters/http/getaccounts"
 	getActorsEndpoint "exercise/internal/participants/adapters/http/getactors"
-	createAccountCommand "exercise/internal/participants/app/command/createaccount"
-	createActorCommand "exercise/internal/participants/app/command/createactor"
+	updateActorEndpoint "exercise/internal/participants/adapters/http/updateactor"
+	"exercise/internal/participants/app/command/createaccount"
+	"exercise/internal/participants/app/command/createactor"
+	"exercise/internal/participants/app/command/updateactor"
 	"exercise/internal/participants/app/query/getaccounts"
 	"exercise/internal/participants/app/query/getactors"
 
@@ -18,12 +20,13 @@ import (
 )
 
 type application struct {
-	CreateActorHandler   *createActorCommand.Handler
-	CreateAccountHandler *createAccountCommand.Handler
+	CreateActorHandler   *createactor.Handler
+	CreateAccountHandler *createaccount.Handler
 	GetAccountsQuery     *getaccounts.Query
 	GetActorsQuery       *getactors.Query
 	CreateAccountHTTP    *createAccountEndpoint.Handler
 	CreateActorHTTP      *createActorEndpoint.Handler
+	UpdateActorHTTP      *updateActorEndpoint.Handler
 	GetAccountsHTTP      *getAccountsEndpoint.Handler
 	GetActorsHTTP        *getActorsEndpoint.Handler
 }
@@ -34,14 +37,16 @@ func setupApplication(pool *pgxpool.Pool) *application {
 	actorRepo := db.NewActorRepository(q)
 
 	newID := uuid.NewV7
-	createAccountHandler := createAccountCommand.NewHandler(db.NewUnitOfWork(pool), newID)
-	createActorHandler := createActorCommand.NewHandler(actorRepo, newID)
+	createAccountHandler := createaccount.NewHandler(db.NewUnitOfWork(pool), newID)
+	createActorHandler := createactor.NewHandler(actorRepo, newID)
+	updateActorHandler := updateactor.NewHandler(actorRepo)
 
 	getAccountsQuery := getaccounts.NewQuery(accountRepo)
 	getActorsQuery := getactors.NewQuery(actorRepo, accountRepo)
 
 	createAccountHTTP := createAccountEndpoint.NewHandler(createAccountHandler)
 	createActorHTTP := createActorEndpoint.NewHandler(createActorHandler)
+	updateActorHTTP := updateActorEndpoint.NewHandler(updateActorHandler)
 	getAccountsHTTP := getAccountsEndpoint.NewHandler(getAccountsQuery)
 	getActorsHTTP := getActorsEndpoint.NewHandler(getActorsQuery)
 
@@ -50,6 +55,7 @@ func setupApplication(pool *pgxpool.Pool) *application {
 		CreateActorHandler:   createActorHandler,
 		CreateActorHTTP:      createActorHTTP,
 		CreateAccountHTTP:    createAccountHTTP,
+		UpdateActorHTTP:      updateActorHTTP,
 		GetAccountsHTTP:      getAccountsHTTP,
 		GetActorsHTTP:        getActorsHTTP,
 	}

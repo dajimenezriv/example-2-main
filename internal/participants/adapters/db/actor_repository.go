@@ -45,6 +45,24 @@ func (r *ActorRepository) Save(ctx context.Context, a *actor.Actor) error {
 	return nil
 }
 
+func (r *ActorRepository) Update(ctx context.Context, a *actor.Actor) error {
+	err := r.db.UpdateActor(ctx, sqlcgen.UpdateActorParams{
+		ID:    a.ID(),
+		TaxID: string(a.TaxID()),
+		Type:  string(a.Type()),
+	})
+	if err != nil {
+		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
+			switch pgErr.ConstraintName {
+			case actorsTaxIDConstraint:
+				return actor.ErrTaxIDAlreadyExists
+			}
+		}
+		return fmt.Errorf("update actor: %w", err)
+	}
+	return nil
+}
+
 func (r *ActorRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
 	a, err := r.db.FindActorByID(ctx, id)
 	if err != nil {

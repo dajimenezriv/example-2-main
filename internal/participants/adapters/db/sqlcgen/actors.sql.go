@@ -71,3 +71,24 @@ func (q *Queries) FindActors(ctx context.Context) ([]Actor, error) {
 	}
 	return items, nil
 }
+
+const updateActor = `-- name: UpdateActor :exec
+UPDATE
+  actors
+SET
+  tax_id = $1,
+  type = $2
+WHERE
+  id = $3
+`
+
+type UpdateActorParams struct {
+	TaxID string
+	Type  string
+	ID    uuid.UUID
+}
+
+func (q *Queries) UpdateActor(ctx context.Context, arg UpdateActorParams) error {
+	_, err := q.db.Exec(ctx, updateActor, arg.TaxID, arg.Type, arg.ID)
+	return err
+}

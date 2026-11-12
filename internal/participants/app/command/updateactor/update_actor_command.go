@@ -17,8 +17,8 @@ type Handler struct {
 	repo actor.Repository
 }
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(repo actor.Repository) *Handler {
+	return &Handler{repo: repo}
 }
 
 func (h *Handler) Execute(ctx context.Context, cmd Command) (*actor.Actor, error) {
@@ -32,7 +32,7 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*actor.Actor, error
 	if err := a.ChangeType(cmd.Type); err != nil {
 		return nil, err
 	}
-	if err := h.repo.Save(ctx, a); err != nil {
+	if err := h.repo.Update(ctx, a); err != nil {
 		return nil, err
 	}
 	return a, nil
