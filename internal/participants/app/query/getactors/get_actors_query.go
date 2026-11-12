@@ -48,10 +48,10 @@ func (q *Query) Execute(ctx context.Context) ([]ActorDTO, error) {
 
 	byActor := make(map[uuid.UUID][]AccountDTO, len(actors))
 	for _, acc := range accounts {
-		byActor[acc.ActorID] = append(byActor[acc.ActorID], AccountDTO{
-			ID:           acc.ID,
-			DltAccountID: acc.DltAccountID,
-			PublicKey:    acc.PublicKey,
+		byActor[acc.ActorID()] = append(byActor[acc.ActorID()], AccountDTO{
+			ID:           acc.ID(),
+			DltAccountID: acc.DltAccountID(),
+			PublicKey:    acc.PublicKey(),
 		})
 	}
 

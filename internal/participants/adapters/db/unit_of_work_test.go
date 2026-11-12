@@ -44,7 +44,7 @@ func TestUnitOfWork(t *testing.T) {
 			t.Fatalf("Do() = %v, want nil", err)
 		}
 
-		if _, err := repo.FindByID(t.Context(), acc.ID); err != nil {
+		if _, err := repo.FindByID(t.Context(), acc.ID()); err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
 	})
@@ -63,7 +63,7 @@ func TestUnitOfWork(t *testing.T) {
 			t.Errorf("Do() = %v, want %v", err, errBoom)
 		}
 
-		assertNotPersisted(t, repo, acc.ID)
+		assertNotPersisted(t, repo, acc.ID())
 	})
 
 	t.Run("rolls back on panic", func(t *testing.T) {
@@ -84,7 +84,7 @@ func TestUnitOfWork(t *testing.T) {
 			})
 		}()
 
-		assertNotPersisted(t, repo, acc.ID)
+		assertNotPersisted(t, repo, acc.ID())
 	})
 
 	t.Run("fails to begin with a canceled context", func(t *testing.T) {

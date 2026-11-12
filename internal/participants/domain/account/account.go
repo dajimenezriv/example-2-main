@@ -12,23 +12,41 @@ var (
 )
 
 type Account struct {
-	ID           uuid.UUID
-	ActorID      uuid.UUID
-	DltAccountID string
-	PrivateKey   string
-	PublicKey    string
+	id           uuid.UUID
+	actorID      uuid.UUID
+	dltAccountID string
+	privateKey   string
+	publicKey    string
 }
 
-func New(id, actorID uuid.UUID, dltID, privKey, pubKey string) (Account, error) {
+func New(id, actorID uuid.UUID, dltID, privKey, pubKey string) (*Account, error) {
 	if dltID == "" {
-		return Account{}, ErrDltAccountIDRequired
+		return nil, ErrDltAccountIDRequired
 	}
 
-	return Account{
-		ID:           id,
-		ActorID:      actorID,
-		DltAccountID: dltID,
-		PrivateKey:   privKey,
-		PublicKey:    pubKey,
+	return &Account{
+		id:           id,
+		actorID:      actorID,
+		dltAccountID: dltID,
+		privateKey:   privKey,
+		publicKey:    pubKey,
 	}, nil
 }
+
+// Reconstitute rebuilds an Account from persistence.
+// Intended for repository adapters only.
+func Reconstitute(id, actorID uuid.UUID, dltID, privKey, pubKey string) *Account {
+	return &Account{
+		id:           id,
+		actorID:      actorID,
+		dltAccountID: dltID,
+		privateKey:   privKey,
+		publicKey:    pubKey,
+	}
+}
+
+func (a *Account) ID() uuid.UUID        { return a.id }
+func (a *Account) ActorID() uuid.UUID   { return a.actorID }
+func (a *Account) DltAccountID() string { return a.dltAccountID }
+func (a *Account) PrivateKey() string   { return a.privateKey }
+func (a *Account) PublicKey() string    { return a.publicKey }

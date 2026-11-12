@@ -20,7 +20,7 @@ func newSUT(t *testing.T) account.Repository {
 	t.Helper()
 	repo := accounttest.NewFakeRepository()
 	a, _ := account.New(existingAccountID, uuid.New(), "DLT account ID", "Private key", "Public key")
-	_ = repo.Save(t.Context(), &a)
+	_ = repo.Save(t.Context(), a)
 	return repo
 }
 

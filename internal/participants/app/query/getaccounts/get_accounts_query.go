@@ -31,10 +31,10 @@ func (q *Query) Execute(ctx context.Context) ([]*AccountDTO, error) {
 	var dtos []*AccountDTO
 	for _, a := range accounts {
 		dtos = append(dtos, &AccountDTO{
-			ID:           a.ID.String(),
-			DltAccountID: a.DltAccountID,
-			PrivateKey:   a.PrivateKey,
-			PublicKey:    a.PublicKey,
+			ID:           a.ID().String(),
+			DltAccountID: a.DltAccountID(),
+			PrivateKey:   a.PrivateKey(),
+			PublicKey:    a.PublicKey(),
 		})
 	}
 	return dtos, nil

@@ -52,12 +52,16 @@ func New(id uuid.UUID, taxID string, typ Type) (*Actor, error) {
 	}, nil
 }
 
-func (a Actor) ID() uuid.UUID { return a.id }
-func (a Actor) TaxID() string { return a.taxID }
-func (a Actor) Type() Type    { return a.typ }
-
 // Reconstitute rebuilds an Actor from persistence.
 // Intended for repository adapters only.
 func Reconstitute(id uuid.UUID, taxID string, typ Type) *Actor {
-	return &Actor{id: id, taxID: taxID, typ: typ}
+	return &Actor{
+		id:    id,
+		taxID: taxID,
+		typ:   typ,
+	}
 }
+
+func (a *Actor) ID() uuid.UUID { return a.id }
+func (a *Actor) TaxID() string { return a.taxID }
+func (a *Actor) Type() Type    { return a.typ }

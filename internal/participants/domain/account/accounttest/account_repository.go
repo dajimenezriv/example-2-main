@@ -27,7 +27,7 @@ func (f *fakeRepository) Save(ctx context.Context, acc *account.Account) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, a := range f.accounts {
-		if a.ID == acc.ID {
+		if a.ID() == acc.ID() {
 			return account.ErrAccountAlreadyExists
 		}
 	}
@@ -42,7 +42,7 @@ func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.A
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, a := range f.accounts {
-		if a.ID == id {
+		if a.ID() == id {
 			return &a, nil
 		}
 	}
@@ -70,7 +70,7 @@ func (f *fakeRepository) FindByActorIDs(ctx context.Context, actorIDs []uuid.UUI
 	defer f.mu.Unlock()
 	var accs []*account.Account
 	for _, acc := range f.accounts {
-		if slices.Contains(actorIDs, acc.ActorID) {
+		if slices.Contains(actorIDs, acc.ActorID()) {
 			accs = append(accs, &acc)
 		}
 	}

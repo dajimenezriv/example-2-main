@@ -47,7 +47,7 @@ func saveActor(t *testing.T, repo actor.Repository, id uuid.UUID) {
 func saveAccount(t *testing.T, repo account.Repository, id, actorID uuid.UUID) {
 	t.Helper()
 	a, _ := account.New(id, actorID, "DLT account ID", "Private key", "Public key")
-	_ = repo.Save(context.Background(), &a)
+	_ = repo.Save(context.Background(), a)
 }
 
 func post(ctx context.Context, t *testing.T, actorRepo actor.Repository, accountRepo account.Repository) *httptest.ResponseRecorder {

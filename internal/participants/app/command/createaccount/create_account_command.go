@@ -38,7 +38,7 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*account.Account, e
 		if _, err := repos.Actors.FindByID(ctx, cmd.ActorID); err != nil {
 			return fmt.Errorf("find actor %s: %w", cmd.ActorID, err)
 		}
-		if err := repos.Accounts.Save(ctx, &acc); err != nil {
+		if err := repos.Accounts.Save(ctx, acc); err != nil {
 			return fmt.Errorf("save account: %w", err)
 		}
 		return nil
@@ -46,5 +46,5 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*account.Account, e
 	if err != nil {
 		return nil, fmt.Errorf("unit of work: %w", err)
 	}
-	return &acc, nil
+	return acc, nil
 }

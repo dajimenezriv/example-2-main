@@ -77,9 +77,9 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	}
 
 	return &Output{Body: createAccountResponse{
-		ID:           acc.ID.String(),
-		ActorID:      acc.ActorID.String(),
-		DltAccountID: acc.DltAccountID,
-		PublicKey:    acc.PublicKey,
+		ID:           acc.ID().String(),
+		ActorID:      acc.ActorID().String(),
+		DltAccountID: acc.DltAccountID(),
+		PublicKey:    acc.PublicKey(),
 	}}, nil
 }

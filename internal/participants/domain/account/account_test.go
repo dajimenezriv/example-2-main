@@ -1,37 +1,28 @@
-package account
+package account_test
 
 import (
 	"errors"
 	"testing"
 	"uuid"
 
-	"github.com/google/go-cmp/cmp"
+	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/account/accounttest"
 )
 
 func TestNewAccountErrors(t *testing.T) {
-	a, err := New(uuid.New(), uuid.New(), "", "", "")
-	if !errors.Is(err, ErrDltAccountIDRequired) {
-		t.Errorf("New() = %v, want %v", err, ErrDltAccountIDRequired)
+	got, err := account.New(uuid.New(), uuid.New(), "", "", "")
+	if !errors.Is(err, account.ErrDltAccountIDRequired) {
+		t.Errorf("New() = %v, want %v", err, account.ErrDltAccountIDRequired)
 	}
-	if diff := cmp.Diff(a, Account{}); diff != "" {
-		t.Errorf("account (-want +got):\n%s", diff)
-	}
+	accounttest.AssertAccount(t, got, nil)
 }
 
 func TestNewCreatesValidAccount(t *testing.T) {
 	id, actorID := uuid.New(), uuid.New()
-	a, err := New(id, actorID, "DLT account ID", "Private key", "Public key")
+	got, err := account.New(id, actorID, "DLT account ID", "Private key", "Public key")
 	if err != nil {
 		t.Errorf("New() = %v, want nil", err)
 	}
-	want := Account{
-		ID:           id,
-		ActorID:      actorID,
-		DltAccountID: "DLT account ID",
-		PrivateKey:   "Private key",
-		PublicKey:    "Public key",
-	}
-	if diff := cmp.Diff(a, want); diff != "" {
-		t.Errorf("actor (-want +got):\n%s", diff)
-	}
+	want := account.Reconstitute(id, actorID, "DLT account ID", "Private key", "Public key")
+	accounttest.AssertAccount(t, got, want)
 }

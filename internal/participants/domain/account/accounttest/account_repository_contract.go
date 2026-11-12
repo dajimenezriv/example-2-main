@@ -7,8 +7,6 @@ import (
 	"uuid"
 
 	"exercise/internal/participants/domain/account"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 type Fixture struct {
@@ -19,7 +17,7 @@ type Fixture struct {
 func NewAccount(t *testing.T, actorID uuid.UUID) *account.Account {
 	t.Helper()
 	a, _ := account.New(uuid.New(), actorID, "DLT account ID", "Private key", "Public key")
-	return &a
+	return a
 }
 
 func saveAccount(t *testing.T, repo account.Repository, actorID uuid.UUID) *account.Account {
@@ -40,13 +38,11 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
-		got, err := f.Repo.FindByID(t.Context(), want.ID)
+		got, err := f.Repo.FindByID(t.Context(), want.ID())
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("account (-want +got):\n%s", diff)
-		}
+		AssertAccount(t, got, want)
 	})
 
 	t.Run("Save fails if account already exists", func(t *testing.T) {
@@ -57,19 +53,22 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
-		duplicate := *want
-		duplicate.DltAccountID = "Other DLT account ID"
-		if err := f.Repo.Save(t.Context(), &duplicate); !errors.Is(err, account.ErrAccountAlreadyExists) {
+		duplicate, _ := account.New(
+			want.ID(),
+			want.ActorID(),
+			"Other DLT account ID",
+			want.PrivateKey(),
+			want.PublicKey(),
+		)
+		if err := f.Repo.Save(t.Context(), duplicate); !errors.Is(err, account.ErrAccountAlreadyExists) {
 			t.Fatalf("Save() = %v, want %v", err, account.ErrAccountAlreadyExists)
 		}
 
-		got, err := f.Repo.FindByID(t.Context(), want.ID)
+		got, err := f.Repo.FindByID(t.Context(), want.ID())
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("account (-want +got):\n%s", diff)
-		}
+		AssertAccount(t, got, want)
 	})
 
 	t.Run("Save returns error if context is canceled", func(t *testing.T) {
@@ -124,9 +123,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		if err != nil {
 			t.Errorf("FindAll() = %v, want nil", err)
 		}
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("accounts (-want +got):\n%s", diff)
-		}
+		AssertAccount(t, got, want)
 	})
 
 	t.Run("FindAll returns error if context is canceled", func(t *testing.T) {
@@ -159,9 +156,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		if err != nil {
 			t.Errorf("FindAll() = %v, want nil", err)
 		}
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("accounts (-want +got):\n%s", diff)
-		}
+		AssertAccount(t, got, want)
 	})
 
 	t.Run("FindByActorIDs returns empty if no actor uuids", func(t *testing.T) {

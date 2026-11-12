@@ -34,7 +34,7 @@ func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, account.Repository)
 	actorRepo := actortest.NewFakeRepository()
 	accountRepo := accounttest.NewFakeRepository()
 	_ = actorRepo.Save(t.Context(), act)
-	_ = accountRepo.Save(t.Context(), &acc)
+	_ = accountRepo.Save(t.Context(), acc)
 
 	h := NewHandler(createaccount.NewHandler(
 		uowtest.NewFake(uow.Repositories{Accounts: accountRepo, Actors: actorRepo}),

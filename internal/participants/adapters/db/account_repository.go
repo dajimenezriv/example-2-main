@@ -22,22 +22,22 @@ func NewAccountRepository(db *sqlcgen.Queries) *AccountRepository {
 }
 
 func toAccountDomain(d sqlcgen.Account) *account.Account {
-	return &account.Account{
-		ID:           d.ID,
-		ActorID:      d.ActorID,
-		DltAccountID: d.DltAccountID,
-		PrivateKey:   d.PrivateKey,
-		PublicKey:    d.PublicKey,
-	}
+	return account.Reconstitute(
+		d.ID,
+		d.ActorID,
+		d.DltAccountID,
+		d.PrivateKey,
+		d.PublicKey,
+	)
 }
 
 func (r *AccountRepository) Save(ctx context.Context, a *account.Account) error {
 	err := r.db.CreateAccount(ctx, sqlcgen.CreateAccountParams{
-		ID:           a.ID,
-		ActorID:      a.ActorID,
-		DltAccountID: a.DltAccountID,
-		PrivateKey:   a.PrivateKey,
-		PublicKey:    a.PublicKey,
+		ID:           a.ID(),
+		ActorID:      a.ActorID(),
+		DltAccountID: a.DltAccountID(),
+		PrivateKey:   a.PrivateKey(),
+		PublicKey:    a.PublicKey(),
 	})
 	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
