@@ -6,14 +6,12 @@ import (
 	"uuid"
 
 	"exercise/internal/participants/domain/actor"
-
-	"github.com/google/go-cmp/cmp"
 )
 
 func newActor(t *testing.T) *actor.Actor {
 	t.Helper()
 	a, _ := actor.New(uuid.New(), "Tax ID", actor.Issuer)
-	return &a
+	return a
 }
 
 func saveActor(t *testing.T, repo actor.Repository) *actor.Actor {
@@ -34,13 +32,11 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
-		got, err := repo.FindByID(t.Context(), want.ID)
+		got, err := repo.FindByID(t.Context(), want.ID())
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("actor (-want +got):\n%s", diff)
-		}
+		AssertActor(t, got, want)
 	})
 
 	t.Run("Save fails if actor already exists", func(t *testing.T) {
@@ -51,19 +47,16 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
-		duplicate := *want
-		duplicate.TaxID = "Other Tax ID"
-		if err := repo.Save(t.Context(), &duplicate); !errors.Is(err, actor.ErrActorAlreadyExists) {
+		duplicate, _ := actor.New(want.ID(), "Other Tax ID", actor.Issuer)
+		if err := repo.Save(t.Context(), duplicate); !errors.Is(err, actor.ErrActorAlreadyExists) {
 			t.Fatalf("Save() = %v, want %v", err, actor.ErrActorAlreadyExists)
 		}
 
-		got, err := repo.FindByID(t.Context(), want.ID)
+		got, err := repo.FindByID(t.Context(), want.ID())
 		if err != nil {
 			t.Errorf("FindByID() = %v, want nil", err)
 		}
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("actor (-want +got):\n%s", diff)
-		}
+		AssertActor(t, got, want)
 	})
 
 	t.Run("FindByID returns error if actor not found", func(t *testing.T) {
@@ -91,8 +84,6 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		if err != nil {
 			t.Errorf("FindAll() = %v, want nil", err)
 		}
-		if diff := cmp.Diff(want, got); diff != "" {
-			t.Errorf("actors (-want +got):\n%s", diff)
-		}
+		AssertActor(t, got, want)
 	})
 }

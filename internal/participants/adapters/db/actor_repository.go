@@ -22,18 +22,14 @@ func NewActorRepository(db *sqlcgen.Queries) *ActorRepository {
 }
 
 func toActorDomain(d sqlcgen.Actor) *actor.Actor {
-	return &actor.Actor{
-		ID:    d.ID,
-		TaxID: d.TaxID,
-		Type:  actor.Type(d.Type),
-	}
+	return actor.Reconstitute(d.ID, d.TaxID, actor.Type(d.Type))
 }
 
 func (r *ActorRepository) Save(ctx context.Context, a *actor.Actor) error {
 	err := r.db.CreateActor(ctx, sqlcgen.CreateActorParams{
-		ID:    a.ID,
-		TaxID: a.TaxID,
-		Type:  string(a.Type),
+		ID:    a.ID(),
+		TaxID: a.TaxID(),
+		Type:  string(a.Type()),
 	})
 	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {

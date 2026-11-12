@@ -27,8 +27,8 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*actor.Actor, error
 	if err != nil {
 		return nil, fmt.Errorf("build actor: %w", err)
 	}
-	if err := h.ActorRepository.Save(ctx, &a); err != nil {
+	if err := h.ActorRepository.Save(ctx, a); err != nil {
 		return nil, fmt.Errorf("save actor: %w", err)
 	}
-	return &a, nil
+	return a, nil
 }

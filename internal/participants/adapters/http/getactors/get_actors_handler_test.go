@@ -41,7 +41,7 @@ func newSUT(t *testing.T) (actor.Repository, account.Repository) {
 func saveActor(t *testing.T, repo actor.Repository, id uuid.UUID) {
 	t.Helper()
 	a, _ := actor.New(id, "Tax ID", actor.Issuer)
-	_ = repo.Save(context.Background(), &a)
+	_ = repo.Save(context.Background(), a)
 }
 
 func saveAccount(t *testing.T, repo account.Repository, id, actorID uuid.UUID) {

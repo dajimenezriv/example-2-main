@@ -39,7 +39,7 @@ func (q *Query) Execute(ctx context.Context) ([]ActorDTO, error) {
 
 	actorsIDs := make([]uuid.UUID, len(actors))
 	for i, act := range actors {
-		actorsIDs[i] = act.ID
+		actorsIDs[i] = act.ID()
 	}
 	accounts, err := q.RepoAccount.FindByActorIDs(ctx, actorsIDs)
 	if err != nil {
@@ -58,10 +58,10 @@ func (q *Query) Execute(ctx context.Context) ([]ActorDTO, error) {
 	actorDTOs := make([]ActorDTO, len(actors))
 	for i, act := range actors {
 		actorDTOs[i] = ActorDTO{
-			ID:       act.ID,
-			TaxID:    act.TaxID,
-			Type:     act.Type,
-			Accounts: byActor[act.ID],
+			ID:       act.ID(),
+			TaxID:    act.TaxID(),
+			Type:     act.Type(),
+			Accounts: byActor[act.ID()],
 		}
 	}
 	return actorDTOs, nil

@@ -64,8 +64,8 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	}
 
 	return &Output{Body: createActorResponse{
-		ID:    act.ID.String(),
-		TaxID: act.TaxID,
-		Type:  string(act.Type),
+		ID:    act.ID().String(),
+		TaxID: act.TaxID(),
+		Type:  string(act.Type()),
 	}}, nil
 }

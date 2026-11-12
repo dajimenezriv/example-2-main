@@ -32,22 +32,32 @@ func (t Type) IsValid() bool {
 }
 
 type Actor struct {
-	ID    uuid.UUID
-	TaxID string
-	Type  Type
+	id    uuid.UUID
+	taxID string
+	typ   Type
 }
 
-func New(id uuid.UUID, taxID string, t Type) (Actor, error) {
+func New(id uuid.UUID, taxID string, typ Type) (*Actor, error) {
 	if taxID == "" {
-		return Actor{}, ErrTaxIDRequired
+		return nil, ErrTaxIDRequired
 	}
-	if !t.IsValid() {
-		return Actor{}, ErrInvalidActorType
+	if !typ.IsValid() {
+		return nil, ErrInvalidActorType
 	}
 
-	return Actor{
-		ID:    id,
-		TaxID: taxID,
-		Type:  t,
+	return &Actor{
+		id:    id,
+		taxID: taxID,
+		typ:   typ,
 	}, nil
+}
+
+func (a Actor) ID() uuid.UUID { return a.id }
+func (a Actor) TaxID() string { return a.taxID }
+func (a Actor) Type() Type    { return a.typ }
+
+// Reconstitute rebuilds an Actor from persistence.
+// Intended for repository adapters only.
+func Reconstitute(id uuid.UUID, taxID string, typ Type) *Actor {
+	return &Actor{id: id, taxID: taxID, typ: typ}
 }

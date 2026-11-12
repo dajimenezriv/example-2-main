@@ -1,5 +1,9 @@
 # Exercise2 - Go DDD Base
 
+- Transactions in the application level
+- Aggregates
+- Option types
+
 This project is a Go DDD base template with `Account` and `Actor` aggregates, using Postgres as persistence.
 
 The project follows a Domain-Driven Design (DDD) approach with:
@@ -94,7 +98,7 @@ Import this file into Postman to easily test all available endpoints.
 curl -X POST http://localhost:8080/actors \
   -H "Content-Type: application/json" \
   -d '{
-        "tax_id": "123456788",
+        "taxId": "123456788",
         "type": "investor"
       }'
 ```
@@ -113,9 +117,9 @@ curl http://localhost:8080/actors
 curl -X POST http://localhost:8080/accounts \
   -H "Content-Type: application/json" \
   -d '{
-        "dlt_account_id": "acc_001",
-        "private_key": "private_key",
-        "public_key": "public_key"
+        "dltAccountId": "acc_001",
+        "privateKey": "private_key",
+        "publicKey": "public_key"
       }'
 ```
 
@@ -217,11 +221,11 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 
 ### 6. Add Filtering & Search ⭐⭐
 
-**Objective:** Add filtering to GET /actors by type and/or tax_id
+**Objective:** Add filtering to GET /actors by type and/or taxId
 
 **Sub-tasks:**
 
-- Accept query params: `?type=investor&tax_id=123`
+- Accept query params: `?type=investor&taxId=123`
 - Build dynamic SQL queries safely (avoid SQL injection)
 - Update DTO to include filter parameters
 - Test with various filter combinations
