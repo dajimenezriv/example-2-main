@@ -26,8 +26,11 @@ func (f *fakeRepository) Save(ctx context.Context, act *actor.Actor) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	for _, a := range f.actors {
-		if a.ID() == act.ID() || a.TaxID() == act.TaxID() {
+		if a.ID() == act.ID() {
 			return actor.ErrAlreadyExists
+		}
+		if a.TaxID() == act.TaxID() {
+			return actor.ErrTaxIDAlreadyExists
 		}
 	}
 	f.actors = append(f.actors, *act)

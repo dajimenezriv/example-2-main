@@ -98,6 +98,13 @@ func TestRejectedRequests(t *testing.T) {
 			wantCode:   http.StatusConflict,
 			wantDetail: "actor already exists",
 		},
+		{
+			name:       "tax ID already exists",
+			body:       requestBody("000000000", "issuer"),
+			newActorID: uuid.New(),
+			wantCode:   http.StatusConflict,
+			wantDetail: "actor with this tax ID already exists",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

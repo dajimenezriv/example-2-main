@@ -33,7 +33,12 @@ func (r *ActorRepository) Save(ctx context.Context, a *actor.Actor) error {
 	})
 	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
-			return actor.ErrAlreadyExists
+			switch pgErr.ConstraintName {
+			case actorsPKeyConstraint:
+				return actor.ErrAlreadyExists
+			case actorsTaxIDConstraint:
+				return actor.ErrTaxIDAlreadyExists
+			}
 		}
 		return fmt.Errorf("save actor: %w", err)
 	}

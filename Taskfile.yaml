@@ -1,7 +1,9 @@
 version: "3"
 
+dotenv: [".env"]
+
 vars:
-  DB_URL: postgresql://postgres:postgres@localhost:5555/db?sslmode=disable&x-multi-statement=true
+  DB_URL: "{{.DATABASE_URL}}"
   MIGRATIONS: migrations
 
 tasks:

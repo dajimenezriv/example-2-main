@@ -46,7 +46,7 @@ func (h *Handler) Register(api huma.API) {
 		Summary:       "Create an actor",
 		Tags:          []string{"Actors"},
 		DefaultStatus: http.StatusCreated,
-		Errors:        []int{http.StatusBadRequest},
+		Errors:        []int{http.StatusBadRequest, http.StatusConflict},
 	}, h.Handle)
 }
 
@@ -57,6 +57,8 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	})
 	switch {
 	case err == nil:
+	case errors.Is(err, actor.ErrTaxIDAlreadyExists):
+		return nil, huma.Error409Conflict("actor with this tax ID already exists")
 	case errors.Is(err, actor.ErrAlreadyExists):
 		return nil, huma.Error409Conflict("actor already exists")
 	default:

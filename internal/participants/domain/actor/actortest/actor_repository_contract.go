@@ -70,8 +70,8 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		}
 
 		duplicate, _ := actor.New(uuid.New(), string(want.TaxID()), want.Type())
-		if err := repo.Save(t.Context(), duplicate); !errors.Is(err, actor.ErrAlreadyExists) {
-			t.Fatalf("Save() = %v, want %v", err, actor.ErrAlreadyExists)
+		if err := repo.Save(t.Context(), duplicate); !errors.Is(err, actor.ErrTaxIDAlreadyExists) {
+			t.Fatalf("Save() = %v, want %v", err, actor.ErrTaxIDAlreadyExists)
 		}
 
 		got, err := repo.FindByID(t.Context(), want.ID())

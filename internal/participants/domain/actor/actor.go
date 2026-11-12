@@ -7,10 +7,11 @@ import (
 )
 
 var (
-	ErrInvalidTaxID  = errors.New("actor: invalid tax ID")
-	ErrInvalidType   = errors.New("actor: invalid type")
-	ErrNotFound      = errors.New("actor: not found")
-	ErrAlreadyExists = errors.New("actor: already exists")
+	ErrInvalidTaxID       = errors.New("actor: invalid tax ID")
+	ErrInvalidType        = errors.New("actor: invalid type")
+	ErrNotFound           = errors.New("actor: not found")
+	ErrAlreadyExists      = errors.New("actor: already exists")
+	ErrTaxIDAlreadyExists = errors.New("actor: tax ID is taken")
 )
 
 type (
