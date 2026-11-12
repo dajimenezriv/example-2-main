@@ -21,7 +21,7 @@ var actorID = uuid.New()
 func newSUT(t *testing.T, newActorID uuid.UUID) (*Handler, actor.Repository) {
 	t.Helper()
 
-	act, _ := actor.New(actorID, "123456789", actor.Issuer)
+	act, _ := actor.New(actorID, "000000000", actor.Issuer)
 
 	actorRepo := actortest.NewFakeRepository()
 	_ = actorRepo.Save(t.Context(), act)
@@ -115,7 +115,7 @@ func TestRejectedRequests(t *testing.T) {
 }
 
 func TestCreatesActor(t *testing.T) {
-	body := requestBody("123456789", "issuer")
+	body := requestBody("999999999", "issuer")
 
 	newActorID := uuid.New()
 	h, actorRepo := newSUT(t, newActorID)
@@ -123,7 +123,7 @@ func TestCreatesActor(t *testing.T) {
 
 	want := fmt.Sprintf(`{
 		"id": %q,
-		"taxId": "123456789",
+		"taxId": "999999999",
 		"type": "issuer"
 	}`, newActorID)
 

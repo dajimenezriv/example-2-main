@@ -28,9 +28,9 @@ var (
 func newSUT(t *testing.T) (actor.Repository, account.Repository) {
 	t.Helper()
 	actorRepo := actortest.NewFakeRepository()
-	saveActor(t, actorRepo, actorID1)
-	saveActor(t, actorRepo, actorID2)
-	saveActor(t, actorRepo, actorID3)
+	saveActor(t, actorRepo, actorID1, "000000000")
+	saveActor(t, actorRepo, actorID2, "000000001")
+	saveActor(t, actorRepo, actorID3, "000000002")
 	accountRepo := accounttest.NewFakeRepository()
 	saveAccount(t, accountRepo, accountID1, actorID1)
 	saveAccount(t, accountRepo, accountID2, actorID1)
@@ -38,9 +38,9 @@ func newSUT(t *testing.T) (actor.Repository, account.Repository) {
 	return actorRepo, accountRepo
 }
 
-func saveActor(t *testing.T, repo actor.Repository, id uuid.UUID) {
+func saveActor(t *testing.T, repo actor.Repository, id uuid.UUID, taxID string) {
 	t.Helper()
-	a, _ := actor.New(id, "123456789", actor.Issuer)
+	a, _ := actor.New(id, taxID, actor.Issuer)
 	_ = repo.Save(context.Background(), a)
 }
 
@@ -73,14 +73,14 @@ func TestReturnActorsAndAccounts(t *testing.T) {
 	rec := post(t.Context(), t, actorRepo, accountRepo)
 
 	want := fmt.Sprintf(`{"actors": [
-		{"id": %q, "taxId": "123456789", "type": "issuer", "accounts": [
+		{"id": %q, "taxId": "000000000", "type": "issuer", "accounts": [
 			{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"},
 			{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"}
 		]},
-		{"id": %q, "taxId": "123456789", "type": "issuer", "accounts": [
+		{"id": %q, "taxId": "000000001", "type": "issuer", "accounts": [
 			{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"}
 		]},
-		{"id": %q, "taxId": "123456789", "type": "issuer", "accounts": []}
+		{"id": %q, "taxId": "000000002", "type": "issuer", "accounts": []}
 	]}`, actorID1, accountID1, accountID2, actorID2, accountID3, actorID3)
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusOK, want)
