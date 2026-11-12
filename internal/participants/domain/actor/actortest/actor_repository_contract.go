@@ -10,7 +10,7 @@ import (
 
 func newActor(t *testing.T) *actor.Actor {
 	t.Helper()
-	a, _ := actor.New(uuid.New(), "Tax ID", actor.Issuer)
+	a, _ := actor.New(uuid.New(), "123456789", actor.Issuer)
 	return a
 }
 
@@ -47,9 +47,9 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 			t.Fatalf("Save() = %v, want nil", err)
 		}
 
-		duplicate, _ := actor.New(want.ID(), "Other Tax ID", want.Type())
-		if err := repo.Save(t.Context(), duplicate); !errors.Is(err, actor.ErrActorAlreadyExists) {
-			t.Fatalf("Save() = %v, want %v", err, actor.ErrActorAlreadyExists)
+		duplicate, _ := actor.New(want.ID(), "999999999", want.Type())
+		if err := repo.Save(t.Context(), duplicate); !errors.Is(err, actor.ErrAlreadyExists) {
+			t.Fatalf("Save() = %v, want %v", err, actor.ErrAlreadyExists)
 		}
 
 		got, err := repo.FindByID(t.Context(), want.ID())
@@ -63,8 +63,8 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		repo := newRepo(t)
 		a, err := repo.FindByID(t.Context(), uuid.New())
 
-		if !errors.Is(err, actor.ErrActorNotFound) {
-			t.Errorf("FindByID() = %v, want %v", err, actor.ErrActorNotFound)
+		if !errors.Is(err, actor.ErrNotFound) {
+			t.Errorf("FindByID() = %v, want %v", err, actor.ErrNotFound)
 		}
 		if a != nil {
 			t.Errorf("FindByID() = %+v, want nil", a)

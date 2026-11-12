@@ -65,7 +65,7 @@ func (h *Handler) Handle(ctx context.Context, _ *struct{}) (*Output, error) {
 		}
 		resp.Actors[i] = actorItem{
 			ID:       act.ID.String(),
-			TaxID:    act.TaxID,
+			TaxID:    string(act.TaxID),
 			Type:     string(act.Type),
 			Accounts: accountItems,
 		}

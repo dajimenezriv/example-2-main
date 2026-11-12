@@ -2,17 +2,23 @@ package actor
 
 import (
 	"errors"
+	"regexp"
 	"uuid"
 )
 
 var (
-	ErrTaxIDRequired      = errors.New("tax ID required")
-	ErrInvalidActorType   = errors.New("invalid actor type")
-	ErrActorNotFound      = errors.New("actor not found")
-	ErrActorAlreadyExists = errors.New("actor already exists")
+	ErrInvalidTaxID  = errors.New("actor: invalid tax ID")
+	ErrInvalidType   = errors.New("actor: invalid type")
+	ErrNotFound      = errors.New("actor: not found")
+	ErrAlreadyExists = errors.New("actor: already exists")
 )
 
-type Type string
+type (
+	TaxID string
+	Type  string
+)
+
+var taxIDRegex = regexp.MustCompile(`^[0-9]{9}$`)
 
 const (
 	Issuer             Type = "issuer"
@@ -33,21 +39,21 @@ func (t Type) IsValid() bool {
 
 type Actor struct {
 	id    uuid.UUID
-	taxID string
+	taxID TaxID
 	typ   Type
 }
 
 func New(id uuid.UUID, taxID string, typ Type) (*Actor, error) {
-	if taxID == "" {
-		return nil, ErrTaxIDRequired
-	}
-	if !typ.IsValid() {
-		return nil, ErrInvalidActorType
+	switch {
+	case !taxIDRegex.MatchString(taxID):
+		return nil, ErrInvalidTaxID
+	case !typ.IsValid():
+		return nil, ErrInvalidType
 	}
 
 	return &Actor{
 		id:    id,
-		taxID: taxID,
+		taxID: TaxID(taxID),
 		typ:   typ,
 	}, nil
 }
@@ -57,11 +63,11 @@ func New(id uuid.UUID, taxID string, typ Type) (*Actor, error) {
 func Reconstitute(id uuid.UUID, taxID string, typ Type) *Actor {
 	return &Actor{
 		id:    id,
-		taxID: taxID,
+		taxID: TaxID(taxID),
 		typ:   typ,
 	}
 }
 
 func (a *Actor) ID() uuid.UUID { return a.id }
-func (a *Actor) TaxID() string { return a.taxID }
+func (a *Actor) TaxID() TaxID  { return a.taxID }
 func (a *Actor) Type() Type    { return a.typ }

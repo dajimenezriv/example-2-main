@@ -23,8 +23,8 @@ func setupUoW(t *testing.T) (*UnitOfWork, account.Repository, uuid.UUID) {
 
 func assertNotPersisted(t *testing.T, repo account.Repository, id uuid.UUID) {
 	t.Helper()
-	if _, err := repo.FindByID(t.Context(), id); !errors.Is(err, account.ErrAccountNotFound) {
-		t.Errorf("FindByID() = %v, want %v", err, account.ErrAccountNotFound)
+	if _, err := repo.FindByID(t.Context(), id); !errors.Is(err, account.ErrNotFound) {
+		t.Errorf("FindByID() = %v, want %v", err, account.ErrNotFound)
 	}
 }
 

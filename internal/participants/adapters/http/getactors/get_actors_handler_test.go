@@ -40,13 +40,13 @@ func newSUT(t *testing.T) (actor.Repository, account.Repository) {
 
 func saveActor(t *testing.T, repo actor.Repository, id uuid.UUID) {
 	t.Helper()
-	a, _ := actor.New(id, "Tax ID", actor.Issuer)
+	a, _ := actor.New(id, "123456789", actor.Issuer)
 	_ = repo.Save(context.Background(), a)
 }
 
 func saveAccount(t *testing.T, repo account.Repository, id, actorID uuid.UUID) {
 	t.Helper()
-	a, _ := account.New(id, actorID, "DLT account ID", "Private key", "Public key")
+	a, _ := account.New(id, actorID, "dltID", "privKey", "pubKey")
 	_ = repo.Save(context.Background(), a)
 }
 
@@ -73,14 +73,14 @@ func TestReturnActorsAndAccounts(t *testing.T) {
 	rec := post(t.Context(), t, actorRepo, accountRepo)
 
 	want := fmt.Sprintf(`{"actors": [
-		{"id": %q, "taxId": "Tax ID", "type": "issuer", "accounts": [
-			{"id": %q, "dltAccountId": "DLT account ID", "publicKey": "Public key"},
-			{"id": %q, "dltAccountId": "DLT account ID", "publicKey": "Public key"}
+		{"id": %q, "taxId": "123456789", "type": "issuer", "accounts": [
+			{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"},
+			{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"}
 		]},
-		{"id": %q, "taxId": "Tax ID", "type": "issuer", "accounts": [
-			{"id": %q, "dltAccountId": "DLT account ID", "publicKey": "Public key"}
+		{"id": %q, "taxId": "123456789", "type": "issuer", "accounts": [
+			{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"}
 		]},
-		{"id": %q, "taxId": "Tax ID", "type": "issuer", "accounts": []}
+		{"id": %q, "taxId": "123456789", "type": "issuer", "accounts": []}
 	]}`, actorID1, accountID1, accountID2, actorID2, accountID3, actorID3)
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusOK, want)

@@ -19,7 +19,7 @@ var existingAccountID = uuid.New()
 func newSUT(t *testing.T) account.Repository {
 	t.Helper()
 	repo := accounttest.NewFakeRepository()
-	a, _ := account.New(existingAccountID, uuid.New(), "DLT account ID", "Private key", "Public key")
+	a, _ := account.New(existingAccountID, uuid.New(), "dltID", "privKey", "pubKey")
 	_ = repo.Save(t.Context(), a)
 	return repo
 }
@@ -49,7 +49,7 @@ func TestReturnsAllAccounts(t *testing.T) {
 	rec := post(t.Context(), t, repo)
 
 	want := fmt.Sprintf(`{"accounts": [
-		{"id": %q, "dltAccountId": "DLT account ID", "publicKey": "Public key"}
+		{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"}
 	]}`, existingAccountID.String())
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusOK, want)

@@ -16,8 +16,8 @@ func TestNewActorErrors(t *testing.T) {
 		t       actor.Type
 		wantErr error
 	}{
-		{"empty taxID", "", actor.Issuer, actor.ErrTaxIDRequired},
-		{"invalid actor type", "Tax ID", "invalid", actor.ErrInvalidActorType},
+		{"invalid tax ID", "invalid", actor.Issuer, actor.ErrInvalidTaxID},
+		{"invalid actor type", "123456789", "invalid", actor.ErrInvalidType},
 	}
 
 	for _, tt := range tests {
@@ -26,17 +26,19 @@ func TestNewActorErrors(t *testing.T) {
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("New() = %v, want %v", err, tt.wantErr)
 			}
-			actortest.AssertActor(t, got, nil)
+			if got != nil {
+				t.Errorf("New() = %v, want nil", got)
+			}
 		})
 	}
 }
 
 func TestNewCreatesValidActor(t *testing.T) {
 	id := uuid.New()
-	got, err := actor.New(id, "Tax ID", actor.Issuer)
+	got, err := actor.New(id, "123456789", actor.Issuer)
 	if err != nil {
 		t.Errorf("New() = %v, want nil", err)
 	}
-	want := actor.Reconstitute(id, "Tax ID", actor.Issuer)
+	want := actor.Reconstitute(id, "123456789", actor.Issuer)
 	actortest.AssertActor(t, got, want)
 }

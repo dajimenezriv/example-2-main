@@ -28,12 +28,12 @@ func toActorDomain(d sqlcgen.Actor) *actor.Actor {
 func (r *ActorRepository) Save(ctx context.Context, a *actor.Actor) error {
 	err := r.db.CreateActor(ctx, sqlcgen.CreateActorParams{
 		ID:    a.ID(),
-		TaxID: a.TaxID(),
+		TaxID: string(a.TaxID()),
 		Type:  string(a.Type()),
 	})
 	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
-			return actor.ErrActorAlreadyExists
+			return actor.ErrAlreadyExists
 		}
 		return fmt.Errorf("save actor: %w", err)
 	}
@@ -44,7 +44,7 @@ func (r *ActorRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Ac
 	a, err := r.db.FindActorByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, actor.ErrActorNotFound
+			return nil, actor.ErrNotFound
 		}
 		return nil, fmt.Errorf("find actor by id: %w", err)
 	}

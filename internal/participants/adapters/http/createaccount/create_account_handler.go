@@ -21,8 +21,8 @@ type Input struct {
 type createAccountRequest struct {
 	ActorID      string `json:"actorId" format:"uuid" doc:"ID of the actor that owns the account"`
 	DltAccountID string `json:"dltAccountId" minLength:"1" doc:"Account ID on the DLT"`
-	PrivateKey   string `json:"privateKey,omitempty"`
-	PublicKey    string `json:"publicKey,omitempty"`
+	PrivateKey   string `json:"privateKey" minLength:"1"`
+	PublicKey    string `json:"publicKey" minLength:"1"`
 }
 type Output struct {
 	Body createAccountResponse
@@ -57,7 +57,7 @@ func (h *Handler) Register(api huma.API) {
 func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	actorID, err := uuid.Parse(in.Body.ActorID)
 	if err != nil {
-		return nil, huma.Error400BadRequest("invalid actor id")
+		return nil, huma.Error400BadRequest("invalid actorId")
 	}
 
 	acc, err := h.CreateAccount.Execute(ctx, createaccount.Command{
@@ -68,9 +68,9 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	})
 	switch {
 	case err == nil:
-	case errors.Is(err, actor.ErrActorNotFound):
+	case errors.Is(err, actor.ErrNotFound):
 		return nil, huma.Error404NotFound("actor not found")
-	case errors.Is(err, account.ErrAccountAlreadyExists):
+	case errors.Is(err, account.ErrAlreadyExists):
 		return nil, huma.Error409Conflict("account already exists")
 	default:
 		return nil, httpapi.Error500InternalServerError(err)

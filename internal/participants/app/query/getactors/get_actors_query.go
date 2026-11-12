@@ -11,7 +11,7 @@ import (
 
 type ActorDTO struct {
 	ID       uuid.UUID
-	TaxID    string
+	TaxID    actor.TaxID
 	Type     actor.Type
 	Accounts []AccountDTO
 }
