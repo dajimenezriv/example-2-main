@@ -1,7 +1,7 @@
 version: "3"
 
 vars:
-  DB_URL: postgresql://postgres:postgres@localhost:5555/db?sslmode=disable
+  DB_URL: postgresql://postgres:postgres@localhost:5555/db?sslmode=disable&x-multi-statement=true
   MIGRATIONS: migrations
 
 tasks:

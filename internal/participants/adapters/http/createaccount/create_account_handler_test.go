@@ -28,8 +28,8 @@ var (
 func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, account.Repository) {
 	t.Helper()
 
-	act, _ := actor.New(actorID, "Tax ID", actor.Issuer)
-	acc, _ := account.New(accountID, actorID, "DLT account ID", "Private key", "Public key")
+	act, _ := actor.New(actorID, "123456789", actor.Issuer)
+	acc, _ := account.New(accountID, actorID, "dltID", "privKey", "pubKey")
 
 	actorRepo := actortest.NewFakeRepository()
 	accountRepo := accounttest.NewFakeRepository()
@@ -41,6 +41,15 @@ func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, account.Repository)
 		func() uuid.UUID { return newAccountID },
 	))
 	return h, accountRepo
+}
+
+func requestBody(actorID string) string {
+	return fmt.Sprintf(`{
+		"actorId": %q,
+		"dltAccountId": "dltID",
+		"privateKey": "privKey",
+		"publicKey": "pubKey"
+	}`, actorID)
 }
 
 func post(t *testing.T, h *Handler, body string) *httptest.ResponseRecorder {
@@ -75,26 +84,28 @@ func TestRejectedRequests(t *testing.T) {
 			wantErrors: []*huma.ErrorDetail{
 				{Message: "expected required property actorId to be present", Location: "body", Value: map[string]any{}},
 				{Message: "expected required property dltAccountId to be present", Location: "body", Value: map[string]any{}},
+				{Message: "expected required property privateKey to be present", Location: "body", Value: map[string]any{}},
+				{Message: "expected required property publicKey to be present", Location: "body", Value: map[string]any{}},
 			},
 		},
 		{
 			// Huma accepts an uppercase "URN:UUID:" prefix, but uuid.Parse does not.
-			name:         "actor id rejected by uuid.Parse",
-			body:         fmt.Sprintf(`{"actorId": "URN:UUID:%s", "dltAccountId": "DLT account ID"}`, uuid.New()),
+			name:         "actor ID rejected by uuid.Parse",
+			body:         requestBody("URN:UUID:" + uuid.New().String()),
 			newAccountID: uuid.New(),
 			wantCode:     http.StatusBadRequest,
-			wantDetail:   "invalid actor id",
+			wantDetail:   "invalid actorId",
 		},
 		{
 			name:         "actor not found",
-			body:         fmt.Sprintf(`{"actorId": %q, "dltAccountId": "DLT account ID"}`, uuid.New()),
+			body:         requestBody(uuid.New().String()),
 			newAccountID: uuid.New(),
 			wantCode:     http.StatusNotFound,
 			wantDetail:   "actor not found",
 		},
 		{
 			name:         "account already exists",
-			body:         fmt.Sprintf(`{"actorId": %q, "dltAccountId": "DLT account ID"}`, actorID),
+			body:         requestBody(actorID.String()),
 			newAccountID: accountID,
 			wantCode:     http.StatusConflict,
 			wantDetail:   "account already exists",
@@ -116,11 +127,7 @@ func TestRejectedRequests(t *testing.T) {
 }
 
 func TestCreatesAccount(t *testing.T) {
-	body := fmt.Sprintf(`{
-		"actorId": %q,
-		"dltAccountId": "DLT account ID",
-		"publicKey": "Public key"
-	}`, actorID)
+	body := requestBody(actorID.String())
 
 	newAccountID := uuid.New()
 	h, accountRepo := newSUT(t, newAccountID)
@@ -129,8 +136,8 @@ func TestCreatesAccount(t *testing.T) {
 	want := fmt.Sprintf(`{
 		"id": %q,
 		"actorId": %q,
-		"dltAccountId": "DLT account ID",
-		"publicKey": "Public key"
+		"dltAccountId": "dltID",
+		"publicKey": "pubKey"
 	}`, newAccountID, actorID)
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusCreated, want)

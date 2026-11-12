@@ -33,8 +33,7 @@ func newSUT(t *testing.T, newActorID uuid.UUID) (*Handler, actor.Repository) {
 	return h, actorRepo
 }
 
-func validBody(t *testing.T, taxID, typ string) string {
-	t.Helper()
+func requestBody(taxID, typ string) string {
 	return fmt.Sprintf(`{"taxId": %q, "type": %q}`, taxID, typ)
 }
 
@@ -74,7 +73,7 @@ func TestRejectedRequests(t *testing.T) {
 		},
 		{
 			name:       "invalid tax ID",
-			body:       validBody(t, "invalid", "issuer"),
+			body:       requestBody("invalid", "issuer"),
 			newActorID: uuid.New(),
 			wantCode:   http.StatusUnprocessableEntity,
 			wantDetail: "validation failed",
@@ -84,7 +83,7 @@ func TestRejectedRequests(t *testing.T) {
 		},
 		{
 			name:       "invalid type",
-			body:       validBody(t, "123456789", "invalid"),
+			body:       requestBody("123456789", "invalid"),
 			newActorID: uuid.New(),
 			wantCode:   http.StatusUnprocessableEntity,
 			wantDetail: "validation failed",
@@ -94,7 +93,7 @@ func TestRejectedRequests(t *testing.T) {
 		},
 		{
 			name:       "actor already exists",
-			body:       validBody(t, "123456789", "issuer"),
+			body:       requestBody("123456789", "issuer"),
 			newActorID: actorID,
 			wantCode:   http.StatusConflict,
 			wantDetail: "actor already exists",
@@ -116,7 +115,7 @@ func TestRejectedRequests(t *testing.T) {
 }
 
 func TestCreatesActor(t *testing.T) {
-	body := validBody(t, "123456789", "issuer")
+	body := requestBody("123456789", "issuer")
 
 	newActorID := uuid.New()
 	h, actorRepo := newSUT(t, newActorID)
