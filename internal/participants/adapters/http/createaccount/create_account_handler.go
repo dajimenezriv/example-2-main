@@ -50,7 +50,7 @@ func (h *Handler) Register(api huma.API) {
 		Summary:       "Create an account",
 		Tags:          []string{"Accounts"},
 		DefaultStatus: http.StatusCreated,
-		Errors:        []int{http.StatusBadRequest, http.StatusNotFound, http.StatusConflict},
+		Errors:        []int{http.StatusBadRequest, http.StatusNotFound, http.StatusConflict, http.StatusUnprocessableEntity},
 	}, h.Handle)
 }
 

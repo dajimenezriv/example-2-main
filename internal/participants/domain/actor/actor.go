@@ -19,7 +19,13 @@ type (
 	Type  string
 )
 
-var taxIDRegex = regexp.MustCompile(`^[0-9]{9}$`)
+const (
+	TaxIDPattern            = `^[0-9]{9}$`
+	TaxIDPatternDescription = "9 digits"
+	TaxIDExample            = "123456789"
+)
+
+var taxIDRegex = regexp.MustCompile(TaxIDPattern)
 
 const (
 	Issuer             Type = "issuer"
