@@ -113,19 +113,19 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 
 		// a is now stale.
 		got, err := repo.Update(t.Context(), a)
-		assert.Error(t, err, actor.ErrVersionConflict)
+		assert.ErrorIs(t, err, actor.ErrVersionConflict)
 		assert.Nil(t, got)
 	})
 
 	t.Run("Update checks if exists before tax ID uniqueness", func(t *testing.T) {
 		repo := newRepo(t)
 		saveActor(t, repo, "000000000")
-		a := saveActor(t, repo, "999999999")
+		a := newActor(t, "999999999")
 
 		err := a.ChangeTaxID("000000000")
 		require.NoError(t, err)
 		got, err := repo.Update(t.Context(), a)
-		assert.Error(t, err, actor.ErrNotFound)
+		assert.ErrorIs(t, err, actor.ErrNotFound)
 		assert.Nil(t, got)
 	})
 
@@ -143,7 +143,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		err = a.ChangeTaxID("000000000")
 		require.NoError(t, err)
 		got, err := repo.Update(t.Context(), a)
-		assert.Error(t, err, actor.ErrVersionConflict)
+		assert.ErrorIs(t, err, actor.ErrVersionConflict)
 		assert.Nil(t, got)
 	})
 
