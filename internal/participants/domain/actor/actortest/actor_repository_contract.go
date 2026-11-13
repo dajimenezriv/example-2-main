@@ -132,6 +132,17 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		}
 	})
 
+	t.Run("FindByID returns actor if exists", func(t *testing.T) {
+		repo := newRepo(t)
+		want := saveActor(t, repo, "123456789")
+
+		got, err := repo.FindByID(t.Context(), want.ID())
+		if err != nil {
+			t.Errorf("FindByID) = %v, want nil", err)
+		}
+		AssertActor(t, got, want)
+	})
+
 	t.Run("FindByID returns error if actor not found", func(t *testing.T) {
 		repo := newRepo(t)
 		got, err := repo.FindByID(t.Context(), uuid.New())
