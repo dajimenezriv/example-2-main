@@ -80,6 +80,16 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		assert.Equal(t, want, got)
 	})
 
+	t.Run("Update without modifying the actor increases version", func(t *testing.T) {
+		repo := newRepo(t)
+		a := saveActor(t, repo, "000000000")
+
+		got, err := repo.Update(t.Context(), a)
+		require.NoError(t, err)
+		want := actor.Reconstitute(a.ID(), "000000000", a.Type(), 2)
+		assert.Equal(t, want, got)
+	})
+
 	t.Run("Update fails if actor does not exist", func(t *testing.T) {
 		repo := newRepo(t)
 		got, err := repo.Update(t.Context(), newActor(t, "000000000"))
