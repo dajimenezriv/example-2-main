@@ -1,26 +1,35 @@
 package actortest
 
 import (
-	"errors"
 	"testing"
 	"uuid"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"exercise/internal/participants/domain/actor"
 )
 
 func newActor(t *testing.T, taxID string) *actor.Actor {
 	t.Helper()
-	a, _ := actor.New(uuid.New(), taxID, actor.Issuer)
+	a, err := actor.New(uuid.New(), taxID, actor.Issuer)
+	require.NoError(t, err)
 	return a
 }
 
 func saveActor(t *testing.T, repo actor.Repository, taxID string) *actor.Actor {
 	t.Helper()
 	a := newActor(t, taxID)
-	if err := repo.Save(t.Context(), a); err != nil {
-		t.Fatalf("save actor: %v", err)
-	}
+	err := repo.Save(t.Context(), a)
+	require.NoError(t, err)
 	return a
+}
+
+func checkActor(t *testing.T, repo actor.Repository, want *actor.Actor) {
+	t.Helper()
+	got, err := repo.FindByID(t.Context(), want.ID())
+	assert.NoError(t, err)
+	assert.Equal(t, want, got)
 }
 
 func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
@@ -28,146 +37,144 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 
 	t.Run("Save stores the actor", func(t *testing.T) {
 		repo := newRepo(t)
-		want := newActor(t, "123456789")
+		a := newActor(t, "000000000")
 
-		if err := repo.Save(t.Context(), want); err != nil {
-			t.Fatalf("Save() = %v, want nil", err)
-		}
-
-		got, err := repo.FindByID(t.Context(), want.ID())
-		if err != nil {
-			t.Errorf("FindByID() = %v, want nil", err)
-		}
-		AssertActor(t, got, want)
+		err := repo.Save(t.Context(), a)
+		require.NoError(t, err)
+		checkActor(t, repo, a)
 	})
 
 	t.Run("Save fails if ID already exists", func(t *testing.T) {
 		repo := newRepo(t)
-		want := saveActor(t, repo, "000000000")
-		duplicate, _ := actor.New(want.ID(), "999999999", want.Type())
+		a := saveActor(t, repo, "000000000")
+		duplicate, err := actor.New(a.ID(), "999999999", a.Type())
+		require.NoError(t, err)
 
-		if err := repo.Save(t.Context(), duplicate); !errors.Is(err, actor.ErrAlreadyExists) {
-			t.Fatalf("Save() = %v, want %v", err, actor.ErrAlreadyExists)
-		}
-
-		got, err := repo.FindByID(t.Context(), want.ID())
-		if err != nil {
-			t.Errorf("FindByID() = %v, want nil", err)
-		}
-		AssertActor(t, got, want)
+		err = repo.Save(t.Context(), duplicate)
+		require.ErrorIs(t, err, actor.ErrAlreadyExists)
+		checkActor(t, repo, a)
 	})
 
 	t.Run("Save fails if tax ID already exists", func(t *testing.T) {
 		repo := newRepo(t)
-		want := saveActor(t, repo, "000000000")
-		duplicate := newActor(t, string(want.TaxID()))
+		saveActor(t, repo, "000000000")
+		a := newActor(t, "000000000")
 
-		if err := repo.Save(t.Context(), duplicate); !errors.Is(err, actor.ErrTaxIDAlreadyExists) {
-			t.Fatalf("Save() = %v, want %v", err, actor.ErrTaxIDAlreadyExists)
-		}
+		err := repo.Save(t.Context(), a)
+		require.ErrorIs(t, err, actor.ErrTaxIDAlreadyExists)
 
-		got, err := repo.FindByID(t.Context(), want.ID())
-		if err != nil {
-			t.Errorf("FindByID() = %+v, want nil", err)
-		}
-		AssertActor(t, got, want)
+		actors, err := repo.FindAll(t.Context())
+		assert.NoError(t, err)
+		assert.Len(t, actors, 1)
 	})
 
 	t.Run("Update modifies the actor and increases version", func(t *testing.T) {
 		repo := newRepo(t)
 		a := saveActor(t, repo, "000000000")
-		a.ChangeTaxID("999999999")
+		err := a.ChangeTaxID("999999999")
+		require.NoError(t, err)
 
 		got, err := repo.Update(t.Context(), a)
-		if err != nil {
-			t.Errorf("Update() = %v, want nil", err)
-		}
+		require.NoError(t, err)
 		want := actor.Reconstitute(a.ID(), string(a.TaxID()), a.Type(), 2)
-		AssertActor(t, got, want)
+		assert.Equal(t, want, got)
 	})
 
 	t.Run("Update fails if actor does not exist", func(t *testing.T) {
 		repo := newRepo(t)
-		got, err := repo.Update(t.Context(), newActor(t, "123456789"))
-
-		if !errors.Is(err, actor.ErrNotFound) {
-			t.Errorf("Update() = %v, want %v", err, actor.ErrNotFound)
-		}
-		if got != nil {
-			t.Errorf("Update() = %+v, want nil", got)
-		}
+		got, err := repo.Update(t.Context(), newActor(t, "000000000"))
+		assert.ErrorIs(t, err, actor.ErrNotFound)
+		assert.Nil(t, got)
 	})
 
 	t.Run("Update fails if tax ID already exists", func(t *testing.T) {
 		repo := newRepo(t)
-		a1 := saveActor(t, repo, "000000000")
-		a2 := saveActor(t, repo, "999999999")
-		a1.ChangeTaxID(string(a2.TaxID()))
+		want := saveActor(t, repo, "000000000")
+		saveActor(t, repo, "999999999")
 
-		got, err := repo.Update(t.Context(), a1)
-		if !errors.Is(err, actor.ErrTaxIDAlreadyExists) {
-			t.Errorf("Update() = %v, want %v", err, actor.ErrTaxIDAlreadyExists)
-		}
-		if got != nil {
-			t.Fatalf("Update() = %+v, want nil", got)
-		}
+		err := want.ChangeTaxID("999999999")
+		require.NoError(t, err)
+		got, err := repo.Update(t.Context(), want)
+		assert.ErrorIs(t, err, actor.ErrTaxIDAlreadyExists)
+		assert.Nil(t, got)
 
-		got, err = repo.FindByID(t.Context(), a1.ID())
-		if err != nil {
-			t.Errorf("FindByID() = %+v, want nil", err)
-		}
-		a1.ChangeTaxID("000000000")
-		AssertActor(t, got, a1)
+		err = want.ChangeTaxID("000000000")
+		checkActor(t, repo, want)
 	})
 
-	t.Run("Update fails if version does not match", func(t *testing.T) {
+	t.Run("Update fails if versions do not match", func(t *testing.T) {
 		repo := newRepo(t)
-		got, err := repo.Update(t.Context(), newActor(t, "123456789"))
+		a := saveActor(t, repo, "000000000")
 
-		if !errors.Is(err, actor.ErrNotFound) {
-			t.Errorf("Update() = %v, want %v", err, actor.ErrNotFound)
-		}
-		if got != nil {
-			t.Errorf("Update() = %+v, want nil", got)
-		}
+		err := a.ChangeTaxID("999999999")
+		require.NoError(t, err)
+		_, err = repo.Update(t.Context(), a)
+		require.NoError(t, err)
+
+		// a is now stale.
+		got, err := repo.Update(t.Context(), a)
+		assert.Error(t, err, actor.ErrVersionConflict)
+		assert.Nil(t, got)
+	})
+
+	t.Run("Update checks if exists before tax ID uniqueness", func(t *testing.T) {
+		repo := newRepo(t)
+		saveActor(t, repo, "000000000")
+		a := saveActor(t, repo, "999999999")
+
+		err := a.ChangeTaxID("000000000")
+		require.NoError(t, err)
+		got, err := repo.Update(t.Context(), a)
+		assert.Error(t, err, actor.ErrNotFound)
+		assert.Nil(t, got)
+	})
+
+	t.Run("Update checks version before tax ID uniqueness", func(t *testing.T) {
+		repo := newRepo(t)
+		saveActor(t, repo, "000000000")
+		a := saveActor(t, repo, "999999999")
+
+		err := a.ChangeTaxID("111111111")
+		require.NoError(t, err)
+		_, err = repo.Update(t.Context(), a)
+		require.NoError(t, err)
+
+		// a1 is now stale.
+		err = a.ChangeTaxID("000000000")
+		require.NoError(t, err)
+		got, err := repo.Update(t.Context(), a)
+		assert.Error(t, err, actor.ErrVersionConflict)
+		assert.Nil(t, got)
 	})
 
 	t.Run("FindByID returns actor if exists", func(t *testing.T) {
 		repo := newRepo(t)
-		want := saveActor(t, repo, "123456789")
+		a := saveActor(t, repo, "000000000")
 
-		got, err := repo.FindByID(t.Context(), want.ID())
-		if err != nil {
-			t.Errorf("FindByID) = %v, want nil", err)
-		}
-		AssertActor(t, got, want)
+		got, err := repo.FindByID(t.Context(), a.ID())
+		assert.NoError(t, err)
+		assert.Equal(t, a, got)
 	})
 
 	t.Run("FindByID returns error if actor not found", func(t *testing.T) {
 		repo := newRepo(t)
-		got, err := repo.FindByID(t.Context(), uuid.New())
 
-		if !errors.Is(err, actor.ErrNotFound) {
-			t.Errorf("FindByID() = %v, want %v", err, actor.ErrNotFound)
-		}
-		if got != nil {
-			t.Errorf("FindByID() = %+v, want nil", got)
-		}
+		got, err := repo.FindByID(t.Context(), uuid.New())
+		assert.ErrorIs(t, err, actor.ErrNotFound)
+		assert.Nil(t, got)
 	})
 
 	t.Run("FindAll returns all actors in inserted order", func(t *testing.T) {
 		repo := newRepo(t)
-		want := []*actor.Actor{
+		actors := []*actor.Actor{
 			saveActor(t, repo, "000000000"),
-			saveActor(t, repo, "000000001"),
-			saveActor(t, repo, "000000002"),
-			saveActor(t, repo, "000000003"),
+			saveActor(t, repo, "111111111"),
+			saveActor(t, repo, "222222222"),
+			saveActor(t, repo, "444444444"),
 		}
 
 		got, err := repo.FindAll(t.Context())
-		if err != nil {
-			t.Errorf("FindAll() = %v, want nil", err)
-		}
-		AssertActor(t, got, want)
+		assert.NoError(t, err)
+		assert.Equal(t, actors, got)
 	})
 }
