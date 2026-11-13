@@ -38,9 +38,9 @@ func (f *fakeRepository) Save(ctx context.Context, act *actor.Actor) error {
 	return nil
 }
 
-func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor) error {
+func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor) (*actor.Actor, error) {
 	if err := ctx.Err(); err != nil {
-		return err
+		return nil, err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -51,14 +51,15 @@ func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor) error {
 			continue
 		}
 		if a.TaxID() == act.TaxID() {
-			return actor.ErrTaxIDAlreadyExists
+			return nil, actor.ErrTaxIDAlreadyExists
 		}
 	}
 	if idx == -1 {
-		return actor.ErrNotFound
+		return nil, actor.ErrNotFound
 	}
+	act = actor.Reconstitute(act.ID(), string(act.TaxID()), act.Type(), act.Version()+1)
 	f.actors[idx] = *act
-	return nil
+	return act, nil
 }
 
 func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {

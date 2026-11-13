@@ -1,17 +1,19 @@
 -- name: CreateActor :exec
 INSERT INTO
-  actors (id, tax_id, type)
+  actors (id, tax_id, type, version)
 VALUES
-  (@id, @tax_id, @type);
+  (@id, @tax_id, @type, @version);
 
--- name: UpdateActor :exec
+-- name: UpdateActor :one
 UPDATE
   actors
 SET
   tax_id = @tax_id,
-  type = @type
+  type = @type,
+  version = version + 1
 WHERE
-  id = @id;
+  id = @id
+  AND version = @version RETURNING *;
 
 -- name: FindActorByID :one
 SELECT

@@ -45,9 +45,10 @@ func (t Type) IsValid() bool {
 }
 
 type Actor struct {
-	id    uuid.UUID
-	taxID TaxID
-	typ   Type
+	id      uuid.UUID
+	taxID   TaxID
+	typ     Type
+	version int64
 }
 
 func New(id uuid.UUID, taxID string, typ Type) (*Actor, error) {
@@ -59,25 +60,28 @@ func New(id uuid.UUID, taxID string, typ Type) (*Actor, error) {
 	}
 
 	return &Actor{
-		id:    id,
-		taxID: TaxID(taxID),
-		typ:   typ,
+		id:      id,
+		taxID:   TaxID(taxID),
+		typ:     typ,
+		version: 1,
 	}, nil
 }
 
 // Reconstitute rebuilds an Actor from persistence.
 // Intended for repository adapters only.
-func Reconstitute(id uuid.UUID, taxID string, typ Type) *Actor {
+func Reconstitute(id uuid.UUID, taxID string, typ Type, version int64) *Actor {
 	return &Actor{
-		id:    id,
-		taxID: TaxID(taxID),
-		typ:   typ,
+		id:      id,
+		taxID:   TaxID(taxID),
+		typ:     typ,
+		version: version,
 	}
 }
 
-func (a *Actor) ID() uuid.UUID { return a.id }
-func (a *Actor) TaxID() TaxID  { return a.taxID }
-func (a *Actor) Type() Type    { return a.typ }
+func (a *Actor) ID() uuid.UUID  { return a.id }
+func (a *Actor) TaxID() TaxID   { return a.taxID }
+func (a *Actor) Type() Type     { return a.typ }
+func (a *Actor) Version() int64 { return a.version }
 
 func (a *Actor) ChangeTaxID(taxID string) error {
 	if !taxIDRegex.MatchString(taxID) {

@@ -13,25 +13,31 @@ import (
 
 const createActor = `-- name: CreateActor :exec
 INSERT INTO
-  actors (id, tax_id, type)
+  actors (id, tax_id, type, version)
 VALUES
-  ($1, $2, $3)
+  ($1, $2, $3, $4)
 `
 
 type CreateActorParams struct {
-	ID    uuid.UUID
-	TaxID string
-	Type  string
+	ID      uuid.UUID
+	TaxID   string
+	Type    string
+	Version int64
 }
 
 func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) error {
-	_, err := q.db.Exec(ctx, createActor, arg.ID, arg.TaxID, arg.Type)
+	_, err := q.db.Exec(ctx, createActor,
+		arg.ID,
+		arg.TaxID,
+		arg.Type,
+		arg.Version,
+	)
 	return err
 }
 
 const findActorByID = `-- name: FindActorByID :one
 SELECT
-  id, tax_id, type
+  id, tax_id, type, version
 FROM
   actors
 WHERE
@@ -41,13 +47,18 @@ WHERE
 func (q *Queries) FindActorByID(ctx context.Context, id uuid.UUID) (Actor, error) {
 	row := q.db.QueryRow(ctx, findActorByID, id)
 	var i Actor
-	err := row.Scan(&i.ID, &i.TaxID, &i.Type)
+	err := row.Scan(
+		&i.ID,
+		&i.TaxID,
+		&i.Type,
+		&i.Version,
+	)
 	return i, err
 }
 
 const findActors = `-- name: FindActors :many
 SELECT
-  id, tax_id, type
+  id, tax_id, type, version
 FROM
   actors
 `
@@ -61,7 +72,12 @@ func (q *Queries) FindActors(ctx context.Context) ([]Actor, error) {
 	var items []Actor
 	for rows.Next() {
 		var i Actor
-		if err := rows.Scan(&i.ID, &i.TaxID, &i.Type); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.TaxID,
+			&i.Type,
+			&i.Version,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -72,23 +88,38 @@ func (q *Queries) FindActors(ctx context.Context) ([]Actor, error) {
 	return items, nil
 }
 
-const updateActor = `-- name: UpdateActor :exec
+const updateActor = `-- name: UpdateActor :one
 UPDATE
   actors
 SET
   tax_id = $1,
-  type = $2
+  type = $2,
+  version = version + 1
 WHERE
   id = $3
+  AND version = $4 RETURNING id, tax_id, type, version
 `
 
 type UpdateActorParams struct {
-	TaxID string
-	Type  string
-	ID    uuid.UUID
+	TaxID   string
+	Type    string
+	ID      uuid.UUID
+	Version int64
 }
 
-func (q *Queries) UpdateActor(ctx context.Context, arg UpdateActorParams) error {
-	_, err := q.db.Exec(ctx, updateActor, arg.TaxID, arg.Type, arg.ID)
-	return err
+func (q *Queries) UpdateActor(ctx context.Context, arg UpdateActorParams) (Actor, error) {
+	row := q.db.QueryRow(ctx, updateActor,
+		arg.TaxID,
+		arg.Type,
+		arg.ID,
+		arg.Version,
+	)
+	var i Actor
+	err := row.Scan(
+		&i.ID,
+		&i.TaxID,
+		&i.Type,
+		&i.Version,
+	)
+	return i, err
 }

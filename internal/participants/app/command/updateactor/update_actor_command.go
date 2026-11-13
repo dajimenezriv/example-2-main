@@ -32,8 +32,9 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*actor.Actor, error
 	if err := a.ChangeType(cmd.Type); err != nil {
 		return nil, err
 	}
-	if err := h.repo.Update(ctx, a); err != nil {
+	if act, err := h.repo.Update(ctx, a); err != nil {
 		return nil, err
+	} else {
+		return act, nil
 	}
-	return a, nil
 }
