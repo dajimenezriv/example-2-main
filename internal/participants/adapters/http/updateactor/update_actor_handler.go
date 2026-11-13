@@ -59,7 +59,7 @@ func (h *Handler) Register(api huma.API) {
 		Summary:       "Update an actor",
 		Tags:          []string{"Actors"},
 		DefaultStatus: http.StatusOK,
-		Errors:        []int{http.StatusBadRequest, http.StatusNotFound, http.StatusUnprocessableEntity},
+		Errors:        []int{http.StatusBadRequest, http.StatusNotFound, http.StatusConflict, http.StatusUnprocessableEntity},
 	}, h.Handle)
 }
 
@@ -78,6 +78,8 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	case err == nil:
 	case errors.Is(err, actor.ErrNotFound):
 		return nil, huma.Error404NotFound("actor not found")
+	case errors.Is(err, actor.ErrVersionConflict):
+		return nil, huma.Error409Conflict("actor version conflict")
 	default:
 		return nil, httpapi.Error500InternalServerError(err)
 	}
