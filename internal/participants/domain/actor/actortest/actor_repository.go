@@ -47,15 +47,20 @@ func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor) (*actor.A
 	idx := -1
 	for i, a := range f.actors {
 		if a.ID() == act.ID() {
+			if a.Version() != act.Version() {
+				return nil, actor.ErrVersionConflict
+			}
 			idx = i
-			continue
-		}
-		if a.TaxID() == act.TaxID() {
-			return nil, actor.ErrTaxIDAlreadyExists
+			break
 		}
 	}
 	if idx == -1 {
 		return nil, actor.ErrNotFound
+	}
+	for _, a := range f.actors {
+		if a.TaxID() == act.TaxID() {
+			return nil, actor.ErrTaxIDAlreadyExists
+		}
 	}
 	act = actor.Reconstitute(act.ID(), string(act.TaxID()), act.Type(), act.Version()+1)
 	f.actors[idx] = *act

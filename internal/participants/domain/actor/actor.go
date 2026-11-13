@@ -12,6 +12,7 @@ var (
 	ErrNotFound           = errors.New("actor: not found")
 	ErrAlreadyExists      = errors.New("actor: already exists")
 	ErrTaxIDAlreadyExists = errors.New("actor: tax ID is taken")
+	ErrVersionConflict    = errors.New("actor: version conflict")
 )
 
 type (
@@ -20,7 +21,7 @@ type (
 )
 
 const (
-	TaxIDPattern            = `^[0-9]{9}$`
+	TaxIDPattern            = `^\d{9}$`
 	TaxIDPatternDescription = "9 digits"
 	TaxIDExample            = "123456789"
 )

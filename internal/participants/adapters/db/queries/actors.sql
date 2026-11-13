@@ -15,6 +15,14 @@ WHERE
   id = @id
   AND version = @version RETURNING *;
 
+-- name: GetActorVersion :one
+SELECT
+  version
+FROM
+  actors
+WHERE
+  id = @id;
+
 -- name: FindActorByID :one
 SELECT
   *

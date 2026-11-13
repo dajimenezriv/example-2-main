@@ -32,51 +32,53 @@ func (r *ActorRepository) Save(ctx context.Context, a *actor.Actor) error {
 		Type:    string(a.Type()),
 		Version: a.Version(),
 	})
-	if err != nil {
-		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
-			switch pgErr.ConstraintName {
-			case actorsPKeyConstraint:
-				return actor.ErrAlreadyExists
-			case actorsTaxIDConstraint:
-				return actor.ErrTaxIDAlreadyExists
-			}
-		}
-		return fmt.Errorf("save actor: %w", err)
+	if err == nil {
+		return nil
 	}
-	return nil
+	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
+		switch pgErr.ConstraintName {
+		case actorsPKeyConstraint:
+			return actor.ErrAlreadyExists
+		case actorsTaxIDConstraint:
+			return actor.ErrTaxIDAlreadyExists
+		}
+	}
+	return fmt.Errorf("save actor: %w", err)
 }
 
 func (r *ActorRepository) Update(ctx context.Context, a *actor.Actor) (*actor.Actor, error) {
-	d, err := r.db.UpdateActor(ctx, sqlcgen.UpdateActorParams{
+	act, err := r.db.UpdateActor(ctx, sqlcgen.UpdateActorParams{
 		ID:      a.ID(),
 		TaxID:   string(a.TaxID()),
 		Type:    string(a.Type()),
 		Version: a.Version(),
 	})
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, actor.ErrNotFound
-		}
-		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
-			switch pgErr.ConstraintName {
-			case actorsTaxIDConstraint:
-				return nil, actor.ErrTaxIDAlreadyExists
-			}
-		}
-		return nil, fmt.Errorf("update actor: %w", err)
+	if err == nil {
+		return toActorDomain(act), nil
 	}
-	return toActorDomain(d), nil
+	if errors.Is(err, pgx.ErrNoRows) {
+		if _, vErr := r.db.GetActorVersion(ctx, a.ID()); vErr == nil {
+			return nil, actor.ErrVersionConflict
+		}
+		return nil, actor.ErrNotFound
+	}
+	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
+		if pgErr.ConstraintName == actorsTaxIDConstraint {
+			return nil, actor.ErrTaxIDAlreadyExists
+		}
+	}
+	return nil, fmt.Errorf("update actor: %w", err)
 }
 
 func (r *ActorRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
 	a, err := r.db.FindActorByID(ctx, id)
-	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, actor.ErrNotFound
-		}
-		return nil, fmt.Errorf("find actor by id: %w", err)
+	if err == nil {
+		return toActorDomain(a), nil
 	}
-	return toActorDomain(a), nil
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, actor.ErrNotFound
+	}
+	return nil, fmt.Errorf("find actor by id: %w", err)
 }
 
 func (r *ActorRepository) FindAll(ctx context.Context) ([]*actor.Actor, error) {

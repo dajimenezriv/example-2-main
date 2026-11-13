@@ -1,12 +1,12 @@
 package actor_test
 
 import (
-	"errors"
 	"testing"
 	"uuid"
 
+	"github.com/stretchr/testify/assert"
+
 	"exercise/internal/participants/domain/actor"
-	"exercise/internal/participants/domain/actor/actortest"
 )
 
 func TestNewActorErrors(t *testing.T) {
@@ -23,12 +23,8 @@ func TestNewActorErrors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := actor.New(uuid.New(), tt.taxID, tt.t)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("New() = %v, want %v", err, tt.wantErr)
-			}
-			if got != nil {
-				t.Errorf("New() = %v, want nil", got)
-			}
+			assert.ErrorIs(t, err, tt.wantErr)
+			assert.Nil(t, got)
 		})
 	}
 }
@@ -36,9 +32,7 @@ func TestNewActorErrors(t *testing.T) {
 func TestNewCreatesValidActor(t *testing.T) {
 	id := uuid.New()
 	got, err := actor.New(id, "123456789", actor.Issuer)
-	if err != nil {
-		t.Errorf("New() = %v, want nil", err)
-	}
+	assert.NoError(t, err)
 	want := actor.Reconstitute(id, "123456789", actor.Issuer, 1)
-	actortest.AssertActor(t, got, want)
+	assert.Equal(t, got, want)
 }

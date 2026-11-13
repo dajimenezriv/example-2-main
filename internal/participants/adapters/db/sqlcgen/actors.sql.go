@@ -88,6 +88,22 @@ func (q *Queries) FindActors(ctx context.Context) ([]Actor, error) {
 	return items, nil
 }
 
+const getActorVersion = `-- name: GetActorVersion :one
+SELECT
+  version
+FROM
+  actors
+WHERE
+  id = $1
+`
+
+func (q *Queries) GetActorVersion(ctx context.Context, id uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, getActorVersion, id)
+	var version int64
+	err := row.Scan(&version)
+	return version, err
+}
+
 const updateActor = `-- name: UpdateActor :one
 UPDATE
   actors
