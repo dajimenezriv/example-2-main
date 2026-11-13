@@ -2,7 +2,6 @@ package actortest
 
 import (
 	"context"
-	"slices"
 	"sync"
 	"uuid"
 
@@ -57,7 +56,10 @@ func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor) (*actor.A
 	if idx == -1 {
 		return nil, actor.ErrNotFound
 	}
-	for _, a := range f.actors {
+	for i, a := range f.actors {
+		if i == idx {
+			continue
+		}
 		if a.TaxID() == act.TaxID() {
 			return nil, actor.ErrTaxIDAlreadyExists
 		}
@@ -92,16 +94,4 @@ func (f *fakeRepository) FindAll(ctx context.Context) ([]*actor.Actor, error) {
 		accs[i] = &acc
 	}
 	return accs, nil
-}
-
-func (f *fakeRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	f.actors = slices.DeleteFunc(f.actors, func(a actor.Actor) bool {
-		return a.ID() == id
-	})
-	return nil
 }

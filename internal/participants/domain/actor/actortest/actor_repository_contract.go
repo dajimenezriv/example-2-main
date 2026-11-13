@@ -76,7 +76,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 
 		got, err := repo.Update(t.Context(), a)
 		require.NoError(t, err)
-		want := actor.Reconstitute(a.ID(), string(a.TaxID()), a.Type(), 2)
+		want := actor.Reconstitute(a.ID(), "999999999", a.Type(), 2)
 		assert.Equal(t, want, got)
 	})
 
@@ -89,32 +89,36 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 
 	t.Run("Update fails if tax ID already exists", func(t *testing.T) {
 		repo := newRepo(t)
-		want := saveActor(t, repo, "000000000")
+		a := saveActor(t, repo, "000000000")
 		saveActor(t, repo, "999999999")
 
-		err := want.ChangeTaxID("999999999")
+		err := a.ChangeTaxID("999999999")
 		require.NoError(t, err)
-		got, err := repo.Update(t.Context(), want)
+		got, err := repo.Update(t.Context(), a)
 		assert.ErrorIs(t, err, actor.ErrTaxIDAlreadyExists)
 		assert.Nil(t, got)
 
-		err = want.ChangeTaxID("000000000")
+		want := actor.Reconstitute(a.ID(), "000000000", a.Type(), 1)
 		checkActor(t, repo, want)
 	})
 
 	t.Run("Update fails if versions do not match", func(t *testing.T) {
 		repo := newRepo(t)
 		a := saveActor(t, repo, "000000000")
+		want := actor.Reconstitute(a.ID(), "999999999", a.Type(), 2)
 
 		err := a.ChangeTaxID("999999999")
 		require.NoError(t, err)
-		_, err = repo.Update(t.Context(), a)
+		got, err := repo.Update(t.Context(), a)
 		require.NoError(t, err)
+		assert.Equal(t, want, got)
 
 		// a is now stale.
-		got, err := repo.Update(t.Context(), a)
+		got, err = repo.Update(t.Context(), a)
 		assert.ErrorIs(t, err, actor.ErrVersionConflict)
 		assert.Nil(t, got)
+
+		checkActor(t, repo, want)
 	})
 
 	t.Run("Update checks if exists before tax ID uniqueness", func(t *testing.T) {
@@ -133,18 +137,22 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		repo := newRepo(t)
 		saveActor(t, repo, "000000000")
 		a := saveActor(t, repo, "999999999")
+		want := actor.Reconstitute(a.ID(), "111111111", a.Type(), 2)
 
 		err := a.ChangeTaxID("111111111")
 		require.NoError(t, err)
-		_, err = repo.Update(t.Context(), a)
+		got, err := repo.Update(t.Context(), a)
 		require.NoError(t, err)
+		assert.Equal(t, want, got)
 
-		// a1 is now stale.
+		// a is now stale.
 		err = a.ChangeTaxID("000000000")
 		require.NoError(t, err)
-		got, err := repo.Update(t.Context(), a)
+		got, err = repo.Update(t.Context(), a)
 		assert.ErrorIs(t, err, actor.ErrVersionConflict)
 		assert.Nil(t, got)
+
+		checkActor(t, repo, want)
 	})
 
 	t.Run("FindByID returns actor if exists", func(t *testing.T) {
