@@ -57,10 +57,7 @@ func (r *ActorRepository) Update(ctx context.Context, a *actor.Actor) (*actor.Ac
 		return toActorDomain(act), nil
 	}
 	if errors.Is(err, pgx.ErrNoRows) {
-		if _, vErr := r.db.GetActorVersion(ctx, a.ID()); vErr == nil {
-			return nil, actor.ErrVersionConflict
-		}
-		return nil, actor.ErrNotFound
+		return nil, r.explainUpdateMiss(ctx, a.ID())
 	}
 	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
 		if pgErr.ConstraintName == actorsTaxIDConstraint {
@@ -68,6 +65,18 @@ func (r *ActorRepository) Update(ctx context.Context, a *actor.Actor) (*actor.Ac
 		}
 	}
 	return nil, fmt.Errorf("update actor: %w", err)
+}
+
+func (r *ActorRepository) explainUpdateMiss(ctx context.Context, id uuid.UUID) error {
+	_, err := r.db.GetActorVersion(ctx, id)
+	switch {
+	case err == nil:
+		return actor.ErrVersionConflict
+	case errors.Is(err, pgx.ErrNoRows):
+		return actor.ErrNotFound
+	default:
+		return fmt.Errorf("update actor: get version: %w", err)
+	}
 }
 
 func (r *ActorRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
