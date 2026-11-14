@@ -40,9 +40,10 @@ type Output struct {
 }
 
 type updateActorResponse struct {
-	ID    string `json:"id" format:"uuid"`
-	TaxID string `json:"taxId"`
-	Type  string `json:"type"`
+	ID      string `json:"id" format:"uuid"`
+	TaxID   string `json:"taxId"`
+	Type    string `json:"type"`
+	Version int64  `json:"version"`
 }
 
 type Handler struct {
@@ -87,8 +88,9 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	}
 
 	return &Output{Body: updateActorResponse{
-		ID:    a.ID().String(),
-		TaxID: string(a.TaxID()),
-		Type:  string(a.Type()),
+		ID:      a.ID().String(),
+		TaxID:   string(a.TaxID()),
+		Type:    string(a.Type()),
+		Version: a.Version(),
 	}}, nil
 }

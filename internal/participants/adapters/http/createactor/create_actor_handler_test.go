@@ -14,27 +14,24 @@ import (
 	"exercise/internal/testhelpers"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-var actorID = uuid.New()
+var actorID = uuid.MustParse("00000000-0000-0000-0000-000000000000")
 
 func newSUT(t *testing.T, newActorID uuid.UUID) (*Handler, actor.Repository) {
 	t.Helper()
 
-	act, _ := actor.New(actorID, "000000000", actor.Issuer)
+	a, err := actor.New(actorID, "000000000", actor.Issuer)
+	require.NoError(t, err)
 
-	actorRepo := actortest.NewFakeRepository()
-	_ = actorRepo.Save(t.Context(), act)
+	repo := actortest.NewFakeRepository()
+	err = repo.Save(t.Context(), a)
+	require.NoError(t, err)
 
-	h := NewHandler(createactor.NewHandler(
-		actorRepo,
-		func() uuid.UUID { return newActorID },
-	))
-	return h, actorRepo
-}
-
-func requestBody(taxID, typ string) string {
-	return fmt.Sprintf(`{"taxId": %q, "type": %q}`, taxID, typ)
+	h := NewHandler(createactor.NewHandler(repo, func() uuid.UUID { return newActorID }))
+	return h, repo
 }
 
 func post(t *testing.T, h *Handler, body string) *httptest.ResponseRecorder {
@@ -42,6 +39,10 @@ func post(t *testing.T, h *Handler, body string) *httptest.ResponseRecorder {
 	api := testhelpers.NewHumaAPI(t)
 	h.Register(api)
 	return api.Post("/actors", strings.NewReader(body))
+}
+
+func requestBody(taxID, typ string) string {
+	return fmt.Sprintf(`{"taxId": %q, "type": %q}`, taxID, typ)
 }
 
 func TestRejectedRequests(t *testing.T) {
@@ -108,15 +109,14 @@ func TestRejectedRequests(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h, actorRepo := newSUT(t, tt.newActorID)
+			h, repo := newSUT(t, tt.newActorID)
 			rec := post(t, h, tt.body)
 
 			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail, tt.wantErrors...)
 
-			actors, _ := actorRepo.FindAll(t.Context())
-			if got := len(actors); got != 1 {
-				t.Errorf("len(actors) = %d, want 1", got)
-			}
+			actors, err := repo.FindAll(t.Context())
+			assert.NoError(t, err)
+			assert.Len(t, actors, 1)
 		})
 	}
 }
@@ -125,7 +125,7 @@ func TestCreatesActor(t *testing.T) {
 	body := requestBody("999999999", "issuer")
 
 	newActorID := uuid.New()
-	h, actorRepo := newSUT(t, newActorID)
+	h, repo := newSUT(t, newActorID)
 	rec := post(t, h, body)
 
 	want := fmt.Sprintf(`{
@@ -137,8 +137,7 @@ func TestCreatesActor(t *testing.T) {
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusCreated, want)
 
-	actors, _ := actorRepo.FindAll(t.Context())
-	if got := len(actors); got != 2 {
-		t.Errorf("len(actors) = %d, want 2", got)
-	}
+	actors, err := repo.FindAll(t.Context())
+	assert.NoError(t, err)
+	assert.Len(t, actors, 2)
 }
