@@ -105,6 +105,7 @@ func registerHTTPHandlers(app *application) chi.Router {
 
 	app.GetActorsHTTP.Register(api)
 	app.CreateActorHTTP.Register(api)
+	app.UpdateActorHTTP.Register(api)
 	app.GetAccountsHTTP.Register(api)
 	app.CreateAccountHTTP.Register(api)
 

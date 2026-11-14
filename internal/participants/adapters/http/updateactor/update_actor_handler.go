@@ -19,8 +19,9 @@ type Input struct {
 }
 
 type updateActorRequest struct {
-	TaxID taxID  `json:"taxId"`
-	Type  string `json:"type" enum:"issuer,investor,platform_admin,market_operator,settlement_operator,custom"`
+	TaxID   taxID  `json:"taxId"`
+	Type    string `json:"type" enum:"issuer,investor,platform_admin,market_operator,settlement_operator,custom"`
+	Version int64  `json:"version"`
 }
 
 type taxID string
@@ -70,9 +71,10 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	}
 
 	a, err := h.UpdateActor.Execute(ctx, updateactor.Command{
-		ID:    id,
-		TaxID: string(in.Body.TaxID),
-		Type:  actor.Type(in.Body.Type),
+		ID:      id,
+		TaxID:   string(in.Body.TaxID),
+		Type:    actor.Type(in.Body.Type),
+		Version: in.Body.Version,
 	})
 	switch {
 	case err == nil:

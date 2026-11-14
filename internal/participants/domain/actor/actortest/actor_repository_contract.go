@@ -74,7 +74,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		err := a.ChangeTaxID("999999999")
 		require.NoError(t, err)
 
-		got, err := repo.Update(t.Context(), a)
+		got, err := repo.Update(t.Context(), a, 1)
 		require.NoError(t, err)
 		want := actor.Reconstitute(a.ID(), "999999999", a.Type(), 2)
 		assert.Equal(t, want, got)
@@ -84,7 +84,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		repo := newRepo(t)
 		a := saveActor(t, repo, "000000000")
 
-		got, err := repo.Update(t.Context(), a)
+		got, err := repo.Update(t.Context(), a, 1)
 		require.NoError(t, err)
 		want := actor.Reconstitute(a.ID(), "000000000", a.Type(), 2)
 		assert.Equal(t, want, got)
@@ -92,7 +92,9 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 
 	t.Run("Update fails if actor does not exist", func(t *testing.T) {
 		repo := newRepo(t)
-		got, err := repo.Update(t.Context(), newActor(t, "000000000"))
+		a := newActor(t, "000000000")
+
+		got, err := repo.Update(t.Context(), a, 1)
 		assert.ErrorIs(t, err, actor.ErrNotFound)
 		assert.Nil(t, got)
 	})
@@ -104,7 +106,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 
 		err := a.ChangeTaxID("999999999")
 		require.NoError(t, err)
-		got, err := repo.Update(t.Context(), a)
+		got, err := repo.Update(t.Context(), a, 1)
 		assert.ErrorIs(t, err, actor.ErrTaxIDAlreadyExists)
 		assert.Nil(t, got)
 
@@ -115,19 +117,14 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 	t.Run("Update fails if versions do not match", func(t *testing.T) {
 		repo := newRepo(t)
 		a := saveActor(t, repo, "000000000")
-		want := actor.Reconstitute(a.ID(), "999999999", a.Type(), 2)
 
 		err := a.ChangeTaxID("999999999")
 		require.NoError(t, err)
-		got, err := repo.Update(t.Context(), a)
-		require.NoError(t, err)
-		assert.Equal(t, want, got)
-
-		// a is now stale.
-		got, err = repo.Update(t.Context(), a)
+		got, err := repo.Update(t.Context(), a, 2)
 		assert.ErrorIs(t, err, actor.ErrVersionConflict)
 		assert.Nil(t, got)
 
+		want := actor.Reconstitute(a.ID(), "000000000", a.Type(), 1)
 		checkActor(t, repo, want)
 	})
 
@@ -138,7 +135,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 
 		err := a.ChangeTaxID("000000000")
 		require.NoError(t, err)
-		got, err := repo.Update(t.Context(), a)
+		got, err := repo.Update(t.Context(), a, 1)
 		assert.ErrorIs(t, err, actor.ErrNotFound)
 		assert.Nil(t, got)
 	})
@@ -147,21 +144,14 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		repo := newRepo(t)
 		saveActor(t, repo, "000000000")
 		a := saveActor(t, repo, "999999999")
-		want := actor.Reconstitute(a.ID(), "111111111", a.Type(), 2)
 
-		err := a.ChangeTaxID("111111111")
+		err := a.ChangeTaxID("000000000")
 		require.NoError(t, err)
-		got, err := repo.Update(t.Context(), a)
-		require.NoError(t, err)
-		assert.Equal(t, want, got)
-
-		// a is now stale.
-		err = a.ChangeTaxID("000000000")
-		require.NoError(t, err)
-		got, err = repo.Update(t.Context(), a)
+		got, err := repo.Update(t.Context(), a, 2)
 		assert.ErrorIs(t, err, actor.ErrVersionConflict)
 		assert.Nil(t, got)
 
+		want := actor.Reconstitute(a.ID(), "999999999", a.Type(), 1)
 		checkActor(t, repo, want)
 	})
 

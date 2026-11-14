@@ -37,7 +37,7 @@ func (f *fakeRepository) Save(ctx context.Context, act *actor.Actor) error {
 	return nil
 }
 
-func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor) (*actor.Actor, error) {
+func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor, expectedVersion int64) (*actor.Actor, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor) (*actor.A
 	idx := -1
 	for i, a := range f.actors {
 		if a.ID() == act.ID() {
-			if a.Version() != act.Version() {
+			if a.Version() != expectedVersion {
 				return nil, actor.ErrVersionConflict
 			}
 			idx = i
@@ -64,7 +64,7 @@ func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor) (*actor.A
 			return nil, actor.ErrTaxIDAlreadyExists
 		}
 	}
-	act = actor.Reconstitute(act.ID(), string(act.TaxID()), act.Type(), act.Version()+1)
+	act = actor.Reconstitute(act.ID(), string(act.TaxID()), act.Type(), expectedVersion+1)
 	f.actors[idx] = *act
 	return act, nil
 }

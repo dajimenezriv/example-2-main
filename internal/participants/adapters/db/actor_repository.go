@@ -46,12 +46,12 @@ func (r *ActorRepository) Save(ctx context.Context, a *actor.Actor) error {
 	return fmt.Errorf("save actor: %w", err)
 }
 
-func (r *ActorRepository) Update(ctx context.Context, a *actor.Actor) (*actor.Actor, error) {
+func (r *ActorRepository) Update(ctx context.Context, a *actor.Actor, expectedVersion int64) (*actor.Actor, error) {
 	act, err := r.db.UpdateActor(ctx, sqlcgen.UpdateActorParams{
 		ID:      a.ID(),
 		TaxID:   string(a.TaxID()),
 		Type:    string(a.Type()),
-		Version: a.Version(),
+		Version: expectedVersion,
 	})
 	if err == nil {
 		return toActorDomain(act), nil

@@ -131,7 +131,8 @@ func TestCreatesActor(t *testing.T) {
 	want := fmt.Sprintf(`{
 		"id": %q,
 		"taxId": "999999999",
-		"type": "issuer"
+		"type": "issuer",
+		"version": 1
 	}`, newActorID)
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusCreated, want)
