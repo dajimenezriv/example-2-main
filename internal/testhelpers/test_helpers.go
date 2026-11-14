@@ -10,7 +10,6 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/humatest"
-	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -24,21 +23,17 @@ func NewHumaAPI(t *testing.T) humatest.TestAPI {
 func AssertHumaOutput(t *testing.T, rec *httptest.ResponseRecorder, wantCode int, wantBody string) {
 	t.Helper()
 
-	if rec.Code != wantCode {
-		t.Errorf("Code = %d, want %d", rec.Code, wantCode)
-	}
-	if got, want := rec.Header().Get("Content-Type"), "application/json"; got != want {
-		t.Errorf("Content-Type = %q, want %q", got, want)
-	}
+	assert.Equal(t, wantCode, rec.Code)
+	assert.Equal(t, "application/json", rec.Header().Get("Content-Type"))
 
 	got := rec.Body.String()
 
 	var g, w any
-	_ = json.Unmarshal([]byte(got), &g)
-	_ = json.Unmarshal([]byte(wantBody), &w)
-	if diff := cmp.Diff(w, g); diff != "" {
-		t.Errorf("JSON mismatch (-want +got):\n%s", diff)
-	}
+	err := json.Unmarshal([]byte(got), &g)
+	require.NoError(t, err)
+	err = json.Unmarshal([]byte(wantBody), &w)
+	require.NoError(t, err)
+	assert.Equal(t, w, g)
 }
 
 func AssertHumaError(t *testing.T, rec *httptest.ResponseRecorder, wantCode int, wantDetail string, wantErrors ...*huma.ErrorDetail) {
