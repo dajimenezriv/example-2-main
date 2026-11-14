@@ -18,10 +18,7 @@ import (
 	"exercise/internal/testhelpers"
 )
 
-var (
-	actorID      = uuid.MustParse("00000000-0000-0000-0000-000000000000")
-	otherActorID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
-)
+var actorID = uuid.MustParse("00000000-0000-0000-0000-000000000000")
 
 func saveActor(t *testing.T, repo actor.Repository, id uuid.UUID, taxID string) *actor.Actor {
 	t.Helper()
@@ -37,7 +34,7 @@ func newSUT(t *testing.T) (*actor.Actor, *Handler, actor.Repository) {
 
 	repo := actortest.NewFakeRepository()
 	a := saveActor(t, repo, actorID, "000000000")
-	saveActor(t, repo, otherActorID, "111111111")
+	saveActor(t, repo, uuid.New(), "111111111")
 
 	h := NewHandler(updateactor.NewHandler(repo))
 	return a, h, repo
