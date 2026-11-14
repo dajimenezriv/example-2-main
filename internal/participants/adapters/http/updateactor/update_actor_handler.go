@@ -81,6 +81,8 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	case err == nil:
 	case errors.Is(err, actor.ErrNotFound):
 		return nil, huma.Error404NotFound("actor not found")
+	case errors.Is(err, actor.ErrTaxIDAlreadyExists):
+		return nil, huma.Error409Conflict("actor with this tax ID already exists")
 	case errors.Is(err, actor.ErrVersionConflict):
 		return nil, huma.Error409Conflict("actor version conflict")
 	default:

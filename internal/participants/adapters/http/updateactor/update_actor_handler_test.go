@@ -18,17 +18,26 @@ import (
 	"exercise/internal/testhelpers"
 )
 
-var actorID = uuid.MustParse("00000000-0000-0000-0000-000000000000")
+var (
+	actorID      = uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	otherActorID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+)
+
+func saveActor(t *testing.T, repo actor.Repository, id uuid.UUID, taxID string) *actor.Actor {
+	t.Helper()
+	a, err := actor.New(id, taxID, actor.Issuer)
+	require.NoError(t, err)
+	err = repo.Save(t.Context(), a)
+	require.NoError(t, err)
+	return a
+}
 
 func newSUT(t *testing.T) (*actor.Actor, *Handler, actor.Repository) {
 	t.Helper()
 
-	a, err := actor.New(actorID, "000000000", actor.Issuer)
-	require.NoError(t, err)
-
 	repo := actortest.NewFakeRepository()
-	err = repo.Save(t.Context(), a)
-	require.NoError(t, err)
+	a := saveActor(t, repo, actorID, "000000000")
+	saveActor(t, repo, otherActorID, "111111111")
 
 	h := NewHandler(updateactor.NewHandler(repo))
 	return a, h, repo
@@ -107,6 +116,13 @@ func TestRejectedRequests(t *testing.T) {
 			body:       requestBody("000000000", "issuer", 1),
 			wantCode:   http.StatusNotFound,
 			wantDetail: "actor not found",
+		},
+		{
+			name:       "tax ID already exists",
+			id:         actorID.String(),
+			body:       requestBody("111111111", "issuer", 1),
+			wantCode:   http.StatusConflict,
+			wantDetail: "actor with this tax ID already exists",
 		},
 		{
 			name:       "version conflict",
