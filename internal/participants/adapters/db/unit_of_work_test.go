@@ -6,7 +6,6 @@ import (
 	"testing"
 	"uuid"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"exercise/internal/participants/adapters/db/sqlcgen"
@@ -67,17 +66,13 @@ func TestUnitOfWork(t *testing.T) {
 		u, repo, actorID := setupUoW(t)
 		acc := accounttest.NewAccount(t, actorID)
 
-		func() {
-			defer func() {
-				assert.Error(t, errBoom, recover())
-			}()
-			err := u.Do(t.Context(), func(ctx context.Context, repos uow.Repositories) error {
+		require.PanicsWithValue(t, "boom", func() {
+			_ = u.Do(t.Context(), func(ctx context.Context, repos uow.Repositories) error {
 				err := repos.Accounts.Save(ctx, acc)
 				require.NoError(t, err)
 				panic("boom")
 			})
-			require.NoError(t, err)
-		}()
+		})
 
 		assertNotPersisted(t, repo, acc.ID())
 	})
