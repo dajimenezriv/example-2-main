@@ -8,6 +8,9 @@ import (
 	"testing"
 	"uuid"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"exercise/internal/participants/app/query/getaccounts"
 	"exercise/internal/participants/domain/account"
 	"exercise/internal/participants/domain/account/accounttest"
@@ -19,8 +22,10 @@ var existingAccountID = uuid.New()
 func newSUT(t *testing.T) account.Repository {
 	t.Helper()
 	repo := accounttest.NewFakeRepository()
-	a, _ := account.New(existingAccountID, uuid.New(), "dltID", "privKey", "pubKey")
-	_ = repo.Save(t.Context(), a)
+	a, err := account.New(existingAccountID, uuid.New(), "dltID", "privKey", "pubKey")
+	require.NoError(t, err)
+	err = repo.Save(t.Context(), a)
+	require.NoError(t, err)
 	return repo
 }
 
@@ -38,10 +43,7 @@ func TestContextCanceledReturnsError(t *testing.T) {
 	cancel()
 
 	rec := post(ctx, t, repo)
-
-	if got, want := rec.Code, http.StatusInternalServerError; got != want {
-		t.Errorf("Code = %d, want %d", got, want)
-	}
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
 }
 
 func TestReturnsAllAccounts(t *testing.T) {

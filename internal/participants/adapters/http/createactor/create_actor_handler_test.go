@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var actorID = uuid.MustParse("00000000-0000-0000-0000-000000000000")
+var actorID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 func newSUT(t *testing.T, newActorID uuid.UUID) (*Handler, actor.Repository) {
 	t.Helper()

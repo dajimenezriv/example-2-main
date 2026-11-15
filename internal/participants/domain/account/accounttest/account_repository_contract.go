@@ -2,9 +2,11 @@ package accounttest
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"uuid"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"exercise/internal/participants/domain/account"
 )
@@ -16,15 +18,24 @@ type Fixture struct {
 
 func NewAccount(t *testing.T, actorID uuid.UUID) *account.Account {
 	t.Helper()
-	a, _ := account.New(uuid.New(), actorID, "dltID", "privKey", "pubKey")
+	a, err := account.New(uuid.New(), actorID, "dltID", "privKey", "pubKey")
+	require.NoError(t, err)
 	return a
 }
 
 func saveAccount(t *testing.T, repo account.Repository, actorID uuid.UUID) *account.Account {
 	t.Helper()
 	a := NewAccount(t, actorID)
-	_ = repo.Save(t.Context(), a)
+	err := repo.Save(t.Context(), a)
+	require.NoError(t, err)
 	return a
+}
+
+func checkAccount(t *testing.T, repo account.Repository, want *account.Account) {
+	t.Helper()
+	got, err := repo.FindByID(t.Context(), want.ID())
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
 }
 
 func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
@@ -32,87 +43,55 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 
 	t.Run("Save stores the account", func(t *testing.T) {
 		f := setup(t)
-		want := NewAccount(t, f.NewActorID(t))
+		a := NewAccount(t, f.NewActorID(t))
 
-		if err := f.Repo.Save(t.Context(), want); err != nil {
-			t.Fatalf("Save() = %v, want nil", err)
-		}
-
-		got, err := f.Repo.FindByID(t.Context(), want.ID())
-		if err != nil {
-			t.Errorf("FindByID() = %v, want nil", err)
-		}
-		AssertAccount(t, got, want)
+		err := f.Repo.Save(t.Context(), a)
+		require.NoError(t, err)
+		checkAccount(t, f.Repo, a)
 	})
 
-	t.Run("Save fails if account already exists", func(t *testing.T) {
+	t.Run("Save fails if ID already exists", func(t *testing.T) {
 		f := setup(t)
-		want := NewAccount(t, f.NewActorID(t))
+		a := saveAccount(t, f.Repo, f.NewActorID(t))
+		duplicate, err := account.New(a.ID(), a.ActorID(), "Other dltID", a.PrivateKey(), a.PublicKey())
+		require.NoError(t, err)
 
-		if err := f.Repo.Save(t.Context(), want); err != nil {
-			t.Fatalf("Save() = %v, want nil", err)
-		}
-
-		duplicate, _ := account.New(
-			want.ID(),
-			want.ActorID(),
-			"Other dltID",
-			want.PrivateKey(),
-			want.PublicKey(),
-		)
-		if err := f.Repo.Save(t.Context(), duplicate); !errors.Is(err, account.ErrAlreadyExists) {
-			t.Fatalf("Save() = %v, want %v", err, account.ErrAlreadyExists)
-		}
-
-		got, err := f.Repo.FindByID(t.Context(), want.ID())
-		if err != nil {
-			t.Errorf("FindByID() = %v, want nil", err)
-		}
-		AssertAccount(t, got, want)
+		err = f.Repo.Save(t.Context(), duplicate)
+		require.ErrorIs(t, err, account.ErrAlreadyExists)
+		checkAccount(t, f.Repo, a)
 	})
 
-	t.Run("Save returns error if context is canceled", func(t *testing.T) {
+	t.Run("Save fails if context is canceled", func(t *testing.T) {
 		f := setup(t)
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
-		err := f.Repo.Save(ctx, NewAccount(t, uuid.New()))
-
-		if !errors.Is(err, context.Canceled) {
-			t.Errorf("Save() = %v, want %v", err, context.Canceled)
-		}
+		a := NewAccount(t, uuid.New())
+		err := f.Repo.Save(ctx, a)
+		require.ErrorIs(t, err, context.Canceled)
 	})
 
-	t.Run("FindByID returns error if account not found", func(t *testing.T) {
+	t.Run("FindByID fails if account not found", func(t *testing.T) {
 		f := setup(t)
-		a, err := f.Repo.FindByID(t.Context(), uuid.New())
 
-		if !errors.Is(err, account.ErrNotFound) {
-			t.Errorf("FindByID() = %v, want %v", err, account.ErrNotFound)
-		}
-		if a != nil {
-			t.Errorf("FindByID() = %+v, want nil", a)
-		}
+		got, err := f.Repo.FindByID(t.Context(), uuid.New())
+		require.ErrorIs(t, err, account.ErrNotFound)
+		assert.Nil(t, got)
 	})
 
-	t.Run("FindByID returns error if context is canceled", func(t *testing.T) {
+	t.Run("FindByID fails if context is canceled", func(t *testing.T) {
 		f := setup(t)
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
 		got, err := f.Repo.FindByID(ctx, uuid.New())
-
-		if !errors.Is(err, context.Canceled) {
-			t.Errorf("FindByID() = %v, want %v", err, context.Canceled)
-		}
-		if got != nil {
-			t.Errorf("FindByID() = %+v, want nil", got)
-		}
+		require.ErrorIs(t, err, context.Canceled)
+		assert.Nil(t, got)
 	})
 
 	t.Run("FindAll returns all accounts in inserted order", func(t *testing.T) {
 		f := setup(t)
-		want := []*account.Account{
+		accounts := []*account.Account{
 			saveAccount(t, f.Repo, f.NewActorID(t)),
 			saveAccount(t, f.Repo, f.NewActorID(t)),
 			saveAccount(t, f.Repo, f.NewActorID(t)),
@@ -120,32 +99,25 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		}
 
 		got, err := f.Repo.FindAll(t.Context())
-		if err != nil {
-			t.Errorf("FindAll() = %v, want nil", err)
-		}
-		AssertAccount(t, got, want)
+		require.NoError(t, err)
+		assert.Equal(t, accounts, got)
 	})
 
-	t.Run("FindAll returns error if context is canceled", func(t *testing.T) {
+	t.Run("FindAll fails if context is canceled", func(t *testing.T) {
 		f := setup(t)
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
 		got, err := f.Repo.FindAll(ctx)
-
-		if !errors.Is(err, context.Canceled) {
-			t.Errorf("FindAll() = %v, want %v", err, context.Canceled)
-		}
-		if got != nil {
-			t.Errorf("FindAll() = %+v, want nil", got)
-		}
+		require.ErrorIs(t, err, context.Canceled)
+		assert.Nil(t, got)
 	})
 
 	t.Run("FindByActorIDs returns accounts filtered by actor ID", func(t *testing.T) {
 		f := setup(t)
 		actorID1 := f.NewActorID(t)
 		actorID2 := f.NewActorID(t)
-		want := []*account.Account{
+		accounts := []*account.Account{
 			saveAccount(t, f.Repo, actorID1),
 			saveAccount(t, f.Repo, actorID1),
 			saveAccount(t, f.Repo, actorID2),
@@ -153,36 +125,25 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		saveAccount(t, f.Repo, f.NewActorID(t))
 
 		got, err := f.Repo.FindByActorIDs(t.Context(), []uuid.UUID{actorID1, actorID2})
-		if err != nil {
-			t.Errorf("FindAll() = %v, want nil", err)
-		}
-		AssertAccount(t, got, want)
+		require.NoError(t, err)
+		assert.Equal(t, accounts, got)
 	})
 
-	t.Run("FindByActorIDs returns empty if no actor uuids", func(t *testing.T) {
+	t.Run("FindByActorIDs returns empty if no actor IDs", func(t *testing.T) {
 		f := setup(t)
 
 		got, err := f.Repo.FindByActorIDs(t.Context(), []uuid.UUID{})
-		if err != nil {
-			t.Errorf("FindByActorIDs() = %v, want nil", err)
-		}
-		if got := len(got); got != 0 {
-			t.Errorf("len(FindByActorIDs()) = %d, want 0", got)
-		}
+		require.NoError(t, err)
+		assert.Empty(t, got)
 	})
 
-	t.Run("FindByActorIDs returns error if context is canceled", func(t *testing.T) {
+	t.Run("FindByActorIDs fails if context is canceled", func(t *testing.T) {
 		f := setup(t)
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
 		got, err := f.Repo.FindByActorIDs(ctx, []uuid.UUID{uuid.New()})
-
-		if !errors.Is(err, context.Canceled) {
-			t.Errorf("FindByActorIDs() = %v, want %v", err, context.Canceled)
-		}
-		if got != nil {
-			t.Errorf("FindByActorIDs() = %+v, want nil", got)
-		}
+		require.ErrorIs(t, err, context.Canceled)
+		assert.Nil(t, got)
 	})
 }

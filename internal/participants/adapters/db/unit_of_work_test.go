@@ -6,6 +6,9 @@ import (
 	"testing"
 	"uuid"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"exercise/internal/participants/adapters/db/sqlcgen"
 	"exercise/internal/participants/app/uow"
 	"exercise/internal/participants/domain/account"
@@ -16,16 +19,16 @@ var errBoom = errors.New("boom")
 
 func setupUoW(t *testing.T) (*UnitOfWork, account.Repository, uuid.UUID) {
 	t.Helper()
-	_, _ = testPool.Exec(t.Context(), "TRUNCATE actors CASCADE")
+	_, err := testPool.Exec(t.Context(), "TRUNCATE actors CASCADE")
+	require.NoError(t, err)
 	q := sqlcgen.New(testPool)
 	return NewUnitOfWork(testPool), NewAccountRepository(q), seedActor(t, q)
 }
 
 func assertNotPersisted(t *testing.T, repo account.Repository, id uuid.UUID) {
 	t.Helper()
-	if _, err := repo.FindByID(t.Context(), id); !errors.Is(err, account.ErrNotFound) {
-		t.Errorf("FindByID() = %v, want %v", err, account.ErrNotFound)
-	}
+	_, err := repo.FindByID(t.Context(), id)
+	require.ErrorIs(t, err, account.ErrNotFound)
 }
 
 func TestUnitOfWork(t *testing.T) {
@@ -40,13 +43,10 @@ func TestUnitOfWork(t *testing.T) {
 		err := u.Do(t.Context(), func(ctx context.Context, repos uow.Repositories) error {
 			return repos.Accounts.Save(ctx, acc)
 		})
-		if err != nil {
-			t.Fatalf("Do() = %v, want nil", err)
-		}
+		require.NoError(t, err)
 
-		if _, err := repo.FindByID(t.Context(), acc.ID()); err != nil {
-			t.Errorf("FindByID() = %v, want nil", err)
-		}
+		_, err = repo.FindByID(t.Context(), acc.ID())
+		require.NoError(t, err)
 	})
 
 	t.Run("rolls back and returns fn error unchanged", func(t *testing.T) {
@@ -54,14 +54,11 @@ func TestUnitOfWork(t *testing.T) {
 		acc := accounttest.NewAccount(t, actorID)
 
 		err := u.Do(t.Context(), func(ctx context.Context, repos uow.Repositories) error {
-			if err := repos.Accounts.Save(ctx, acc); err != nil {
-				return err
-			}
+			err := repos.Accounts.Save(ctx, acc)
+			require.NoError(t, err)
 			return errBoom
 		})
-		if !errors.Is(err, errBoom) {
-			t.Errorf("Do() = %v, want %v", err, errBoom)
-		}
+		require.ErrorIs(t, err, errBoom)
 
 		assertNotPersisted(t, repo, acc.ID())
 	})
@@ -72,16 +69,14 @@ func TestUnitOfWork(t *testing.T) {
 
 		func() {
 			defer func() {
-				if r := recover(); r == nil {
-					t.Error("Do() did not propagate the panic")
-				}
+				assert.Error(t, errBoom, recover())
 			}()
-			_ = u.Do(t.Context(), func(ctx context.Context, repos uow.Repositories) error {
-				if err := repos.Accounts.Save(ctx, acc); err != nil {
-					return err
-				}
+			err := u.Do(t.Context(), func(ctx context.Context, repos uow.Repositories) error {
+				err := repos.Accounts.Save(ctx, acc)
+				require.NoError(t, err)
 				panic("boom")
 			})
+			require.NoError(t, err)
 		}()
 
 		assertNotPersisted(t, repo, acc.ID())
@@ -97,11 +92,7 @@ func TestUnitOfWork(t *testing.T) {
 			called = true
 			return nil
 		})
-		if !errors.Is(err, context.Canceled) {
-			t.Errorf("Do() = %v, want %v", err, context.Canceled)
-		}
-		if called {
-			t.Error("fn was called, want not called")
-		}
+		require.ErrorIs(t, err, context.Canceled)
+		require.False(t, called)
 	})
 }

@@ -18,7 +18,7 @@ import (
 	"exercise/internal/testhelpers"
 )
 
-var actorID = uuid.MustParse("00000000-0000-0000-0000-000000000000")
+var actorID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
 
 func saveActor(t *testing.T, repo actor.Repository, id uuid.UUID, taxID string) *actor.Actor {
 	t.Helper()
