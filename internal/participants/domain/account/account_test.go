@@ -41,6 +41,6 @@ func TestNewCreatesValidAccount(t *testing.T) {
 	if err != nil {
 		t.Errorf("New() = %v, want nil", err)
 	}
-	want := account.Reconstitute(id, actorID, "dltID", "privKey", "pubKey")
+	want := account.Reconstitute(id, actorID, "dltID", "privKey", "pubKey", 1)
 	accounttest.AssertAccount(t, got, want)
 }

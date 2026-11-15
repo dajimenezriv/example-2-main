@@ -28,6 +28,7 @@ func toAccountDomain(d sqlcgen.Account) *account.Account {
 		d.DltAccountID,
 		d.PrivateKey,
 		d.PublicKey,
+		d.Version,
 	)
 }
 

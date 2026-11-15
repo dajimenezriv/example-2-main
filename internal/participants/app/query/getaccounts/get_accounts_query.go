@@ -12,6 +12,7 @@ type AccountDTO struct {
 	DltAccountID string
 	PrivateKey   string
 	PublicKey    string
+	Version      int64
 }
 
 type Query struct {
@@ -35,6 +36,7 @@ func (q *Query) Execute(ctx context.Context) ([]*AccountDTO, error) {
 			DltAccountID: a.DltAccountID(),
 			PrivateKey:   a.PrivateKey(),
 			PublicKey:    a.PublicKey(),
+			Version:      a.Version(),
 		})
 	}
 	return dtos, nil
