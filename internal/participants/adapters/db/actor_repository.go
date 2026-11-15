@@ -67,18 +67,6 @@ func (r *ActorRepository) Update(ctx context.Context, a *actor.Actor, expectedVe
 	return nil, fmt.Errorf("update actor: %w", err)
 }
 
-func (r *ActorRepository) explainUpdateMiss(ctx context.Context, id uuid.UUID) error {
-	_, err := r.db.GetActorVersion(ctx, id)
-	switch {
-	case err == nil:
-		return actor.ErrVersionConflict
-	case errors.Is(err, pgx.ErrNoRows):
-		return actor.ErrNotFound
-	default:
-		return fmt.Errorf("update actor: get version: %w", err)
-	}
-}
-
 func (r *ActorRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
 	a, err := r.db.FindActorByID(ctx, id)
 	if err == nil {
@@ -100,4 +88,16 @@ func (r *ActorRepository) FindAll(ctx context.Context) ([]*actor.Actor, error) {
 		res[i] = toActorDomain(a)
 	}
 	return res, nil
+}
+
+func (r *ActorRepository) explainUpdateMiss(ctx context.Context, id uuid.UUID) error {
+	_, err := r.db.GetActorVersion(ctx, id)
+	switch {
+	case err == nil:
+		return actor.ErrVersionConflict
+	case errors.Is(err, pgx.ErrNoRows):
+		return actor.ErrNotFound
+	default:
+		return fmt.Errorf("update actor: get version: %w", err)
+	}
 }
