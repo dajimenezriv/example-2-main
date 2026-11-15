@@ -39,6 +39,7 @@ func (r *AccountRepository) Save(ctx context.Context, a *account.Account) error 
 		DltAccountID: a.DltAccountID(),
 		PrivateKey:   a.PrivateKey(),
 		PublicKey:    a.PublicKey(),
+		Version:      a.Version(),
 	})
 	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {

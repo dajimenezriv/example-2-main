@@ -32,14 +32,18 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*actor.Actor, error
 		return nil, actor.ErrVersionConflict
 	}
 	if cmd.TaxID != nil {
-		if err := a.ChangeTaxID(*cmd.TaxID); err != nil {
+		if err = a.ChangeTaxID(*cmd.TaxID); err != nil {
 			return nil, fmt.Errorf("change tax id: %w", err)
 		}
 	}
 	if cmd.Type != nil {
-		if err := a.ChangeType(*cmd.Type); err != nil {
+		if err = a.ChangeType(*cmd.Type); err != nil {
 			return nil, fmt.Errorf("change type: %w", err)
 		}
 	}
-	return h.repo.Update(ctx, a, cmd.Version)
+	updated, err := h.repo.Update(ctx, a, cmd.Version)
+	if err != nil {
+		return nil, fmt.Errorf("update actor: %w", err)
+	}
+	return updated, nil
 }
