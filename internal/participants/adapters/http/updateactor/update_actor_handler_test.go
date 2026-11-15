@@ -40,7 +40,7 @@ func newSUT(t *testing.T) (*actor.Actor, *Handler, actor.Repository) {
 	return a, h, repo
 }
 
-func patch(t *testing.T, h *Handler, id string, body string) *httptest.ResponseRecorder {
+func patch(t *testing.T, h *Handler, id, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	api := testhelpers.NewHumaAPI(t)
 	h.Register(api)
