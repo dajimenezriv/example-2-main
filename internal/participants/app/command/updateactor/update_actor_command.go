@@ -9,8 +9,8 @@ import (
 
 type Command struct {
 	ID      uuid.UUID
-	TaxID   string
-	Type    actor.Type
+	TaxID   *string
+	Type    *actor.Type
 	Version int64
 }
 
@@ -30,11 +30,15 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*actor.Actor, error
 	if a.Version() != cmd.Version {
 		return nil, actor.ErrVersionConflict
 	}
-	if err := a.ChangeTaxID(cmd.TaxID); err != nil {
-		return nil, err
+	if cmd.TaxID != nil {
+		if err := a.ChangeTaxID(*cmd.TaxID); err != nil {
+			return nil, err
+		}
 	}
-	if err := a.ChangeType(cmd.Type); err != nil {
-		return nil, err
+	if cmd.Type != nil {
+		if err := a.ChangeType(*cmd.Type); err != nil {
+			return nil, err
+		}
 	}
 	return h.repo.Update(ctx, a, cmd.Version)
 }

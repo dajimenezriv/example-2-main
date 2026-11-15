@@ -19,9 +19,9 @@ type Input struct {
 }
 
 type updateActorRequest struct {
-	TaxID   taxID  `json:"taxId"`
-	Type    string `json:"type" enum:"issuer,investor,platform_admin,market_operator,settlement_operator,custom"`
-	Version int64  `json:"version" minimum:"1"`
+	TaxID   *taxID  `json:"taxId,omitempty"`
+	Type    *string `json:"type,omitempty" enum:"issuer,investor,platform_admin,market_operator,settlement_operator,custom"`
+	Version int64   `json:"version" minimum:"1"`
 }
 
 type taxID string
@@ -56,7 +56,7 @@ func NewHandler(cmd *updateactor.Handler) *Handler {
 
 func (h *Handler) Register(api huma.API) {
 	huma.Register(api, huma.Operation{
-		Method:        http.MethodPut,
+		Method:        http.MethodPatch,
 		Path:          "/actors/{id}",
 		Summary:       "Update an actor",
 		Tags:          []string{"Actors"},
@@ -71,12 +71,18 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 		return nil, huma.Error400BadRequest("invalid actorId")
 	}
 
-	a, err := h.UpdateActor.Execute(ctx, updateactor.Command{
+	cmd := updateactor.Command{
 		ID:      id,
-		TaxID:   string(in.Body.TaxID),
-		Type:    actor.Type(in.Body.Type),
 		Version: in.Body.Version,
-	})
+	}
+	if in.Body.TaxID != nil {
+		cmd.TaxID = new(string(*in.Body.TaxID))
+	}
+	if in.Body.Type != nil {
+		cmd.Type = new(actor.Type(*in.Body.Type))
+	}
+
+	a, err := h.UpdateActor.Execute(ctx, cmd)
 	switch {
 	case err == nil:
 	case errors.Is(err, actor.ErrNotFound):

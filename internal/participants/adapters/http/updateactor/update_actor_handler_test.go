@@ -40,11 +40,11 @@ func newSUT(t *testing.T) (*actor.Actor, *Handler, actor.Repository) {
 	return a, h, repo
 }
 
-func put(t *testing.T, h *Handler, id string, body string) *httptest.ResponseRecorder {
+func patch(t *testing.T, h *Handler, id string, body string) *httptest.ResponseRecorder {
 	t.Helper()
 	api := testhelpers.NewHumaAPI(t)
 	h.Register(api)
-	return api.Put("/actors/"+id, strings.NewReader(body))
+	return api.Patch("/actors/"+id, strings.NewReader(body))
 }
 
 func requestBody(taxID, typ string, version int64) string {
@@ -74,8 +74,6 @@ func TestRejectedRequests(t *testing.T) {
 			wantCode:   http.StatusUnprocessableEntity,
 			wantDetail: "validation failed",
 			wantErrors: []*huma.ErrorDetail{
-				{Message: "expected required property taxId to be present", Location: "body", Value: map[string]any{}},
-				{Message: "expected required property type to be present", Location: "body", Value: map[string]any{}},
 				{Message: "expected required property version to be present", Location: "body", Value: map[string]any{}},
 			},
 		},
@@ -142,7 +140,7 @@ func TestRejectedRequests(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			a, h, repo := newSUT(t)
-			rec := put(t, h, tt.id, tt.body)
+			rec := patch(t, h, tt.id, tt.body)
 
 			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail, tt.wantErrors...)
 
@@ -154,22 +152,55 @@ func TestRejectedRequests(t *testing.T) {
 }
 
 func TestUpdatesActor(t *testing.T) {
-	body := requestBody("999999999", "investor", 1)
+	tests := []struct {
+		name      string
+		body      string
+		wantTaxID string
+		wantType  actor.Type
+	}{
+		{
+			name:      "tax ID and type",
+			body:      requestBody("999999999", "investor", 1),
+			wantTaxID: "999999999",
+			wantType:  actor.Investor,
+		},
+		{
+			name:      "tax ID only",
+			body:      `{"taxId": "999999999", "version": 1}`,
+			wantTaxID: "999999999",
+			wantType:  actor.Issuer,
+		},
+		{
+			name:      "type only",
+			body:      `{"type": "investor", "version": 1}`,
+			wantTaxID: "000000000",
+			wantType:  actor.Investor,
+		},
+		{
+			name:      "neither",
+			body:      `{"version": 1}`,
+			wantTaxID: "000000000",
+			wantType:  actor.Issuer,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, h, repo := newSUT(t)
+			rec := patch(t, h, actorID.String(), tt.body)
 
-	_, h, repo := newSUT(t)
-	rec := put(t, h, actorID.String(), body)
+			want := fmt.Sprintf(`{
+				"id": %q,
+				"taxId": %q,
+				"type": %q,
+				"version": 2
+			}`, actorID, tt.wantTaxID, tt.wantType)
 
-	want := fmt.Sprintf(`{
-		"id": %q,
-		"taxId": "999999999",
-		"type": "investor",
-		"version": 2
-	}`, actorID)
+			testhelpers.AssertHumaOutput(t, rec, http.StatusOK, want)
 
-	testhelpers.AssertHumaOutput(t, rec, http.StatusOK, want)
-
-	got, err := repo.FindByID(t.Context(), actorID)
-	assert.NoError(t, err)
-	wantActor := actor.Reconstitute(actorID, "999999999", "investor", 2)
-	assert.Equal(t, wantActor, got)
+			got, err := repo.FindByID(t.Context(), actorID)
+			assert.NoError(t, err)
+			wantActor := actor.Reconstitute(actorID, tt.wantTaxID, tt.wantType, 2)
+			assert.Equal(t, wantActor, got)
+		})
+	}
 }
