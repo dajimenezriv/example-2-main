@@ -21,6 +21,7 @@ type accountItem struct {
 	ID           string `json:"id" format:"uuid"`
 	DltAccountID string `json:"dltAccountId"`
 	PublicKey    string `json:"publicKey"`
+	Version      int64  `json:"version"`
 }
 
 type Handler struct {
@@ -52,6 +53,7 @@ func (h *Handler) Handle(ctx context.Context, _ *struct{}) (*Output, error) {
 			ID:           a.ID,
 			DltAccountID: a.DltAccountID,
 			PublicKey:    a.PublicKey,
+			Version:      a.Version,
 		}
 	}
 	return &Output{Body: resp}, nil

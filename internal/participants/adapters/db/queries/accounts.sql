@@ -5,7 +5,8 @@ INSERT INTO
     actor_id,
     dlt_account_id,
     private_key,
-    public_key
+    public_key,
+    version
   )
 VALUES
   (
@@ -13,7 +14,8 @@ VALUES
     @actor_id,
     @dlt_account_id,
     @private_key,
-    @public_key
+    @public_key,
+    @version
   );
 
 -- name: FindAccountByID :one

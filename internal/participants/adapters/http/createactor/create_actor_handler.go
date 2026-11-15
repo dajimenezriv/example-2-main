@@ -37,9 +37,10 @@ type Output struct {
 }
 
 type createActorResponse struct {
-	ID    string `json:"id" format:"uuid"`
-	TaxID string `json:"taxId"`
-	Type  string `json:"type"`
+	ID      string `json:"id" format:"uuid"`
+	TaxID   string `json:"taxId"`
+	Type    string `json:"type"`
+	Version int64  `json:"version"`
 }
 
 type Handler struct {
@@ -62,7 +63,7 @@ func (h *Handler) Register(api huma.API) {
 }
 
 func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
-	act, err := h.CreateActor.Execute(ctx, createactor.Command{
+	a, err := h.CreateActor.Execute(ctx, createactor.Command{
 		TaxID: string(in.Body.TaxID),
 		Type:  actor.Type(in.Body.Type),
 	})
@@ -77,8 +78,9 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	}
 
 	return &Output{Body: createActorResponse{
-		ID:    act.ID().String(),
-		TaxID: string(act.TaxID()),
-		Type:  string(act.Type()),
+		ID:      a.ID().String(),
+		TaxID:   string(a.TaxID()),
+		Type:    string(a.Type()),
+		Version: a.Version(),
 	}}, nil
 }

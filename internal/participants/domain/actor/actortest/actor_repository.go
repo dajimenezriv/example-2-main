@@ -37,6 +37,38 @@ func (f *fakeRepository) Save(ctx context.Context, act *actor.Actor) error {
 	return nil
 }
 
+func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor, expectedVersion int64) (*actor.Actor, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	idx := -1
+	for i, a := range f.actors {
+		if a.ID() == act.ID() {
+			if a.Version() != expectedVersion {
+				return nil, actor.ErrVersionConflict
+			}
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		return nil, actor.ErrNotFound
+	}
+	for i, a := range f.actors {
+		if i == idx {
+			continue
+		}
+		if a.TaxID() == act.TaxID() {
+			return nil, actor.ErrTaxIDAlreadyExists
+		}
+	}
+	act = actor.Reconstitute(act.ID(), string(act.TaxID()), act.Type(), expectedVersion+1)
+	f.actors[idx] = *act
+	return act, nil
+}
+
 func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err

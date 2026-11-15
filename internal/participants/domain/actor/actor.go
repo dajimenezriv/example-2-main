@@ -12,6 +12,7 @@ var (
 	ErrNotFound           = errors.New("actor: not found")
 	ErrAlreadyExists      = errors.New("actor: already exists")
 	ErrTaxIDAlreadyExists = errors.New("actor: tax ID is taken")
+	ErrVersionConflict    = errors.New("actor: version conflict")
 )
 
 type (
@@ -20,7 +21,7 @@ type (
 )
 
 const (
-	TaxIDPattern            = `^[0-9]{9}$`
+	TaxIDPattern            = `^\d{9}$`
 	TaxIDPatternDescription = "9 digits"
 	TaxIDExample            = "123456789"
 )
@@ -45,9 +46,10 @@ func (t Type) IsValid() bool {
 }
 
 type Actor struct {
-	id    uuid.UUID
-	taxID TaxID
-	typ   Type
+	id      uuid.UUID
+	taxID   TaxID
+	typ     Type
+	version int64
 }
 
 func New(id uuid.UUID, taxID string, typ Type) (*Actor, error) {
@@ -59,22 +61,41 @@ func New(id uuid.UUID, taxID string, typ Type) (*Actor, error) {
 	}
 
 	return &Actor{
-		id:    id,
-		taxID: TaxID(taxID),
-		typ:   typ,
+		id:      id,
+		taxID:   TaxID(taxID),
+		typ:     typ,
+		version: 1,
 	}, nil
 }
 
 // Reconstitute rebuilds an Actor from persistence.
 // Intended for repository adapters only.
-func Reconstitute(id uuid.UUID, taxID string, typ Type) *Actor {
+func Reconstitute(id uuid.UUID, taxID string, typ Type, version int64) *Actor {
 	return &Actor{
-		id:    id,
-		taxID: TaxID(taxID),
-		typ:   typ,
+		id:      id,
+		taxID:   TaxID(taxID),
+		typ:     typ,
+		version: version,
 	}
 }
 
-func (a *Actor) ID() uuid.UUID { return a.id }
-func (a *Actor) TaxID() TaxID  { return a.taxID }
-func (a *Actor) Type() Type    { return a.typ }
+func (a *Actor) ID() uuid.UUID  { return a.id }
+func (a *Actor) TaxID() TaxID   { return a.taxID }
+func (a *Actor) Type() Type     { return a.typ }
+func (a *Actor) Version() int64 { return a.version }
+
+func (a *Actor) ChangeTaxID(taxID string) error {
+	if !taxIDRegex.MatchString(taxID) {
+		return ErrInvalidTaxID
+	}
+	a.taxID = TaxID(taxID)
+	return nil
+}
+
+func (a *Actor) ChangeType(typ Type) error {
+	if !typ.IsValid() {
+		return ErrInvalidType
+	}
+	a.typ = typ
+	return nil
+}

@@ -48,6 +48,8 @@ linters:
           - funlen
           - gochecknoglobals
           - gocognit
+          - goconst
+          - mnd
           - wrapcheck
 
 formatters:

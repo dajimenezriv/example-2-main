@@ -1,6 +1,9 @@
 package db
 
-const uniqueViolation = "23505"
+const (
+	foreignKeyViolation = "23503"
+	uniqueViolation     = "23505"
+)
 
 // Constraint names on the actors table (see migrations/).
 const (

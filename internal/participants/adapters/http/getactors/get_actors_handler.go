@@ -21,6 +21,7 @@ type actorItem struct {
 	ID       string             `json:"id" format:"uuid"`
 	TaxID    string             `json:"taxId"`
 	Type     string             `json:"type"`
+	Version  int64              `json:"version"`
 	Accounts []actorAccountItem `json:"accounts"`
 }
 
@@ -67,6 +68,7 @@ func (h *Handler) Handle(ctx context.Context, _ *struct{}) (*Output, error) {
 			ID:       act.ID.String(),
 			TaxID:    string(act.TaxID),
 			Type:     string(act.Type),
+			Version:  act.Version,
 			Accounts: accountItems,
 		}
 	}

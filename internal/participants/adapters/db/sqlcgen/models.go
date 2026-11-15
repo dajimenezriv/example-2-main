@@ -14,10 +14,12 @@ type Account struct {
 	PrivateKey   string
 	PublicKey    string
 	ActorID      uuid.UUID
+	Version      int64
 }
 
 type Actor struct {
-	ID    uuid.UUID
-	TaxID string
-	Type  string
+	ID      uuid.UUID
+	TaxID   string
+	Type    string
+	Version int64
 }

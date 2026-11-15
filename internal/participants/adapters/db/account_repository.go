@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"uuid"
@@ -10,6 +9,7 @@ import (
 	"exercise/internal/participants/adapters/db/sqlcgen"
 	"exercise/internal/participants/domain/account"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -28,6 +28,7 @@ func toAccountDomain(d sqlcgen.Account) *account.Account {
 		d.DltAccountID,
 		d.PrivateKey,
 		d.PublicKey,
+		d.Version,
 	)
 }
 
@@ -38,6 +39,7 @@ func (r *AccountRepository) Save(ctx context.Context, a *account.Account) error 
 		DltAccountID: a.DltAccountID(),
 		PrivateKey:   a.PrivateKey(),
 		PublicKey:    a.PublicKey(),
+		Version:      a.Version(),
 	})
 	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
@@ -51,7 +53,7 @@ func (r *AccountRepository) Save(ctx context.Context, a *account.Account) error 
 func (r *AccountRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.Account, error) {
 	a, err := r.db.FindAccountByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
+		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, account.ErrNotFound
 		}
 		return nil, fmt.Errorf("find account by id: %w", err)

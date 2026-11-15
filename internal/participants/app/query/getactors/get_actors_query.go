@@ -13,6 +13,7 @@ type ActorDTO struct {
 	ID       uuid.UUID
 	TaxID    actor.TaxID
 	Type     actor.Type
+	Version  int64
 	Accounts []AccountDTO
 }
 
@@ -61,6 +62,7 @@ func (q *Query) Execute(ctx context.Context) ([]ActorDTO, error) {
 			ID:       act.ID(),
 			TaxID:    act.TaxID(),
 			Type:     act.Type(),
+			Version:  act.Version(),
 			Accounts: byActor[act.ID()],
 		}
 	}

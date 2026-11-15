@@ -10,7 +10,8 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/humatest"
-	"github.com/google/go-cmp/cmp"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func NewHumaAPI(t *testing.T) humatest.TestAPI {
@@ -22,35 +23,28 @@ func NewHumaAPI(t *testing.T) humatest.TestAPI {
 func AssertHumaOutput(t *testing.T, rec *httptest.ResponseRecorder, wantCode int, wantBody string) {
 	t.Helper()
 
-	if rec.Code != wantCode {
-		t.Errorf("Code = %d, want %d", rec.Code, wantCode)
-	}
-	if got, want := rec.Header().Get("Content-Type"), "application/json"; got != want {
-		t.Errorf("Content-Type = %q, want %q", got, want)
-	}
+	assert.Equal(t, wantCode, rec.Code)
+	assert.Equal(t, "application/json", rec.Header().Get("Content-Type"))
 
 	got := rec.Body.String()
 
 	var g, w any
-	_ = json.Unmarshal([]byte(got), &g)
-	_ = json.Unmarshal([]byte(wantBody), &w)
-	if diff := cmp.Diff(w, g); diff != "" {
-		t.Errorf("JSON mismatch (-want +got):\n%s", diff)
-	}
+	err := json.Unmarshal([]byte(got), &g)
+	require.NoError(t, err)
+	err = json.Unmarshal([]byte(wantBody), &w)
+	require.NoError(t, err)
+	assert.Equal(t, w, g)
 }
 
 func AssertHumaError(t *testing.T, rec *httptest.ResponseRecorder, wantCode int, wantDetail string, wantErrors ...*huma.ErrorDetail) {
 	t.Helper()
 
-	if got := rec.Code; got != wantCode {
-		t.Errorf("Code = %d, want %d", got, wantCode)
-	}
-	if got, want := rec.Header().Get("Content-Type"), "application/problem+json"; got != want {
-		t.Errorf("Content-Type = %q, want %q", got, want)
-	}
+	assert.Equal(t, wantCode, rec.Code)
+	assert.Equal(t, "application/problem+json", rec.Header().Get("Content-Type"))
 
 	var got huma.ErrorModel
-	_ = json.Unmarshal(rec.Body.Bytes(), &got)
+	err := json.Unmarshal(rec.Body.Bytes(), &got)
+	require.NoError(t, err)
 
 	want := huma.ErrorModel{
 		Status: wantCode,
@@ -58,7 +52,5 @@ func AssertHumaError(t *testing.T, rec *httptest.ResponseRecorder, wantCode int,
 		Detail: wantDetail,
 		Errors: wantErrors,
 	}
-	if diff := cmp.Diff(want, got); diff != "" {
-		t.Errorf("error body mismatch (-want +got):\n%s", diff)
-	}
+	assert.Equal(t, want, got)
 }

@@ -18,7 +18,8 @@ INSERT INTO
     actor_id,
     dlt_account_id,
     private_key,
-    public_key
+    public_key,
+    version
   )
 VALUES
   (
@@ -26,7 +27,8 @@ VALUES
     $2,
     $3,
     $4,
-    $5
+    $5,
+    $6
   )
 `
 
@@ -36,6 +38,7 @@ type CreateAccountParams struct {
 	DltAccountID string
 	PrivateKey   string
 	PublicKey    string
+	Version      int64
 }
 
 func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) error {
@@ -45,13 +48,14 @@ func (q *Queries) CreateAccount(ctx context.Context, arg CreateAccountParams) er
 		arg.DltAccountID,
 		arg.PrivateKey,
 		arg.PublicKey,
+		arg.Version,
 	)
 	return err
 }
 
 const findAccountByID = `-- name: FindAccountByID :one
 SELECT
-  id, dlt_account_id, private_key, public_key, actor_id
+  id, dlt_account_id, private_key, public_key, actor_id, version
 FROM
   accounts
 WHERE
@@ -67,13 +71,14 @@ func (q *Queries) FindAccountByID(ctx context.Context, id uuid.UUID) (Account, e
 		&i.PrivateKey,
 		&i.PublicKey,
 		&i.ActorID,
+		&i.Version,
 	)
 	return i, err
 }
 
 const findAccounts = `-- name: FindAccounts :many
 SELECT
-  id, dlt_account_id, private_key, public_key, actor_id
+  id, dlt_account_id, private_key, public_key, actor_id, version
 FROM
   accounts
 `
@@ -93,6 +98,7 @@ func (q *Queries) FindAccounts(ctx context.Context) ([]Account, error) {
 			&i.PrivateKey,
 			&i.PublicKey,
 			&i.ActorID,
+			&i.Version,
 		); err != nil {
 			return nil, err
 		}
@@ -106,7 +112,7 @@ func (q *Queries) FindAccounts(ctx context.Context) ([]Account, error) {
 
 const findAccountsByActorIDs = `-- name: FindAccountsByActorIDs :many
 SELECT
-  id, dlt_account_id, private_key, public_key, actor_id
+  id, dlt_account_id, private_key, public_key, actor_id, version
 FROM
   accounts
 WHERE
@@ -128,6 +134,7 @@ func (q *Queries) FindAccountsByActorIDs(ctx context.Context, actorIds []uuid.UU
 			&i.PrivateKey,
 			&i.PublicKey,
 			&i.ActorID,
+			&i.Version,
 		); err != nil {
 			return nil, err
 		}
