@@ -113,7 +113,7 @@ func TestRejectedRequests(t *testing.T) {
 			id:         "URN:UUID:" + actorID.String(),
 			body:       requestBody("000000000", "issuer", 1),
 			wantCode:   http.StatusBadRequest,
-			wantDetail: "invalid actorId",
+			wantDetail: "invalid id",
 		},
 		{
 			name:       "actor does not exist",

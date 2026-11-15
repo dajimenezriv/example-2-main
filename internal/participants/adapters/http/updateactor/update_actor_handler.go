@@ -68,7 +68,7 @@ func (h *Handler) Register(api huma.API) {
 func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	id, err := uuid.Parse(in.ID)
 	if err != nil {
-		return nil, huma.Error400BadRequest("invalid actorId")
+		return nil, huma.Error400BadRequest("invalid id")
 	}
 
 	cmd := updateactor.Command{
