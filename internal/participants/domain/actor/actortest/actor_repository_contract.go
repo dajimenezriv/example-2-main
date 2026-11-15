@@ -28,7 +28,7 @@ func saveActor(t *testing.T, repo actor.Repository, taxID string) *actor.Actor {
 func checkActor(t *testing.T, repo actor.Repository, want *actor.Actor) {
 	t.Helper()
 	got, err := repo.FindByID(t.Context(), want.ID())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, want, got)
 }
 
@@ -64,7 +64,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		require.ErrorIs(t, err, actor.ErrTaxIDAlreadyExists)
 
 		actors, err := repo.FindAll(t.Context())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Len(t, actors, 1)
 	})
 
@@ -95,7 +95,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		a := newActor(t, "000000000")
 
 		got, err := repo.Update(t.Context(), a, 1)
-		assert.ErrorIs(t, err, actor.ErrNotFound)
+		require.ErrorIs(t, err, actor.ErrNotFound)
 		assert.Nil(t, got)
 	})
 
@@ -107,7 +107,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		err := a.ChangeTaxID("999999999")
 		require.NoError(t, err)
 		got, err := repo.Update(t.Context(), a, 1)
-		assert.ErrorIs(t, err, actor.ErrTaxIDAlreadyExists)
+		require.ErrorIs(t, err, actor.ErrTaxIDAlreadyExists)
 		assert.Nil(t, got)
 
 		want := actor.Reconstitute(a.ID(), "000000000", a.Type(), 1)
@@ -121,7 +121,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		err := a.ChangeTaxID("999999999")
 		require.NoError(t, err)
 		got, err := repo.Update(t.Context(), a, 2)
-		assert.ErrorIs(t, err, actor.ErrVersionConflict)
+		require.ErrorIs(t, err, actor.ErrVersionConflict)
 		assert.Nil(t, got)
 
 		want := actor.Reconstitute(a.ID(), "000000000", a.Type(), 1)
@@ -136,7 +136,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		err := a.ChangeTaxID("000000000")
 		require.NoError(t, err)
 		got, err := repo.Update(t.Context(), a, 1)
-		assert.ErrorIs(t, err, actor.ErrNotFound)
+		require.ErrorIs(t, err, actor.ErrNotFound)
 		assert.Nil(t, got)
 	})
 
@@ -148,7 +148,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		err := a.ChangeTaxID("000000000")
 		require.NoError(t, err)
 		got, err := repo.Update(t.Context(), a, 2)
-		assert.ErrorIs(t, err, actor.ErrVersionConflict)
+		require.ErrorIs(t, err, actor.ErrVersionConflict)
 		assert.Nil(t, got)
 
 		want := actor.Reconstitute(a.ID(), "999999999", a.Type(), 1)
@@ -160,7 +160,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		a := saveActor(t, repo, "000000000")
 
 		got, err := repo.FindByID(t.Context(), a.ID())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, a, got)
 	})
 
@@ -168,7 +168,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		repo := newRepo(t)
 
 		got, err := repo.FindByID(t.Context(), uuid.New())
-		assert.ErrorIs(t, err, actor.ErrNotFound)
+		require.ErrorIs(t, err, actor.ErrNotFound)
 		assert.Nil(t, got)
 	})
 
@@ -182,7 +182,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		}
 
 		got, err := repo.FindAll(t.Context())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, actors, got)
 	})
 }

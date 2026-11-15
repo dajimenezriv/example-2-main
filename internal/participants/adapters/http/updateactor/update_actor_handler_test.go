@@ -145,7 +145,7 @@ func TestRejectedRequests(t *testing.T) {
 			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail, tt.wantErrors...)
 
 			got, err := repo.FindByID(t.Context(), a.ID())
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			assert.Equal(t, a, got)
 		})
 	}
@@ -198,7 +198,7 @@ func TestUpdatesActor(t *testing.T) {
 			testhelpers.AssertHumaOutput(t, rec, http.StatusOK, want)
 
 			got, err := repo.FindByID(t.Context(), actorID)
-			assert.NoError(t, err)
+			require.NoError(t, err)
 			wantActor := actor.Reconstitute(actorID, tt.wantTaxID, tt.wantType, 2)
 			assert.Equal(t, wantActor, got)
 		})
