@@ -34,5 +34,5 @@ func TestNewCreatesValidActor(t *testing.T) {
 	got, err := actor.New(id, "123456789", actor.Issuer)
 	assert.NoError(t, err)
 	want := actor.Reconstitute(id, "123456789", actor.Issuer, 1)
-	assert.Equal(t, got, want)
+	assert.Equal(t, want, got)
 }
