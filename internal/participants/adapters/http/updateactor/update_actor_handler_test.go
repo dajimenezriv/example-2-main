@@ -100,6 +100,16 @@ func TestRejectedRequests(t *testing.T) {
 			},
 		},
 		{
+			name:       "non positive version",
+			id:         actorID.String(),
+			body:       requestBody("000000000", "issuer", 0),
+			wantCode:   http.StatusUnprocessableEntity,
+			wantDetail: "validation failed",
+			wantErrors: []*huma.ErrorDetail{
+				{Message: `expected number >= 1`, Location: "body.version", Value: 0},
+			},
+		},
+		{
 			// Huma accepts an uppercase "URN:UUID:" prefix, but uuid.Parse does not.
 			name:       "invalid actor ID",
 			id:         "URN:UUID:" + actorID.String(),

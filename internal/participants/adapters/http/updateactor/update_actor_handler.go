@@ -21,7 +21,7 @@ type Input struct {
 type updateActorRequest struct {
 	TaxID   taxID  `json:"taxId"`
 	Type    string `json:"type" enum:"issuer,investor,platform_admin,market_operator,settlement_operator,custom"`
-	Version int64  `json:"version"`
+	Version int64  `json:"version" minimum:"1"`
 }
 
 type taxID string
