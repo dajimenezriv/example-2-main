@@ -106,7 +106,7 @@ func TestRejectedRequests(t *testing.T) {
 			wantCode:   http.StatusUnprocessableEntity,
 			wantDetail: "validation failed",
 			wantErrors: []*huma.ErrorDetail{
-				{Message: `expected number >= 1`, Location: "body.version", Value: 0},
+				{Message: `expected number >= 1`, Location: "body.version", Value: float64(0)},
 			},
 		},
 		{
