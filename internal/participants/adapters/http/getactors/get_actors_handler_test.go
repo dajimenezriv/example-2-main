@@ -19,12 +19,12 @@ import (
 )
 
 var (
-	actorID1   = uuid.New()
-	actorID2   = uuid.New()
-	actorID3   = uuid.New()
-	accountID1 = uuid.New()
-	accountID2 = uuid.New()
-	accountID3 = uuid.New()
+	actorID1   = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	actorID2   = uuid.MustParse("00000000-0000-0000-0000-000000000002")
+	actorID3   = uuid.MustParse("00000000-0000-0000-0000-000000000003")
+	accountID1 = uuid.MustParse("00000000-0000-0000-0000-000000000004")
+	accountID2 = uuid.MustParse("00000000-0000-0000-0000-000000000005")
+	accountID3 = uuid.MustParse("00000000-0000-0000-0000-000000000006")
 )
 
 func newSUT(t *testing.T) (actor.Repository, account.Repository) {

@@ -17,12 +17,15 @@ import (
 	"exercise/internal/testhelpers"
 )
 
-var existingAccountID = uuid.New()
+var (
+	accountID = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	actorID   = uuid.MustParse("00000000-0000-0000-0000-000000000002")
+)
 
 func newSUT(t *testing.T) account.Repository {
 	t.Helper()
 	repo := accounttest.NewFakeRepository()
-	a, err := account.New(existingAccountID, uuid.New(), "dltID", "privKey", "pubKey")
+	a, err := account.New(accountID, actorID, "dltID", "privKey", "pubKey")
 	require.NoError(t, err)
 	err = repo.Save(t.Context(), a)
 	require.NoError(t, err)
@@ -52,7 +55,7 @@ func TestReturnsAllAccounts(t *testing.T) {
 
 	want := fmt.Sprintf(`{"accounts": [
 		{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey", "version": 1}
-	]}`, existingAccountID.String())
+	]}`, accountID.String())
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusOK, want)
 }

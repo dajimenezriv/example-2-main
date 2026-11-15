@@ -6,9 +6,9 @@ import (
 	"testing"
 	"uuid"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"exercise/internal/participants/adapters/db/sqlcgen"
 	"exercise/internal/participants/app/uow"
 	"exercise/internal/participants/domain/account"
 	"exercise/internal/participants/domain/account/accounttest"
@@ -18,10 +18,8 @@ var errBoom = errors.New("boom")
 
 func setupUoW(t *testing.T) (*UnitOfWork, account.Repository, uuid.UUID) {
 	t.Helper()
-	_, err := testPool.Exec(t.Context(), "TRUNCATE actors CASCADE")
-	require.NoError(t, err)
-	q := sqlcgen.New(testPool)
-	return NewUnitOfWork(testPool), NewAccountRepository(q), seedActor(t, q)
+	f := setup(t)
+	return NewUnitOfWork(testPool), f.Repo, f.NewActorID(t)
 }
 
 func assertNotPersisted(t *testing.T, repo account.Repository, id uuid.UUID) {
@@ -66,12 +64,13 @@ func TestUnitOfWork(t *testing.T) {
 		u, repo, actorID := setupUoW(t)
 		acc := accounttest.NewAccount(t, actorID)
 
-		require.PanicsWithValue(t, "boom", func() {
-			_ = u.Do(t.Context(), func(ctx context.Context, repos uow.Repositories) error {
+		assert.PanicsWithValue(t, "boom", func() {
+			err := u.Do(t.Context(), func(ctx context.Context, repos uow.Repositories) error {
 				err := repos.Accounts.Save(ctx, acc)
 				require.NoError(t, err)
 				panic("boom")
 			})
+			require.NoError(t, err)
 		})
 
 		assertNotPersisted(t, repo, acc.ID())

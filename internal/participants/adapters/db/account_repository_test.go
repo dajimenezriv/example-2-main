@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 	"sync/atomic"
 	"testing"
@@ -11,6 +10,8 @@ import (
 	"exercise/internal/participants/domain/account/accounttest"
 
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var seedTaxID atomic.Int64
@@ -19,9 +20,8 @@ func seedActor(t *testing.T, q *sqlcgen.Queries) uuid.UUID {
 	t.Helper()
 	id := uuid.New()
 	taxID := fmt.Sprintf("%09d", seedTaxID.Add(1))
-	if err := q.CreateActor(t.Context(), sqlcgen.CreateActorParams{ID: id, TaxID: taxID, Type: "issuer"}); err != nil {
-		t.Fatalf("seed actor: %v", err)
-	}
+	err := q.CreateActor(t.Context(), sqlcgen.CreateActorParams{ID: id, TaxID: taxID, Type: "issuer"})
+	require.NoError(t, err, "seed actor")
 	return id
 }
 
@@ -29,9 +29,8 @@ func setup(t *testing.T) accounttest.Fixture {
 	t.Helper()
 	q := sqlcgen.New(testPool)
 	// Truncating actors also empties accounts.
-	if _, err := testPool.Exec(t.Context(), "TRUNCATE actors CASCADE"); err != nil {
-		t.Fatalf("truncate actors: %v", err)
-	}
+	_, err := testPool.Exec(t.Context(), "TRUNCATE actors CASCADE")
+	require.NoError(t, err, "truncate actors")
 	return accounttest.Fixture{
 		Repo: NewAccountRepository(q),
 		NewActorID: func(t *testing.T) uuid.UUID {
@@ -53,8 +52,8 @@ func TestAccountRepository(t *testing.T) {
 		a := accounttest.NewAccount(t, uuid.New())
 
 		err := f.Repo.Save(t.Context(), a)
-		if pgErr, ok := errors.AsType[*pgconn.PgError](err); !ok || pgErr.Code != foreignKeyViolation {
-			t.Errorf("Save() = %v, want FK violation error", err)
-		}
+		var pgErr *pgconn.PgError
+		require.ErrorAs(t, err, &pgErr)
+		assert.Equal(t, foreignKeyViolation, pgErr.Code)
 	})
 }
