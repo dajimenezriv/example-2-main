@@ -1,6 +1,7 @@
 package actortest
 
 import (
+	"context"
 	"testing"
 	"uuid"
 
@@ -66,6 +67,16 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		actors, err := repo.FindAll(t.Context())
 		require.NoError(t, err)
 		assert.Len(t, actors, 1)
+	})
+
+	t.Run("Save fails if context is canceled", func(t *testing.T) {
+		repo := newRepo(t)
+		ctx, cancel := context.WithCancel(t.Context())
+		cancel()
+
+		a := newActor(t, "000000000")
+		err := repo.Save(ctx, a)
+		require.ErrorIs(t, err, context.Canceled)
 	})
 
 	t.Run("Update modifies the actor and increases version", func(t *testing.T) {
@@ -155,6 +166,17 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		checkActor(t, repo, want)
 	})
 
+	t.Run("Update fails if context is canceled", func(t *testing.T) {
+		repo := newRepo(t)
+		ctx, cancel := context.WithCancel(t.Context())
+		cancel()
+
+		a := newActor(t, "000000000")
+		got, err := repo.Update(ctx, a, 1)
+		require.ErrorIs(t, err, context.Canceled)
+		assert.Nil(t, got)
+	})
+
 	t.Run("FindByID returns actor if exists", func(t *testing.T) {
 		repo := newRepo(t)
 		a := saveActor(t, repo, "000000000")
@@ -164,11 +186,21 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		assert.Equal(t, a, got)
 	})
 
-	t.Run("FindByID returns error if actor not found", func(t *testing.T) {
+	t.Run("FindByID fails if actor not found", func(t *testing.T) {
 		repo := newRepo(t)
 
 		got, err := repo.FindByID(t.Context(), uuid.New())
 		require.ErrorIs(t, err, actor.ErrNotFound)
+		assert.Nil(t, got)
+	})
+
+	t.Run("FindByID fails if context is canceled", func(t *testing.T) {
+		repo := newRepo(t)
+		ctx, cancel := context.WithCancel(t.Context())
+		cancel()
+
+		got, err := repo.FindByID(ctx, uuid.New())
+		require.ErrorIs(t, err, context.Canceled)
 		assert.Nil(t, got)
 	})
 
@@ -184,5 +216,15 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		got, err := repo.FindAll(t.Context())
 		require.NoError(t, err)
 		assert.Equal(t, actors, got)
+	})
+
+	t.Run("FindAll fails if context is canceled", func(t *testing.T) {
+		repo := newRepo(t)
+		ctx, cancel := context.WithCancel(t.Context())
+		cancel()
+
+		got, err := repo.FindAll(ctx)
+		require.ErrorIs(t, err, context.Canceled)
+		assert.Nil(t, got)
 	})
 }

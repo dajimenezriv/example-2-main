@@ -61,3 +61,11 @@ func (a *Account) DltAccountID() string { return a.dltAccountID }
 func (a *Account) PrivateKey() string   { return a.privateKey }
 func (a *Account) PublicKey() string    { return a.publicKey }
 func (a *Account) Version() int64       { return a.version }
+
+func (a *Account) ChangeDltAccountID(dltID string) error {
+	if dltID == "" {
+		return ErrDltAccountIDRequired
+	}
+	a.dltAccountID = dltID
+	return nil
+}

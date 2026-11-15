@@ -1,12 +1,13 @@
 package account_test
 
 import (
-	"errors"
 	"testing"
 	"uuid"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
 	"exercise/internal/participants/domain/account"
-	"exercise/internal/participants/domain/account/accounttest"
 )
 
 func TestNewAccountErrors(t *testing.T) {
@@ -25,12 +26,8 @@ func TestNewAccountErrors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := account.New(uuid.New(), uuid.New(), tt.dltID, tt.privKey, tt.pubKey)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("New() = %v, want %v", err, tt.wantErr)
-			}
-			if got != nil {
-				t.Errorf("New() = %v, want nil", got)
-			}
+			require.ErrorIs(t, err, tt.wantErr)
+			assert.Nil(t, got)
 		})
 	}
 }
@@ -38,9 +35,7 @@ func TestNewAccountErrors(t *testing.T) {
 func TestNewCreatesValidAccount(t *testing.T) {
 	id, actorID := uuid.New(), uuid.New()
 	got, err := account.New(id, actorID, "dltID", "privKey", "pubKey")
-	if err != nil {
-		t.Errorf("New() = %v, want nil", err)
-	}
+	require.NoError(t, err)
 	want := account.Reconstitute(id, actorID, "dltID", "privKey", "pubKey", 1)
-	accounttest.AssertAccount(t, got, want)
+	assert.Equal(t, want, got)
 }

@@ -44,7 +44,6 @@ linters:
       - path: (_test\.go$|test/|testhelpers/)
         linters:
           - cyclop
-          - errcheck
           - funlen
           - gochecknoglobals
           - gocognit

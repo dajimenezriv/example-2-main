@@ -18,23 +18,29 @@ import (
 	"exercise/internal/testhelpers"
 
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var (
-	actorID   = uuid.New()
-	accountID = uuid.New()
+	actorID   = uuid.MustParse("00000000-0000-0000-0000-000000000001")
+	accountID = uuid.MustParse("00000000-0000-0000-0000-000000000002")
 )
 
 func newSUT(t *testing.T, newAccountID uuid.UUID) (*Handler, account.Repository) {
 	t.Helper()
 
-	act, _ := actor.New(actorID, "123456789", actor.Issuer)
-	acc, _ := account.New(accountID, actorID, "dltID", "privKey", "pubKey")
+	act, err := actor.New(actorID, "123456789", actor.Issuer)
+	require.NoError(t, err)
+	acc, err := account.New(accountID, actorID, "dltID", "privKey", "pubKey")
+	require.NoError(t, err)
 
 	actorRepo := actortest.NewFakeRepository()
 	accountRepo := accounttest.NewFakeRepository()
-	_ = actorRepo.Save(t.Context(), act)
-	_ = accountRepo.Save(t.Context(), acc)
+	err = actorRepo.Save(t.Context(), act)
+	require.NoError(t, err)
+	err = accountRepo.Save(t.Context(), acc)
+	require.NoError(t, err)
 
 	h := NewHandler(createaccount.NewHandler(
 		uowtest.NewFake(uow.Repositories{Accounts: accountRepo, Actors: actorRepo}),
@@ -118,10 +124,9 @@ func TestRejectedRequests(t *testing.T) {
 
 			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail, tt.wantErrors...)
 
-			accounts, _ := accountRepo.FindAll(t.Context())
-			if got := len(accounts); got != 1 {
-				t.Errorf("len(accounts) = %d, want 1", got)
-			}
+			accounts, err := accountRepo.FindAll(t.Context())
+			require.NoError(t, err)
+			assert.Len(t, accounts, 1)
 		})
 	}
 }
@@ -142,8 +147,7 @@ func TestCreatesAccount(t *testing.T) {
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusCreated, want)
 
-	accounts, _ := accountRepo.FindAll(t.Context())
-	if got := len(accounts); got != 2 {
-		t.Errorf("len(accounts) = %d, want 2", got)
-	}
+	accounts, err := accountRepo.FindAll(t.Context())
+	require.NoError(t, err)
+	assert.Len(t, accounts, 2)
 }
