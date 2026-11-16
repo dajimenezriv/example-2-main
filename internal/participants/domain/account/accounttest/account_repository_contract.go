@@ -151,37 +151,24 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		f := setup(t)
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
+		a := NewAccount(t, f.NewActorID(t))
+		page := MustPage(t, account.MaxPageLimit, 0)
 
 		tests := []struct {
 			name string
-			fn   func() (any, error)
+			call func() (any, error)
 		}{
-			{
-				name: "Save",
-				fn: func() (any, error) {
-					a := NewAccount(t, uuid.New())
-					err := f.Repo.Save(ctx, a)
-					return nil, err
-				},
-			},
-			{
-				name: "FindByID",
-				fn:   func() (any, error) { return f.Repo.FindByID(ctx, uuid.New()) },
-			},
-			{
-				name: "FindAll",
-				fn:   func() (any, error) { return f.Repo.FindAll(ctx, MustPage(t, account.MaxPageLimit, 0)) },
-			},
-			{
-				name: "FindByActorIDs",
-				fn:   func() (any, error) { return f.Repo.FindByActorIDs(ctx, []uuid.UUID{uuid.New()}) },
-			},
+			{"Count", func() (any, error) { return f.Repo.Count(ctx) }},
+			{"Save", func() (any, error) { return nil, f.Repo.Save(ctx, a) }},
+			{"FindByID", func() (any, error) { return f.Repo.FindByID(ctx, a.ID()) }},
+			{"FindAll", func() (any, error) { return f.Repo.FindAll(ctx, page) }},
+			{"FindByActorIDs", func() (any, error) { return f.Repo.FindByActorIDs(ctx, []uuid.UUID{a.ActorID()}) }},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				got, err := tt.fn()
+				got, err := tt.call()
 				require.ErrorIs(t, err, context.Canceled)
-				assert.Nil(t, got)
+				assert.Zero(t, got)
 			})
 		}
 	})
