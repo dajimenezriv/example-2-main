@@ -35,6 +35,8 @@ SELECT
   *
 FROM
   accounts
+ORDER BY
+  id
 LIMIT
   @page_limit OFFSET @page_offset;
 
@@ -44,4 +46,6 @@ SELECT
 FROM
   accounts
 WHERE
-  actor_id = ANY(@actor_ids::uuid[]);
+  actor_id = ANY(@actor_ids::uuid[])
+ORDER BY
+  id;

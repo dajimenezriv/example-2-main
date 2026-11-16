@@ -20,7 +20,7 @@ type Fixture struct {
 
 func NewAccount(t *testing.T, actorID uuid.UUID) *account.Account {
 	t.Helper()
-	a, err := account.New(uuid.New(), actorID, "dltID", "privKey", "pubKey")
+	a, err := account.New(uuid.NewV7(), actorID, "dltID", "privKey", "pubKey")
 	require.NoError(t, err)
 	return a
 }

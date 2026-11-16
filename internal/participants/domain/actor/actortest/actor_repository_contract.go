@@ -15,7 +15,7 @@ import (
 
 func newActor(t *testing.T, taxID string) *actor.Actor {
 	t.Helper()
-	a, err := actor.New(uuid.New(), taxID, actor.Issuer)
+	a, err := actor.New(uuid.NewV7(), taxID, actor.Issuer)
 	require.NoError(t, err)
 	return a
 }

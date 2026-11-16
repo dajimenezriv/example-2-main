@@ -39,5 +39,7 @@ SELECT
   *
 FROM
   actors
+ORDER BY
+  id
 LIMIT
   @page_limit OFFSET @page_offset;

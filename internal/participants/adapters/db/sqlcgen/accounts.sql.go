@@ -92,6 +92,8 @@ SELECT
   id, dlt_account_id, private_key, public_key, actor_id, version
 FROM
   accounts
+ORDER BY
+  id
 LIMIT
   $2 OFFSET $1
 `
@@ -135,6 +137,8 @@ FROM
   accounts
 WHERE
   actor_id = ANY($1::uuid[])
+ORDER BY
+  id
 `
 
 func (q *Queries) FindAccountsByActorIDs(ctx context.Context, actorIds []uuid.UUID) ([]Account, error) {

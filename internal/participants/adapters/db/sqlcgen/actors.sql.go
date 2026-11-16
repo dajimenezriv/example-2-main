@@ -72,6 +72,8 @@ SELECT
   id, tax_id, type, version
 FROM
   actors
+ORDER BY
+  id
 LIMIT
   $2 OFFSET $1
 `
