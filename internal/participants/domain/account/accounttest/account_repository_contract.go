@@ -2,6 +2,7 @@ package accounttest
 
 import (
 	"context"
+	"math"
 	"testing"
 	"uuid"
 
@@ -97,6 +98,9 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		}{
 			{"negative limit", -1, 0},
 			{"negative offset", 0, -1},
+			{"limit above int32", math.MaxInt32 + 1, 0},
+			{"offset above int32", 20, math.MaxInt32 + 1},
+			{"max int offset", 20, math.MaxInt},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -123,6 +127,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 			{"limit bigger than number of accounts", 10, 0, []*account.Account{a1, a2, a3}},
 			{"set offset", 100, 1, []*account.Account{a2, a3}},
 			{"offset bigger than number of accounts", 100, 10, []*account.Account{}},
+			{"max int32 limit and offset", math.MaxInt32, math.MaxInt32, []*account.Account{}},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {

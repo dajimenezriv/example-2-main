@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"uuid"
 
 	"exercise/internal/participants/adapters/db/sqlcgen"
@@ -70,7 +71,7 @@ func (r *AccountRepository) FindByID(ctx context.Context, id uuid.UUID) (*accoun
 }
 
 func (r *AccountRepository) FindAll(ctx context.Context, limit, offset int) ([]*account.Account, error) {
-	if limit < 0 || offset < 0 {
+	if limit < 0 || offset < 0 || limit > math.MaxInt32 || offset > math.MaxInt32 {
 		return nil, account.ErrInvalidPagination
 	}
 
