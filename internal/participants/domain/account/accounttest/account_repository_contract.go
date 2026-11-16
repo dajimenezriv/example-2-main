@@ -61,16 +61,6 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		checkAccount(t, f.Repo, a)
 	})
 
-	t.Run("Save fails if context is canceled", func(t *testing.T) {
-		f := setup(t)
-		ctx, cancel := context.WithCancel(t.Context())
-		cancel()
-
-		a := NewAccount(t, uuid.New())
-		err := f.Repo.Save(ctx, a)
-		require.ErrorIs(t, err, context.Canceled)
-	})
-
 	t.Run("FindByID fails if account not found", func(t *testing.T) {
 		f := setup(t)
 
@@ -79,38 +69,68 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		assert.Nil(t, got)
 	})
 
-	t.Run("FindByID fails if context is canceled", func(t *testing.T) {
+	t.Run("FindAll", func(t *testing.T) {
 		f := setup(t)
-		ctx, cancel := context.WithCancel(t.Context())
-		cancel()
+		a1 := saveAccount(t, f.Repo, f.NewActorID(t))
+		a2 := saveAccount(t, f.Repo, f.NewActorID(t))
+		a3 := saveAccount(t, f.Repo, f.NewActorID(t))
 
-		got, err := f.Repo.FindByID(ctx, uuid.New())
-		require.ErrorIs(t, err, context.Canceled)
-		assert.Nil(t, got)
-	})
-
-	t.Run("FindAll returns all accounts in inserted order", func(t *testing.T) {
-		f := setup(t)
-		accounts := []*account.Account{
-			saveAccount(t, f.Repo, f.NewActorID(t)),
-			saveAccount(t, f.Repo, f.NewActorID(t)),
-			saveAccount(t, f.Repo, f.NewActorID(t)),
-			saveAccount(t, f.Repo, f.NewActorID(t)),
+		tests := []struct {
+			name   string
+			limit  int
+			offset int
+			want   []*account.Account
+		}{
+			{
+				name:   "zero limit",
+				limit:  0,
+				offset: 0,
+				want:   []*account.Account{},
+			},
+			{
+				name:   "negative limit",
+				limit:  -1,
+				offset: 0,
+				want:   []*account.Account{},
+			},
+			{
+				name:   "set limit",
+				limit:  2,
+				offset: 0,
+				want:   []*account.Account{a1, a2},
+			},
+			{
+				name:   "limit bigger than number of accounts",
+				limit:  10,
+				offset: 0,
+				want:   []*account.Account{a1, a2, a3},
+			},
+			{
+				name:   "negative offset",
+				limit:  0,
+				offset: -1,
+				want:   []*account.Account{},
+			},
+			{
+				name:   "set offset",
+				limit:  100,
+				offset: 1,
+				want:   []*account.Account{a2, a3},
+			},
+			{
+				name:   "offset bigger than number of accounts",
+				limit:  100,
+				offset: 10,
+				want:   []*account.Account{},
+			},
 		}
-
-		got, err := f.Repo.FindAll(t.Context(), 100, 0)
-		require.NoError(t, err)
-		assert.Equal(t, accounts, got)
-	})
-
-	t.Run("FindAll fails if context is canceled", func(t *testing.T) {
-		f := setup(t)
-		ctx, cancel := context.WithCancel(t.Context())
-		cancel()
-
-		got, err := f.Repo.FindAll(ctx, 100, 0)
-		require.ErrorIs(t, err, context.Canceled)
-		assert.Nil(t, got)
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got, err := f.Repo.FindAll(t.Context(), tt.limit, tt.offset)
+				require.NoError(t, err)
+				assert.Equal(t, tt.want, got)
+			})
+		}
 	})
 
 	t.Run("FindByActorIDs returns accounts filtered by actor ID", func(t *testing.T) {
@@ -137,13 +157,42 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		assert.Empty(t, got)
 	})
 
-	t.Run("FindByActorIDs fails if context is canceled", func(t *testing.T) {
+	t.Run("Context canceled", func(t *testing.T) {
 		f := setup(t)
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
-		got, err := f.Repo.FindByActorIDs(ctx, []uuid.UUID{uuid.New()})
-		require.ErrorIs(t, err, context.Canceled)
-		assert.Nil(t, got)
+		tests := []struct {
+			name string
+			fn   func() (any, error)
+		}{
+			{
+				name: "Save",
+				fn: func() (any, error) {
+					a := NewAccount(t, uuid.New())
+					err := f.Repo.Save(ctx, a)
+					return nil, err
+				},
+			},
+			{
+				name: "FindByID",
+				fn:   func() (any, error) { return f.Repo.FindByID(ctx, uuid.New()) },
+			},
+			{
+				name: "FindAll",
+				fn:   func() (any, error) { return f.Repo.FindAll(ctx, 100, 0) },
+			},
+			{
+				name: "FindByActorIDs",
+				fn:   func() (any, error) { return f.Repo.FindByActorIDs(ctx, []uuid.UUID{uuid.New()}) },
+			},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got, err := tt.fn()
+				require.ErrorIs(t, err, context.Canceled)
+				assert.Nil(t, got)
+			})
+		}
 	})
 }

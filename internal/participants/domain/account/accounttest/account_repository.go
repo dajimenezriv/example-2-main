@@ -53,6 +53,11 @@ func (f *fakeRepository) FindAll(ctx context.Context, limit, offset int) ([]*acc
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
+
+	if limit < 0 || offset < 0 {
+		return []*account.Account{}, nil
+	}
+
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
