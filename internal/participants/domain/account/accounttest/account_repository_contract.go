@@ -24,6 +24,13 @@ func NewAccount(t *testing.T, actorID uuid.UUID) *account.Account {
 	return a
 }
 
+func MustPage(t *testing.T, limit, offset int32) account.Page {
+	t.Helper()
+	p, err := account.NewPage(limit, offset)
+	require.NoError(t, err)
+	return p
+}
+
 func saveAccount(t *testing.T, repo account.Repository, actorID uuid.UUID) *account.Account {
 	t.Helper()
 	a := NewAccount(t, actorID)
@@ -89,28 +96,6 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		assert.Nil(t, got)
 	})
 
-	t.Run("FindAll errors", func(t *testing.T) {
-		f := setup(t)
-
-		tests := []struct {
-			name          string
-			limit, offset int
-		}{
-			{"negative limit", -1, 0},
-			{"negative offset", 0, -1},
-			{"limit above int32", math.MaxInt32 + 1, 0},
-			{"offset above int32", 20, math.MaxInt32 + 1},
-			{"max int offset", 20, math.MaxInt},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				got, err := f.Repo.FindAll(t.Context(), tt.limit, tt.offset)
-				require.ErrorIs(t, err, account.ErrInvalidPagination)
-				assert.Nil(t, got)
-			})
-		}
-	})
-
 	t.Run("FindAll success", func(t *testing.T) {
 		f := setup(t)
 		a1 := saveAccount(t, f.Repo, f.NewActorID(t))
@@ -119,19 +104,18 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 
 		tests := []struct {
 			name          string
-			limit, offset int
+			limit, offset int32
 			want          []*account.Account
 		}{
-			{"zero limit", 0, 0, []*account.Account{}},
 			{"set limit", 2, 0, []*account.Account{a1, a2}},
 			{"limit bigger than number of accounts", 10, 0, []*account.Account{a1, a2, a3}},
-			{"set offset", 100, 1, []*account.Account{a2, a3}},
-			{"offset bigger than number of accounts", 100, 10, []*account.Account{}},
-			{"max int32 limit and offset", math.MaxInt32, math.MaxInt32, []*account.Account{}},
+			{"set offset", account.MaxPageLimit, 1, []*account.Account{a2, a3}},
+			{"offset bigger than number of accounts", account.MaxPageLimit, 10, []*account.Account{}},
+			{"max limit and offset", account.MaxPageLimit, math.MaxInt32, []*account.Account{}},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				got, err := f.Repo.FindAll(t.Context(), tt.limit, tt.offset)
+				got, err := f.Repo.FindAll(t.Context(), MustPage(t, tt.limit, tt.offset))
 				require.NoError(t, err)
 				assert.Equal(t, tt.want, got)
 			})
@@ -185,7 +169,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 			},
 			{
 				name: "FindAll",
-				fn:   func() (any, error) { return f.Repo.FindAll(ctx, 100, 0) },
+				fn:   func() (any, error) { return f.Repo.FindAll(ctx, MustPage(t, account.MaxPageLimit, 0)) },
 			},
 			{
 				name: "FindByActorIDs",

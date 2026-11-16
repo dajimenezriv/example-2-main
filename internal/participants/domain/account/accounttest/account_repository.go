@@ -2,7 +2,6 @@ package accounttest
 
 import (
 	"context"
-	"math"
 	"slices"
 	"sync"
 	"uuid"
@@ -62,18 +61,15 @@ func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.A
 	return nil, account.ErrNotFound
 }
 
-func (f *fakeRepository) FindAll(ctx context.Context, limit, offset int) ([]*account.Account, error) {
-	if limit < 0 || offset < 0 || limit > math.MaxInt32 || offset > math.MaxInt32 {
-		return nil, account.ErrInvalidPagination
-	}
+func (f *fakeRepository) FindAll(ctx context.Context, page account.Page) ([]*account.Account, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	from := min(len(f.accounts), offset)          // 0 ≤ from ≤ len
-	to := from + min(len(f.accounts)-from, limit) // from ≤ to ≤ len
+	from := min(len(f.accounts), int(page.Offset()))
+	to := min(len(f.accounts), from+int(page.Limit()))
 
 	accs := make([]*account.Account, to-from)
 	for i, acc := range f.accounts[from:to] {
