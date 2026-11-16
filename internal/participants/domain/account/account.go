@@ -11,6 +11,7 @@ var (
 	ErrPublicKeyRequired    = errors.New("account: public key is required")
 	ErrNotFound             = errors.New("account: not found")
 	ErrAlreadyExists        = errors.New("account: already exists")
+	ErrInvalidPagination    = errors.New("account: invalid pagination")
 )
 
 type Account struct {

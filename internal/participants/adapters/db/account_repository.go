@@ -62,6 +62,10 @@ func (r *AccountRepository) FindByID(ctx context.Context, id uuid.UUID) (*accoun
 }
 
 func (r *AccountRepository) FindAll(ctx context.Context, limit, offset int) ([]*account.Account, error) {
+	if limit < 0 || offset < 0 {
+		return nil, account.ErrInvalidPagination
+	}
+
 	as, err := r.db.FindAccounts(ctx, sqlcgen.FindAccountsParams{
 		PageSize:   int32(limit),
 		PageOffset: int32(offset),

@@ -69,60 +69,41 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		assert.Nil(t, got)
 	})
 
-	t.Run("FindAll", func(t *testing.T) {
+	t.Run("FindAll errors", func(t *testing.T) {
+		f := setup(t)
+
+		tests := []struct {
+			name          string
+			limit, offset int
+		}{
+			{"negative limit", -1, 0},
+			{"negative offset", 0, -1},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got, err := f.Repo.FindAll(t.Context(), tt.limit, tt.offset)
+				require.ErrorIs(t, err, account.ErrInvalidPagination)
+				assert.Nil(t, got)
+			})
+		}
+	})
+
+	t.Run("FindAll success", func(t *testing.T) {
 		f := setup(t)
 		a1 := saveAccount(t, f.Repo, f.NewActorID(t))
 		a2 := saveAccount(t, f.Repo, f.NewActorID(t))
 		a3 := saveAccount(t, f.Repo, f.NewActorID(t))
 
 		tests := []struct {
-			name   string
-			limit  int
-			offset int
-			want   []*account.Account
+			name          string
+			limit, offset int
+			want          []*account.Account
 		}{
-			{
-				name:   "zero limit",
-				limit:  0,
-				offset: 0,
-				want:   []*account.Account{},
-			},
-			{
-				name:   "negative limit",
-				limit:  -1,
-				offset: 0,
-				want:   []*account.Account{},
-			},
-			{
-				name:   "set limit",
-				limit:  2,
-				offset: 0,
-				want:   []*account.Account{a1, a2},
-			},
-			{
-				name:   "limit bigger than number of accounts",
-				limit:  10,
-				offset: 0,
-				want:   []*account.Account{a1, a2, a3},
-			},
-			{
-				name:   "negative offset",
-				limit:  0,
-				offset: -1,
-				want:   []*account.Account{},
-			},
-			{
-				name:   "set offset",
-				limit:  100,
-				offset: 1,
-				want:   []*account.Account{a2, a3},
-			},
-			{
-				name:   "offset bigger than number of accounts",
-				limit:  100,
-				offset: 10,
-				want:   []*account.Account{},
-			},
+			{"zero limit", 0, 0, []*account.Account{}},
+			{"set limit", 2, 0, []*account.Account{a1, a2}},
+			{"limit bigger than number of accounts", 10, 0, []*account.Account{a1, a2, a3}},
+			{"set offset", 100, 1, []*account.Account{a2, a3}},
+			{"offset bigger than number of accounts", 100, 10, []*account.Account{}},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {

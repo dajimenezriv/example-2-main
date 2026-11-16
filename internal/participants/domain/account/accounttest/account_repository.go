@@ -50,12 +50,12 @@ func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.A
 }
 
 func (f *fakeRepository) FindAll(ctx context.Context, limit, offset int) ([]*account.Account, error) {
-	if err := ctx.Err(); err != nil {
-		return nil, err
+	if limit < 0 || offset < 0 {
+		return nil, account.ErrInvalidPagination
 	}
 
-	if limit < 0 || offset < 0 {
-		return []*account.Account{}, nil
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 
 	f.mu.Lock()
