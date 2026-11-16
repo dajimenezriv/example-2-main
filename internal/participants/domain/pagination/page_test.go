@@ -12,7 +12,7 @@ import (
 
 const testMaxLimit = 50
 
-func mustPage(t *testing.T, limit, offset, maxLimit int32) pagination.Page {
+func newPage(t *testing.T, limit, offset, maxLimit int32) pagination.Page {
 	t.Helper()
 	p, err := pagination.NewPage(limit, offset, maxLimit)
 	require.NoError(t, err)
@@ -58,7 +58,7 @@ func TestNewPage(t *testing.T) {
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				p := mustPage(t, tt.limit, tt.offset, tt.maxLimit)
+				p := newPage(t, tt.limit, tt.offset, tt.maxLimit)
 				assert.Equal(t, tt.limit, p.Limit())
 				assert.Equal(t, tt.offset, p.Offset())
 			})
@@ -79,7 +79,7 @@ func TestPage_HasPrevious(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := mustPage(t, 10, tt.offset, testMaxLimit)
+			p := newPage(t, 10, tt.offset, testMaxLimit)
 			assert.Equal(t, tt.want, p.HasPrevious())
 		})
 	}
@@ -106,7 +106,7 @@ func TestPage_HasNext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := mustPage(t, tt.limit, tt.offset, math.MaxInt32)
+			p := newPage(t, tt.limit, tt.offset, math.MaxInt32)
 			assert.Equal(t, tt.want, p.HasNext(tt.total))
 		})
 	}

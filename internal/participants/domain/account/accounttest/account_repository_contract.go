@@ -25,7 +25,7 @@ func NewAccount(t *testing.T, actorID uuid.UUID) *account.Account {
 	return a
 }
 
-func MustPage(t *testing.T, limit, offset int32) pagination.Page {
+func NewPage(t *testing.T, limit, offset int32) pagination.Page {
 	t.Helper()
 	p, err := pagination.NewPage(limit, offset, account.MaxPageLimit)
 	require.NoError(t, err)
@@ -116,7 +116,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				got, err := f.Repo.FindAll(t.Context(), MustPage(t, tt.limit, tt.offset))
+				got, err := f.Repo.FindAll(t.Context(), NewPage(t, tt.limit, tt.offset))
 				require.NoError(t, err)
 				assert.Equal(t, tt.want, got)
 			})
@@ -152,7 +152,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 		a := NewAccount(t, f.NewActorID(t))
-		page := MustPage(t, account.MaxPageLimit, 0)
+		page := NewPage(t, account.MaxPageLimit, 0)
 
 		tests := []struct {
 			name string

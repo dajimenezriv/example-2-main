@@ -2,6 +2,7 @@ package actortest
 
 import (
 	"context"
+	"math"
 	"testing"
 	"uuid"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"exercise/internal/participants/domain/actor"
+	"exercise/internal/participants/domain/pagination"
 )
 
 func newActor(t *testing.T, taxID string) *actor.Actor {
@@ -26,6 +28,13 @@ func saveActor(t *testing.T, repo actor.Repository, taxID string) *actor.Actor {
 	return a
 }
 
+func newPage(t *testing.T, limit, offset int32) pagination.Page {
+	t.Helper()
+	p, err := pagination.NewPage(limit, offset, actor.MaxPageLimit)
+	require.NoError(t, err)
+	return p
+}
+
 func checkActor(t *testing.T, repo actor.Repository, want *actor.Actor) {
 	t.Helper()
 	got, err := repo.FindByID(t.Context(), want.ID())
@@ -34,6 +43,38 @@ func checkActor(t *testing.T, repo actor.Repository, want *actor.Actor) {
 }
 
 func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
+	t.Helper()
+	runCountContract(t, newRepo)
+	runSaveContract(t, newRepo)
+	runUpdateContract(t, newRepo)
+	runFindContract(t, newRepo)
+	runContextCanceledContract(t, newRepo)
+}
+
+func runCountContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
+	t.Helper()
+
+	t.Run("Count returns zero when there are no actors", func(t *testing.T) {
+		repo := newRepo(t)
+
+		got, err := repo.Count(t.Context())
+		require.NoError(t, err)
+		assert.Equal(t, int64(0), got)
+	})
+
+	t.Run("Count returns the number of stored actors", func(t *testing.T) {
+		repo := newRepo(t)
+		saveActor(t, repo, "000000000")
+		saveActor(t, repo, "111111111")
+		saveActor(t, repo, "222222222")
+
+		got, err := repo.Count(t.Context())
+		require.NoError(t, err)
+		assert.Equal(t, int64(3), got)
+	})
+}
+
+func runSaveContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
 	t.Helper()
 
 	t.Run("Save stores the actor", func(t *testing.T) {
@@ -64,20 +105,14 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		err := repo.Save(t.Context(), a)
 		require.ErrorIs(t, err, actor.ErrTaxIDAlreadyExists)
 
-		actors, err := repo.FindAll(t.Context())
+		count, err := repo.Count(t.Context())
 		require.NoError(t, err)
-		assert.Len(t, actors, 1)
+		assert.Equal(t, int64(1), count)
 	})
+}
 
-	t.Run("Save fails if context is canceled", func(t *testing.T) {
-		repo := newRepo(t)
-		ctx, cancel := context.WithCancel(t.Context())
-		cancel()
-
-		a := newActor(t, "000000000")
-		err := repo.Save(ctx, a)
-		require.ErrorIs(t, err, context.Canceled)
-	})
+func runUpdateContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
+	t.Helper()
 
 	t.Run("Update modifies the actor and increases version", func(t *testing.T) {
 		repo := newRepo(t)
@@ -165,17 +200,10 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		want := actor.Reconstitute(a.ID(), "999999999", a.Type(), 1)
 		checkActor(t, repo, want)
 	})
+}
 
-	t.Run("Update fails if context is canceled", func(t *testing.T) {
-		repo := newRepo(t)
-		ctx, cancel := context.WithCancel(t.Context())
-		cancel()
-
-		a := newActor(t, "000000000")
-		got, err := repo.Update(ctx, a, 1)
-		require.ErrorIs(t, err, context.Canceled)
-		assert.Nil(t, got)
-	})
+func runFindContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
+	t.Helper()
 
 	t.Run("FindByID returns actor if exists", func(t *testing.T) {
 		repo := newRepo(t)
@@ -194,16 +222,6 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 		assert.Nil(t, got)
 	})
 
-	t.Run("FindByID fails if context is canceled", func(t *testing.T) {
-		repo := newRepo(t)
-		ctx, cancel := context.WithCancel(t.Context())
-		cancel()
-
-		got, err := repo.FindByID(ctx, uuid.New())
-		require.ErrorIs(t, err, context.Canceled)
-		assert.Nil(t, got)
-	})
-
 	t.Run("FindAll returns all actors in inserted order", func(t *testing.T) {
 		repo := newRepo(t)
 		actors := []*actor.Actor{
@@ -213,18 +231,65 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 			saveActor(t, repo, "444444444"),
 		}
 
-		got, err := repo.FindAll(t.Context())
+		got, err := repo.FindAll(t.Context(), newPage(t, actor.MaxPageLimit, 0))
 		require.NoError(t, err)
 		assert.Equal(t, actors, got)
 	})
 
-	t.Run("FindAll fails if context is canceled", func(t *testing.T) {
+	t.Run("FindAll paginates", func(t *testing.T) {
+		repo := newRepo(t)
+		a1 := saveActor(t, repo, "000000000")
+		a2 := saveActor(t, repo, "111111111")
+		a3 := saveActor(t, repo, "222222222")
+
+		tests := []struct {
+			name          string
+			limit, offset int32
+			want          []*actor.Actor
+		}{
+			{"set limit", 2, 0, []*actor.Actor{a1, a2}},
+			{"limit bigger than number of actors", 10, 0, []*actor.Actor{a1, a2, a3}},
+			{"set offset", actor.MaxPageLimit, 1, []*actor.Actor{a2, a3}},
+			{"set limit and offset", 1, 1, []*actor.Actor{a2}},
+			{"offset bigger than number of actors", actor.MaxPageLimit, 10, []*actor.Actor{}},
+			{"max limit and offset", actor.MaxPageLimit, math.MaxInt32, []*actor.Actor{}},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got, err := repo.FindAll(t.Context(), newPage(t, tt.limit, tt.offset))
+				require.NoError(t, err)
+				assert.Equal(t, tt.want, got)
+			})
+		}
+	})
+}
+
+func runContextCanceledContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
+	t.Helper()
+
+	t.Run("Context canceled", func(t *testing.T) {
 		repo := newRepo(t)
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
+		a := newActor(t, "000000000")
+		page := newPage(t, actor.MaxPageLimit, 0)
 
-		got, err := repo.FindAll(ctx)
-		require.ErrorIs(t, err, context.Canceled)
-		assert.Nil(t, got)
+		tests := []struct {
+			name string
+			call func() (any, error)
+		}{
+			{"Count", func() (any, error) { return repo.Count(ctx) }},
+			{"Save", func() (any, error) { return nil, repo.Save(ctx, a) }},
+			{"Update", func() (any, error) { return repo.Update(ctx, a, 1) }},
+			{"FindByID", func() (any, error) { return repo.FindByID(ctx, a.ID()) }},
+			{"FindAll", func() (any, error) { return repo.FindAll(ctx, page) }},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got, err := tt.call()
+				require.ErrorIs(t, err, context.Canceled)
+				assert.Zero(t, got)
+			})
+		}
 	})
 }
