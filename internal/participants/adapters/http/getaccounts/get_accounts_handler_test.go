@@ -9,6 +9,7 @@ import (
 	"testing"
 	"uuid"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/stretchr/testify/require"
 
 	"exercise/internal/participants/app/query/getaccounts"
@@ -17,28 +18,24 @@ import (
 	"exercise/internal/testhelpers"
 )
 
-var (
-	accountID1 = uuid.MustParse("00000000-0000-0000-0000-000000000001")
-	accountID2 = uuid.MustParse("00000000-0000-0000-0000-000000000002")
-	accountID3 = uuid.MustParse("00000000-0000-0000-0000-000000000003")
-	actorID    = uuid.MustParse("00000000-0000-0000-0000-000000000004")
-)
+// One more than the default limit (20), so the default is observable.
+const seededAccounts = 21
+
+var actorID = uuid.MustParse("00000000-0000-0000-0000-0000000000ff")
+
+func accountID(n int) uuid.UUID {
+	return uuid.MustParse(fmt.Sprintf("00000000-0000-0000-0000-%012d", n))
+}
 
 func newSUT(t *testing.T) account.Repository {
 	t.Helper()
 	repo := accounttest.NewFakeRepository()
-	saveAccount(t, repo, accountID1)
-	saveAccount(t, repo, accountID2)
-	saveAccount(t, repo, accountID3)
+	for n := 1; n <= seededAccounts; n++ {
+		a, err := account.New(accountID(n), actorID, "dltID", "privKey", "pubKey")
+		require.NoError(t, err)
+		require.NoError(t, repo.Save(t.Context(), a))
+	}
 	return repo
-}
-
-func saveAccount(t *testing.T, repo account.Repository, accountID uuid.UUID) {
-	t.Helper()
-	a, err := account.New(accountID, actorID, "dltID", "privKey", "pubKey")
-	require.NoError(t, err)
-	err = repo.Save(t.Context(), a)
-	require.NoError(t, err)
 }
 
 func get(ctx context.Context, t *testing.T, repo account.Repository, url string) *httptest.ResponseRecorder {
@@ -49,19 +46,23 @@ func get(ctx context.Context, t *testing.T, repo account.Repository, url string)
 	return api.GetCtx(ctx, url)
 }
 
-func page(hasNext, hasPrevious bool, accountIDs ...uuid.UUID) string {
-	rows := make([]string, len(accountIDs))
-	for i, id := range accountIDs {
-		rows[i] = fmt.Sprintf(`{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey", "version": 1}`, id)
+// page builds the expected body for accounts [from, to]. Exact match also
+// guarantees privateKey is never exposed.
+func page(from, to int, hasNext, hasPrevious bool) string {
+	rows := make([]string, 0, to-from+1)
+	for n := from; n <= to; n++ {
+		rows = append(rows, fmt.Sprintf(
+			`{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey", "version": 1}`, accountID(n),
+		))
 	}
 	return fmt.Sprintf(
-		`{"accounts": [%s], "totalCount": 3, "hasNext": %t, "hasPrevious": %t}`,
-		strings.Join(rows, ", "), hasNext, hasPrevious,
+		`{"accounts": [%s], "totalCount": %d, "hasNext": %t, "hasPrevious": %t}`,
+		strings.Join(rows, ", "), seededAccounts, hasNext, hasPrevious,
 	)
 }
 
 func TestGetAccounts_RejectedRequests(t *testing.T) {
-	ctx, cancel := context.WithCancel(t.Context())
+	canceled, cancel := context.WithCancel(t.Context())
 	cancel()
 
 	tests := []struct {
@@ -70,10 +71,11 @@ func TestGetAccounts_RejectedRequests(t *testing.T) {
 		url        string
 		wantCode   int
 		wantDetail string
+		wantErrors []*huma.ErrorDetail
 	}{
 		{
-			name:       "context canceled",
-			ctx:        ctx,
+			name:       "repository failure",
+			ctx:        canceled,
 			url:        "/accounts",
 			wantCode:   http.StatusInternalServerError,
 			wantDetail: "internal server error",
@@ -85,13 +87,29 @@ func TestGetAccounts_RejectedRequests(t *testing.T) {
 			wantCode:   http.StatusBadRequest,
 			wantDetail: "invalid pagination",
 		},
+		{
+			name:       "limit above account max",
+			ctx:        t.Context(),
+			url:        fmt.Sprintf("/accounts?limit=%d", account.MaxPageLimit+1),
+			wantCode:   http.StatusBadRequest,
+			wantDetail: "invalid pagination",
+		},
+		{
+			name:       "non-numeric limit",
+			ctx:        t.Context(),
+			url:        "/accounts?limit=abc",
+			wantCode:   http.StatusUnprocessableEntity,
+			wantDetail: "validation failed",
+			wantErrors: []*huma.ErrorDetail{
+				{Message: "invalid integer", Location: "query.limit", Value: "abc"},
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := newSUT(t)
-			rec := get(tt.ctx, t, repo, tt.url)
+			rec := get(tt.ctx, t, newSUT(t), tt.url)
 
-			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail)
+			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail, tt.wantErrors...)
 		})
 	}
 }
@@ -103,20 +121,24 @@ func TestGetAccounts_Success(t *testing.T) {
 		want string
 	}{
 		{
-			name: "no limit or offset",
+			name: "default limit and offset",
 			url:  "/accounts",
-			want: page(false, false, accountID1, accountID2, accountID3),
+			want: page(1, 20, true, false),
 		},
 		{
-			name: "set limit and offset",
-			url:  "/accounts?limit=1&&offset=1",
-			want: page(true, true, accountID2),
+			name: "limit at account max",
+			url:  fmt.Sprintf("/accounts?limit=%d", account.MaxPageLimit),
+			want: page(1, seededAccounts, false, false),
+		},
+		{
+			name: "explicit limit and offset",
+			url:  "/accounts?limit=2&offset=1",
+			want: page(2, 3, true, true),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repo := newSUT(t)
-			rec := get(t.Context(), t, repo, tt.url)
+			rec := get(t.Context(), t, newSUT(t), tt.url)
 
 			testhelpers.AssertHumaOutput(t, rec, http.StatusOK, tt.want)
 		})

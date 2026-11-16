@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"uuid"
 
@@ -56,38 +57,125 @@ func saveAccount(t *testing.T, repo account.Repository, id, actorID uuid.UUID) {
 	require.NoError(t, err)
 }
 
-func post(ctx context.Context, t *testing.T, actorRepo actor.Repository, accountRepo account.Repository) *httptest.ResponseRecorder {
+func get(ctx context.Context, t *testing.T, actorRepo actor.Repository, accountRepo account.Repository, url string) *httptest.ResponseRecorder {
 	t.Helper()
 	h := NewHandler(getactors.NewQuery(actorRepo, accountRepo))
 	api := testhelpers.NewHumaAPI(t)
 	h.Register(api)
-	return api.GetCtx(ctx, "/actors")
+	return api.GetCtx(ctx, url)
 }
 
-func TestContextCanceledReturnsError(t *testing.T) {
-	actorRepo, accountRepo := newSUT(t)
+var (
+	actor1JSON = fmt.Sprintf(`{"id": %q, "taxId": "000000000", "type": "issuer", "version": 1, "accounts": [
+		{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"},
+		{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"}
+	]}`, actorID1, accountID1, accountID2)
+	actor2JSON = fmt.Sprintf(`{"id": %q, "taxId": "000000001", "type": "issuer", "version": 1, "accounts": [
+		{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"}
+	]}`, actorID2, accountID3)
+	actor3JSON = fmt.Sprintf(`{"id": %q, "taxId": "000000002", "type": "issuer", "version": 1, "accounts": []}`, actorID3)
+)
+
+func page(hasNext, hasPrevious bool, actors ...string) string {
+	return fmt.Sprintf(
+		`{"actors": [%s], "totalCount": 3, "hasNext": %t, "hasPrevious": %t}`,
+		strings.Join(actors, ", "), hasNext, hasPrevious,
+	)
+}
+
+func TestGetActors_RejectedRequests(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
-	rec := post(ctx, t, actorRepo, accountRepo)
+	tests := []struct {
+		name       string
+		ctx        context.Context
+		url        string
+		wantCode   int
+		wantDetail string
+	}{
+		{
+			name:       "context canceled",
+			ctx:        ctx,
+			url:        "/actors",
+			wantCode:   http.StatusInternalServerError,
+			wantDetail: "internal server error",
+		},
+		{
+			name:       "zero limit",
+			ctx:        t.Context(),
+			url:        "/actors?limit=0",
+			wantCode:   http.StatusBadRequest,
+			wantDetail: "invalid pagination",
+		},
+		{
+			name:       "limit above max",
+			ctx:        t.Context(),
+			url:        "/actors?limit=21",
+			wantCode:   http.StatusBadRequest,
+			wantDetail: "invalid pagination",
+		},
+		{
+			name:       "negative offset",
+			ctx:        t.Context(),
+			url:        "/actors?offset=-1",
+			wantCode:   http.StatusBadRequest,
+			wantDetail: "invalid pagination",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actorRepo, accountRepo := newSUT(t)
+			rec := get(tt.ctx, t, actorRepo, accountRepo, tt.url)
 
-	testhelpers.AssertHumaError(t, rec, http.StatusInternalServerError, "find actors: context canceled")
+			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail)
+		})
+	}
 }
 
-func TestReturnActorsAndAccounts(t *testing.T) {
-	actorRepo, accountRepo := newSUT(t)
-	rec := post(t.Context(), t, actorRepo, accountRepo)
+func TestGetActors_Success(t *testing.T) {
+	tests := []struct {
+		name string
+		url  string
+		want string
+	}{
+		{
+			name: "no limit or offset",
+			url:  "/actors",
+			want: page(false, false, actor1JSON, actor2JSON, actor3JSON),
+		},
+		{
+			name: "max limit",
+			url:  "/actors?limit=20",
+			want: page(false, false, actor1JSON, actor2JSON, actor3JSON),
+		},
+		{
+			name: "set limit",
+			url:  "/actors?limit=2",
+			want: page(true, false, actor1JSON, actor2JSON),
+		},
+		{
+			name: "set limit and offset",
+			url:  "/actors?limit=1&offset=1",
+			want: page(true, true, actor2JSON),
+		},
+		{
+			name: "last page",
+			url:  "/actors?limit=2&offset=2",
+			want: page(false, true, actor3JSON),
+		},
+		{
+			name: "offset past end",
+			url:  "/actors?offset=10",
+			want: page(false, true),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			actorRepo, accountRepo := newSUT(t)
+			rec := get(t.Context(), t, actorRepo, accountRepo, tt.url)
 
-	want := fmt.Sprintf(`{"actors": [
-		{"id": %q, "taxId": "000000000", "type": "issuer", "version": 1, "accounts": [
-			{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"},
-			{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"}
-		]},
-		{"id": %q, "taxId": "000000001", "type": "issuer", "version": 1, "accounts": [
-			{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey"}
-		]},
-		{"id": %q, "taxId": "000000002", "type": "issuer", "version": 1, "accounts": []}
-	]}`, actorID1, accountID1, accountID2, actorID2, accountID3, actorID3)
-
-	testhelpers.AssertHumaOutput(t, rec, http.StatusOK, want)
+			testhelpers.AssertHumaOutput(t, rec, http.StatusOK, tt.want)
+		})
+	}
 }
