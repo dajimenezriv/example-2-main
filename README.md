@@ -62,7 +62,7 @@ This project is designed for conducting 1-hour live coding interviews. Below are
 
 ### 4. Add Pagination to GET Endpoints ⭐⭐
 
-**Objective:** Add limit/offset pagination to GET /accounts
+**Objective:** Add limit/offset pagination to GET /actors and GET /accounts
 
 **Sub-tasks:**
 
