@@ -11,6 +11,17 @@ import (
 	"uuid"
 )
 
+const countActors = `-- name: CountActors :one
+SELECT COUNT(*) FROM actors
+`
+
+func (q *Queries) CountActors(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countActors)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createActor = `-- name: CreateActor :exec
 INSERT INTO
   actors (id, tax_id, type, version)
@@ -61,10 +72,17 @@ SELECT
   id, tax_id, type, version
 FROM
   actors
+LIMIT
+  $2 OFFSET $1
 `
 
-func (q *Queries) FindActors(ctx context.Context) ([]Actor, error) {
-	rows, err := q.db.Query(ctx, findActors)
+type FindActorsParams struct {
+	PageOffset int32
+	PageLimit  int32
+}
+
+func (q *Queries) FindActors(ctx context.Context, arg FindActorsParams) ([]Actor, error) {
+	rows, err := q.db.Query(ctx, findActors, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

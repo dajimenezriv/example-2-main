@@ -13,6 +13,9 @@ var (
 	ErrAlreadyExists        = errors.New("account: already exists")
 )
 
+// MaxPageLimit is the largest page size for listing accounts.
+const MaxPageLimit = 100
+
 type Account struct {
 	id           uuid.UUID
 	actorID      uuid.UUID

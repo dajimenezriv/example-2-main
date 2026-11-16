@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.14.0
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      # Repository tests start Postgres via testcontainers (Docker is preinstalled on ubuntu runners).
+      - name: Run tests
+        run: go test -race -coverpkg=./... -coverprofile=raw_coverage.out ./...
+      - name: Coverage summary
+        run: |
+          grep -vE '/(actortest|accounttest)/' raw_coverage.out > coverage.out
+          go tool cover -func=coverage.out | tail -1 >> "$GITHUB_STEP_SUMMARY"
+
+  checks:
+    name: go mod tidy / sqlc / squawk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: go mod tidy
+        run: go mod tidy -diff
+      - uses: sqlc-dev/setup-sqlc@v5
+        with:
+          sqlc-version: "1.31.1"
+      - name: sqlc generated code is up to date
+        run: sqlc diff -f sqlc.yaml
+      - name: sqlc vet
+        run: sqlc vet -f sqlc.yaml
+      - name: squawk (migration linting)
+        run: npx --yes squawk-cli@2.59.0 'migrations/*.sql'

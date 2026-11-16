@@ -2,6 +2,7 @@ package accounttest
 
 import (
 	"context"
+	"math"
 	"testing"
 	"uuid"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/pagination"
 )
 
 type Fixture struct {
@@ -21,6 +23,13 @@ func NewAccount(t *testing.T, actorID uuid.UUID) *account.Account {
 	a, err := account.New(uuid.New(), actorID, "dltID", "privKey", "pubKey")
 	require.NoError(t, err)
 	return a
+}
+
+func NewPage(t *testing.T, limit, offset int32) pagination.Page {
+	t.Helper()
+	p, err := pagination.NewPage(limit, offset, account.MaxPageLimit)
+	require.NoError(t, err)
+	return p
 }
 
 func saveAccount(t *testing.T, repo account.Repository, actorID uuid.UUID) *account.Account {
@@ -40,6 +49,25 @@ func checkAccount(t *testing.T, repo account.Repository, want *account.Account) 
 
 func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 	t.Helper()
+
+	t.Run("Count returns zero when there are no accounts", func(t *testing.T) {
+		f := setup(t)
+
+		got, err := f.Repo.Count(t.Context())
+		require.NoError(t, err)
+		assert.Equal(t, int64(0), got)
+	})
+
+	t.Run("Count returns the number of stored accounts", func(t *testing.T) {
+		f := setup(t)
+		saveAccount(t, f.Repo, f.NewActorID(t))
+		saveAccount(t, f.Repo, f.NewActorID(t))
+		saveAccount(t, f.Repo, f.NewActorID(t))
+
+		got, err := f.Repo.Count(t.Context())
+		require.NoError(t, err)
+		assert.Equal(t, int64(3), got)
+	})
 
 	t.Run("Save stores the account", func(t *testing.T) {
 		f := setup(t)
@@ -61,16 +89,6 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		checkAccount(t, f.Repo, a)
 	})
 
-	t.Run("Save fails if context is canceled", func(t *testing.T) {
-		f := setup(t)
-		ctx, cancel := context.WithCancel(t.Context())
-		cancel()
-
-		a := NewAccount(t, uuid.New())
-		err := f.Repo.Save(ctx, a)
-		require.ErrorIs(t, err, context.Canceled)
-	})
-
 	t.Run("FindByID fails if account not found", func(t *testing.T) {
 		f := setup(t)
 
@@ -79,38 +97,30 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		assert.Nil(t, got)
 	})
 
-	t.Run("FindByID fails if context is canceled", func(t *testing.T) {
+	t.Run("FindAll success", func(t *testing.T) {
 		f := setup(t)
-		ctx, cancel := context.WithCancel(t.Context())
-		cancel()
+		a1 := saveAccount(t, f.Repo, f.NewActorID(t))
+		a2 := saveAccount(t, f.Repo, f.NewActorID(t))
+		a3 := saveAccount(t, f.Repo, f.NewActorID(t))
 
-		got, err := f.Repo.FindByID(ctx, uuid.New())
-		require.ErrorIs(t, err, context.Canceled)
-		assert.Nil(t, got)
-	})
-
-	t.Run("FindAll returns all accounts in inserted order", func(t *testing.T) {
-		f := setup(t)
-		accounts := []*account.Account{
-			saveAccount(t, f.Repo, f.NewActorID(t)),
-			saveAccount(t, f.Repo, f.NewActorID(t)),
-			saveAccount(t, f.Repo, f.NewActorID(t)),
-			saveAccount(t, f.Repo, f.NewActorID(t)),
+		tests := []struct {
+			name          string
+			limit, offset int32
+			want          []*account.Account
+		}{
+			{"set limit", 2, 0, []*account.Account{a1, a2}},
+			{"limit bigger than number of accounts", 10, 0, []*account.Account{a1, a2, a3}},
+			{"set offset", account.MaxPageLimit, 1, []*account.Account{a2, a3}},
+			{"offset bigger than number of accounts", account.MaxPageLimit, 10, []*account.Account{}},
+			{"max limit and offset", account.MaxPageLimit, math.MaxInt32, []*account.Account{}},
 		}
-
-		got, err := f.Repo.FindAll(t.Context())
-		require.NoError(t, err)
-		assert.Equal(t, accounts, got)
-	})
-
-	t.Run("FindAll fails if context is canceled", func(t *testing.T) {
-		f := setup(t)
-		ctx, cancel := context.WithCancel(t.Context())
-		cancel()
-
-		got, err := f.Repo.FindAll(ctx)
-		require.ErrorIs(t, err, context.Canceled)
-		assert.Nil(t, got)
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got, err := f.Repo.FindAll(t.Context(), NewPage(t, tt.limit, tt.offset))
+				require.NoError(t, err)
+				assert.Equal(t, tt.want, got)
+			})
+		}
 	})
 
 	t.Run("FindByActorIDs returns accounts filtered by actor ID", func(t *testing.T) {
@@ -137,13 +147,29 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		assert.Empty(t, got)
 	})
 
-	t.Run("FindByActorIDs fails if context is canceled", func(t *testing.T) {
+	t.Run("Context canceled", func(t *testing.T) {
 		f := setup(t)
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
+		a := NewAccount(t, f.NewActorID(t))
+		page := NewPage(t, account.MaxPageLimit, 0)
 
-		got, err := f.Repo.FindByActorIDs(ctx, []uuid.UUID{uuid.New()})
-		require.ErrorIs(t, err, context.Canceled)
-		assert.Nil(t, got)
+		tests := []struct {
+			name string
+			call func() (any, error)
+		}{
+			{"Count", func() (any, error) { return f.Repo.Count(ctx) }},
+			{"Save", func() (any, error) { return nil, f.Repo.Save(ctx, a) }},
+			{"FindByID", func() (any, error) { return f.Repo.FindByID(ctx, a.ID()) }},
+			{"FindAll", func() (any, error) { return f.Repo.FindAll(ctx, page) }},
+			{"FindByActorIDs", func() (any, error) { return f.Repo.FindByActorIDs(ctx, []uuid.UUID{a.ActorID()}) }},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got, err := tt.call()
+				require.ErrorIs(t, err, context.Canceled)
+				assert.Zero(t, got)
+			})
+		}
 	})
 }

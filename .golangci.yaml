@@ -43,6 +43,7 @@ linters:
     rules:
       - path: (_test\.go$|test/|testhelpers/)
         linters:
+          - containedctx
           - cyclop
           - funlen
           - gochecknoglobals

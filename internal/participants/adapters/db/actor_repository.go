@@ -8,6 +8,7 @@ import (
 
 	"exercise/internal/participants/adapters/db/sqlcgen"
 	"exercise/internal/participants/domain/actor"
+	"exercise/internal/participants/domain/pagination"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -23,6 +24,14 @@ func NewActorRepository(db *sqlcgen.Queries) *ActorRepository {
 
 func toActorDomain(d sqlcgen.Actor) *actor.Actor {
 	return actor.Reconstitute(d.ID, d.TaxID, actor.Type(d.Type), d.Version)
+}
+
+func (r *ActorRepository) Count(ctx context.Context) (int64, error) {
+	n, err := r.db.CountActors(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count actors: %w", err)
+	}
+	return n, nil
 }
 
 func (r *ActorRepository) Save(ctx context.Context, a *actor.Actor) error {
@@ -78,8 +87,11 @@ func (r *ActorRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Ac
 	return nil, fmt.Errorf("find actor by id: %w", err)
 }
 
-func (r *ActorRepository) FindAll(ctx context.Context) ([]*actor.Actor, error) {
-	as, err := r.db.FindActors(ctx)
+func (r *ActorRepository) FindAll(ctx context.Context, page pagination.Page) ([]*actor.Actor, error) {
+	as, err := r.db.FindActors(ctx, sqlcgen.FindActorsParams{
+		PageLimit:  page.Limit(),
+		PageOffset: page.Offset(),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("find actors: %w", err)
 	}

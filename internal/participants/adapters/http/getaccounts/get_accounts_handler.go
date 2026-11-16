@@ -2,19 +2,30 @@ package getaccounts
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"exercise/internal/participants/app/query/getaccounts"
+	"exercise/internal/participants/domain/pagination"
+	"exercise/internal/platform/httpapi"
 
 	"github.com/danielgtaylor/huma/v2"
 )
+
+type Input struct {
+	Limit  int32 `query:"limit" default:"20"`
+	Offset int32 `query:"offset" default:"0"`
+}
 
 type Output struct {
 	Body getAccountsResponse
 }
 
 type getAccountsResponse struct {
-	Accounts []accountItem `json:"accounts"`
+	Accounts    []accountItem `json:"accounts"`
+	TotalCount  int64         `json:"totalCount"`
+	HasNext     bool          `json:"hasNext"`
+	HasPrevious bool          `json:"hasPrevious"`
 }
 
 type accountItem struct {
@@ -41,14 +52,23 @@ func (h *Handler) Register(api huma.API) {
 	}, h.Handle)
 }
 
-func (h *Handler) Handle(ctx context.Context, _ *struct{}) (*Output, error) {
-	accounts, err := h.Query.Execute(ctx)
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
+func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
+	res, err := h.Query.Execute(ctx, in.Limit, in.Offset)
+	switch {
+	case err == nil:
+	case errors.Is(err, pagination.ErrInvalid):
+		return nil, huma.Error400BadRequest("invalid pagination")
+	default:
+		return nil, httpapi.Error500InternalServerError(err)
 	}
 
-	resp := getAccountsResponse{Accounts: make([]accountItem, len(accounts))}
-	for i, a := range accounts {
+	resp := getAccountsResponse{
+		Accounts:    make([]accountItem, len(res.Accounts)),
+		TotalCount:  res.TotalCount,
+		HasNext:     res.HasNext,
+		HasPrevious: res.HasPrevious,
+	}
+	for i, a := range res.Accounts {
 		resp.Accounts[i] = accountItem{
 			ID:           a.ID,
 			DltAccountID: a.DltAccountID,

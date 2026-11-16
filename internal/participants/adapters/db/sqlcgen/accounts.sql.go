@@ -11,6 +11,17 @@ import (
 	"uuid"
 )
 
+const countAccounts = `-- name: CountAccounts :one
+SELECT COUNT(*) FROM accounts
+`
+
+func (q *Queries) CountAccounts(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countAccounts)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createAccount = `-- name: CreateAccount :exec
 INSERT INTO
   accounts (
@@ -81,10 +92,17 @@ SELECT
   id, dlt_account_id, private_key, public_key, actor_id, version
 FROM
   accounts
+LIMIT
+  $2 OFFSET $1
 `
 
-func (q *Queries) FindAccounts(ctx context.Context) ([]Account, error) {
-	rows, err := q.db.Query(ctx, findAccounts)
+type FindAccountsParams struct {
+	PageOffset int32
+	PageLimit  int32
+}
+
+func (q *Queries) FindAccounts(ctx context.Context, arg FindAccountsParams) ([]Account, error) {
+	rows, err := q.db.Query(ctx, findAccounts, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

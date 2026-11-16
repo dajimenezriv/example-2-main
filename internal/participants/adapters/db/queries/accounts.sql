@@ -1,3 +1,7 @@
+-- name: CountAccounts :one
+SELECT COUNT(*) FROM accounts;
+
+
 -- name: CreateAccount :exec
 INSERT INTO
   accounts (
@@ -30,7 +34,9 @@ WHERE
 SELECT
   *
 FROM
-  accounts;
+  accounts
+LIMIT
+  @page_limit OFFSET @page_offset;
 
 -- name: FindAccountsByActorIDs :many
 SELECT

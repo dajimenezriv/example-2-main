@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	domainAccount "exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/pagination"
 )
 
 type AccountDTO struct {
@@ -16,28 +17,48 @@ type AccountDTO struct {
 }
 
 type Query struct {
-	Repo domainAccount.Repository
+	Repo account.Repository
 }
 
-func NewQuery(repo domainAccount.Repository) *Query {
+type Result struct {
+	Accounts    []*AccountDTO
+	TotalCount  int64
+	HasNext     bool
+	HasPrevious bool
+}
+
+func NewQuery(repo account.Repository) *Query {
 	return &Query{Repo: repo}
 }
 
-func (q *Query) Execute(ctx context.Context) ([]*AccountDTO, error) {
-	accounts, err := q.Repo.FindAll(ctx)
+func (q *Query) Execute(ctx context.Context, limit, offset int32) (*Result, error) {
+	page, err := pagination.NewPage(limit, offset, account.MaxPageLimit)
+	if err != nil {
+		return nil, fmt.Errorf("build page: %w", err)
+	}
+	accounts, err := q.Repo.FindAll(ctx, page)
 	if err != nil {
 		return nil, fmt.Errorf("find accounts: %w", err)
 	}
+	total, err := q.Repo.Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("count accounts: %w", err)
+	}
 
-	var dtos []*AccountDTO
-	for _, a := range accounts {
-		dtos = append(dtos, &AccountDTO{
+	res := &Result{
+		Accounts:    make([]*AccountDTO, len(accounts)),
+		TotalCount:  total,
+		HasNext:     page.HasNext(total),
+		HasPrevious: page.HasPrevious(),
+	}
+	for i, a := range accounts {
+		res.Accounts[i] = &AccountDTO{
 			ID:           a.ID().String(),
 			DltAccountID: a.DltAccountID(),
 			PrivateKey:   a.PrivateKey(),
 			PublicKey:    a.PublicKey(),
 			Version:      a.Version(),
-		})
+		}
 	}
-	return dtos, nil
+	return res, nil
 }

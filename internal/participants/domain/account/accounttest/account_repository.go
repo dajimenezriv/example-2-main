@@ -7,6 +7,7 @@ import (
 	"uuid"
 
 	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/pagination"
 )
 
 type fakeRepository struct {
@@ -20,12 +21,23 @@ func NewFakeRepository() account.Repository {
 	}
 }
 
+func (f *fakeRepository) Count(ctx context.Context) (int64, error) {
+	if err := ctx.Err(); err != nil {
+		return 0, err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	return int64(len(f.accounts)), nil
+}
+
 func (f *fakeRepository) Save(ctx context.Context, acc *account.Account) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
+
 	for _, a := range f.accounts {
 		if a.ID() == acc.ID() {
 			return account.ErrAlreadyExists
@@ -41,6 +53,7 @@ func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.A
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
+
 	for _, a := range f.accounts {
 		if a.ID() == id {
 			return &a, nil
@@ -49,14 +62,18 @@ func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.A
 	return nil, account.ErrNotFound
 }
 
-func (f *fakeRepository) FindAll(ctx context.Context) ([]*account.Account, error) {
+func (f *fakeRepository) FindAll(ctx context.Context, page pagination.Page) ([]*account.Account, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	accs := make([]*account.Account, len(f.accounts))
-	for i, acc := range f.accounts {
+
+	from := min(len(f.accounts), int(page.Offset()))
+	to := min(len(f.accounts), from+int(page.Limit()))
+
+	accs := make([]*account.Account, to-from)
+	for i, acc := range f.accounts[from:to] {
 		accs[i] = &acc
 	}
 	return accs, nil
@@ -68,6 +85,7 @@ func (f *fakeRepository) FindByActorIDs(ctx context.Context, actorIDs []uuid.UUI
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
+
 	var accs []*account.Account
 	for _, acc := range f.accounts {
 		if slices.Contains(actorIDs, acc.ActorID()) {
