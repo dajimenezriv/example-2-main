@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"uuid"
 
@@ -50,8 +51,15 @@ func get(ctx context.Context, t *testing.T, repo account.Repository, url string)
 	return api.GetCtx(ctx, url)
 }
 
-func row(accountID uuid.UUID) string {
-	return fmt.Sprintf(`{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey", "version": 1}`, accountID)
+func page(totalCount int, hasNext, hasPrevious bool, accountIDs ...uuid.UUID) string {
+	rows := make([]string, len(accountIDs))
+	for i, id := range accountIDs {
+		rows[i] = fmt.Sprintf(`{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey", "version": 1}`, id)
+	}
+	return fmt.Sprintf(
+		`{"accounts": [%s], "totalCount": %d, "hasNext": %t, "hasPrevious": %t}`,
+		strings.Join(rows, ", "), totalCount, hasNext, hasPrevious,
+	)
 }
 
 func TestContextCanceledReturnsError(t *testing.T) {
@@ -118,32 +126,42 @@ func TestGetAccounts_Success(t *testing.T) {
 		{
 			name: "no limit or offset",
 			url:  "/accounts",
-			want: fmt.Sprintf(`{"accounts": [%s, %s, %s]}`, row(accountID1), row(accountID2), row(accountID3)),
+			want: page(3, false, false, accountID1, accountID2, accountID3),
 		},
 		{
 			name: "set limit",
 			url:  "/accounts?limit=2",
-			want: fmt.Sprintf(`{"accounts": [%s, %s]}`, row(accountID1), row(accountID2)),
+			want: page(3, true, false, accountID1, accountID2),
+		},
+		{
+			name: "limit equal to number of accounts",
+			url:  "/accounts?limit=3",
+			want: page(3, false, false, accountID1, accountID2, accountID3),
 		},
 		{
 			name: "limit bigger than number of accounts",
 			url:  "/accounts?limit=10",
-			want: fmt.Sprintf(`{"accounts": [%s, %s, %s]}`, row(accountID1), row(accountID2), row(accountID3)),
+			want: page(3, false, false, accountID1, accountID2, accountID3),
 		},
 		{
 			name: "set offset",
 			url:  "/accounts?offset=1",
-			want: fmt.Sprintf(`{"accounts": [%s, %s]}`, row(accountID2), row(accountID3)),
+			want: page(3, false, true, accountID2, accountID3),
 		},
 		{
 			name: "offset bigger than number of accounts",
 			url:  "/accounts?offset=4",
-			want: `{"accounts": []}`,
+			want: page(3, false, true),
 		},
 		{
 			name: "set limit and offset",
-			url:  "/accounts?limit=1&&offset=1",
-			want: fmt.Sprintf(`{"accounts": [%s]}`, row(accountID2)),
+			url:  "/accounts?limit=1&offset=1",
+			want: page(3, true, true, accountID2),
+		},
+		{
+			name: "last page",
+			url:  "/accounts?limit=2&offset=2",
+			want: page(3, false, true, accountID3),
 		},
 	}
 	for _, tt := range tests {

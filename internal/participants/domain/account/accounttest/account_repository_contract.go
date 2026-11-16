@@ -41,6 +41,25 @@ func checkAccount(t *testing.T, repo account.Repository, want *account.Account) 
 func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 	t.Helper()
 
+	t.Run("Count returns zero when there are no accounts", func(t *testing.T) {
+		f := setup(t)
+
+		got, err := f.Repo.Count(t.Context())
+		require.NoError(t, err)
+		assert.Equal(t, int64(0), got)
+	})
+
+	t.Run("Count returns the number of stored accounts", func(t *testing.T) {
+		f := setup(t)
+		saveAccount(t, f.Repo, f.NewActorID(t))
+		saveAccount(t, f.Repo, f.NewActorID(t))
+		saveAccount(t, f.Repo, f.NewActorID(t))
+
+		got, err := f.Repo.Count(t.Context())
+		require.NoError(t, err)
+		assert.Equal(t, int64(3), got)
+	})
+
 	t.Run("Save stores the account", func(t *testing.T) {
 		f := setup(t)
 		a := NewAccount(t, f.NewActorID(t))
