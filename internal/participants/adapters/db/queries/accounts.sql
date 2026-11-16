@@ -30,7 +30,9 @@ WHERE
 SELECT
   *
 FROM
-  accounts;
+  accounts
+LIMIT
+  @page_size OFFSET @page_offset;
 
 -- name: FindAccountsByActorIDs :many
 SELECT

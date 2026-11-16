@@ -81,10 +81,17 @@ SELECT
   id, dlt_account_id, private_key, public_key, actor_id, version
 FROM
   accounts
+LIMIT
+  $2 OFFSET $1
 `
 
-func (q *Queries) FindAccounts(ctx context.Context) ([]Account, error) {
-	rows, err := q.db.Query(ctx, findAccounts)
+type FindAccountsParams struct {
+	PageOffset int32
+	PageSize   int32
+}
+
+func (q *Queries) FindAccounts(ctx context.Context, arg FindAccountsParams) ([]Account, error) {
+	rows, err := q.db.Query(ctx, findAccounts, arg.PageOffset, arg.PageSize)
 	if err != nil {
 		return nil, err
 	}

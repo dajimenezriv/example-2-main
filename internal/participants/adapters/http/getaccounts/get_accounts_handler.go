@@ -9,6 +9,11 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 )
 
+type Input struct {
+	Limit  int `query:"limit" default:"20" minimum:"1" maximum:"100"`
+	Offset int `query:"offset" default:"0" minimum:"0"`
+}
+
 type Output struct {
 	Body getAccountsResponse
 }
@@ -34,15 +39,17 @@ func NewHandler(query *getaccounts.Query) *Handler {
 
 func (h *Handler) Register(api huma.API) {
 	huma.Register(api, huma.Operation{
-		Method:  http.MethodGet,
-		Path:    "/accounts",
-		Summary: "List accounts",
-		Tags:    []string{"Accounts"},
+		Method:        http.MethodGet,
+		Path:          "/accounts",
+		Summary:       "List accounts",
+		Tags:          []string{"Accounts"},
+		DefaultStatus: http.StatusOK,
+		Errors:        []int{http.StatusUnprocessableEntity},
 	}, h.Handle)
 }
 
-func (h *Handler) Handle(ctx context.Context, _ *struct{}) (*Output, error) {
-	accounts, err := h.Query.Execute(ctx)
+func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
+	accounts, err := h.Query.Execute(ctx, in.Limit, in.Offset)
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
 	}

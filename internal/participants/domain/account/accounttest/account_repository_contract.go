@@ -98,7 +98,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 			saveAccount(t, f.Repo, f.NewActorID(t)),
 		}
 
-		got, err := f.Repo.FindAll(t.Context())
+		got, err := f.Repo.FindAll(t.Context(), 100, 0)
 		require.NoError(t, err)
 		assert.Equal(t, accounts, got)
 	})
@@ -108,7 +108,7 @@ func RunRepositoryContract(t *testing.T, setup func(t *testing.T) Fixture) {
 		ctx, cancel := context.WithCancel(t.Context())
 		cancel()
 
-		got, err := f.Repo.FindAll(ctx)
+		got, err := f.Repo.FindAll(ctx, 100, 0)
 		require.ErrorIs(t, err, context.Canceled)
 		assert.Nil(t, got)
 	})

@@ -61,8 +61,11 @@ func (r *AccountRepository) FindByID(ctx context.Context, id uuid.UUID) (*accoun
 	return toAccountDomain(a), nil
 }
 
-func (r *AccountRepository) FindAll(ctx context.Context) ([]*account.Account, error) {
-	as, err := r.db.FindAccounts(ctx)
+func (r *AccountRepository) FindAll(ctx context.Context, limit, offset int) ([]*account.Account, error) {
+	as, err := r.db.FindAccounts(ctx, sqlcgen.FindAccountsParams{
+		PageSize:   int32(limit),
+		PageOffset: int32(offset),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("find accounts: %w", err)
 	}

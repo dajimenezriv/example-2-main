@@ -23,8 +23,8 @@ func NewQuery(repo domainAccount.Repository) *Query {
 	return &Query{Repo: repo}
 }
 
-func (q *Query) Execute(ctx context.Context) ([]*AccountDTO, error) {
-	accounts, err := q.Repo.FindAll(ctx)
+func (q *Query) Execute(ctx context.Context, limit, offset int) ([]*AccountDTO, error) {
+	accounts, err := q.Repo.FindAll(ctx, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("find accounts: %w", err)
 	}

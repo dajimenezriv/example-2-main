@@ -23,7 +23,7 @@ func NewHumaAPI(t *testing.T) humatest.TestAPI {
 func AssertHumaOutput(t *testing.T, rec *httptest.ResponseRecorder, wantCode int, wantBody string) {
 	t.Helper()
 
-	assert.Equal(t, wantCode, rec.Code)
+	require.Equal(t, wantCode, rec.Code)
 	assert.Equal(t, "application/json", rec.Header().Get("Content-Type"))
 
 	got := rec.Body.String()
@@ -39,7 +39,7 @@ func AssertHumaOutput(t *testing.T, rec *httptest.ResponseRecorder, wantCode int
 func AssertHumaError(t *testing.T, rec *httptest.ResponseRecorder, wantCode int, wantDetail string, wantErrors ...*huma.ErrorDetail) {
 	t.Helper()
 
-	assert.Equal(t, wantCode, rec.Code)
+	require.Equal(t, wantCode, rec.Code)
 	assert.Equal(t, "application/problem+json", rec.Header().Get("Content-Type"))
 
 	var got huma.ErrorModel

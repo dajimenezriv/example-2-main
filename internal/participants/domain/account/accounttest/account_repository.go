@@ -49,15 +49,20 @@ func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.A
 	return nil, account.ErrNotFound
 }
 
-func (f *fakeRepository) FindAll(ctx context.Context) ([]*account.Account, error) {
+func (f *fakeRepository) FindAll(ctx context.Context, limit, offset int) ([]*account.Account, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	accs := make([]*account.Account, len(f.accounts))
-	for i, acc := range f.accounts {
-		accs[i] = &acc
+
+	length := min(len(f.accounts), limit)
+	from := min(len(f.accounts), offset)
+	to := min(len(f.accounts), limit+offset)
+
+	accs := make([]*account.Account, 0, length)
+	for _, acc := range f.accounts[from:to] {
+		accs = append(accs, &acc)
 	}
 	return accs, nil
 }

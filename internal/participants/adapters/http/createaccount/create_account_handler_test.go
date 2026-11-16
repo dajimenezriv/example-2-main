@@ -124,7 +124,7 @@ func TestRejectedRequests(t *testing.T) {
 
 			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail, tt.wantErrors...)
 
-			accounts, err := accountRepo.FindAll(t.Context())
+			accounts, err := accountRepo.FindAll(t.Context(), 100, 0)
 			require.NoError(t, err)
 			assert.Len(t, accounts, 1)
 		})
@@ -147,7 +147,7 @@ func TestCreatesAccount(t *testing.T) {
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusCreated, want)
 
-	accounts, err := accountRepo.FindAll(t.Context())
+	accounts, err := accountRepo.FindAll(t.Context(), 100, 0)
 	require.NoError(t, err)
 	assert.Len(t, accounts, 2)
 }
