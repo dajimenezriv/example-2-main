@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	domainAccount "exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/account"
 )
 
 type AccountDTO struct {
@@ -16,7 +16,7 @@ type AccountDTO struct {
 }
 
 type Query struct {
-	Repo domainAccount.Repository
+	Repo account.Repository
 }
 
 type Result struct {
@@ -26,12 +26,16 @@ type Result struct {
 	HasPrevious bool
 }
 
-func NewQuery(repo domainAccount.Repository) *Query {
+func NewQuery(repo account.Repository) *Query {
 	return &Query{Repo: repo}
 }
 
-func (q *Query) Execute(ctx context.Context, limit, offset int) (*Result, error) {
-	accounts, err := q.Repo.FindAll(ctx, limit, offset)
+func (q *Query) Execute(ctx context.Context, limit, offset int32) (*Result, error) {
+	page, err := account.NewPage(limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("build page: %w", err)
+	}
+	accounts, err := q.Repo.FindAll(ctx, page)
 	if err != nil {
 		return nil, fmt.Errorf("find accounts: %w", err)
 	}
@@ -43,8 +47,8 @@ func (q *Query) Execute(ctx context.Context, limit, offset int) (*Result, error)
 	res := &Result{
 		Accounts:    make([]*AccountDTO, len(accounts)),
 		TotalCount:  total,
-		HasNext:     int64(offset+len(accounts)) < total,
-		HasPrevious: offset > 0,
+		HasNext:     page.HasNext(total),
+		HasPrevious: page.HasPrevious(),
 	}
 	for i, a := range accounts {
 		res.Accounts[i] = &AccountDTO{

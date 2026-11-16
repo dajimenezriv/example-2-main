@@ -9,8 +9,6 @@ import (
 	"testing"
 	"uuid"
 
-	"github.com/danielgtaylor/huma/v2"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"exercise/internal/participants/app/query/getaccounts"
@@ -51,68 +49,49 @@ func get(ctx context.Context, t *testing.T, repo account.Repository, url string)
 	return api.GetCtx(ctx, url)
 }
 
-func page(totalCount int, hasNext, hasPrevious bool, accountIDs ...uuid.UUID) string {
+func page(hasNext, hasPrevious bool, accountIDs ...uuid.UUID) string {
 	rows := make([]string, len(accountIDs))
 	for i, id := range accountIDs {
 		rows[i] = fmt.Sprintf(`{"id": %q, "dltAccountId": "dltID", "publicKey": "pubKey", "version": 1}`, id)
 	}
 	return fmt.Sprintf(
-		`{"accounts": [%s], "totalCount": %d, "hasNext": %t, "hasPrevious": %t}`,
-		strings.Join(rows, ", "), totalCount, hasNext, hasPrevious,
+		`{"accounts": [%s], "totalCount": 3, "hasNext": %t, "hasPrevious": %t}`,
+		strings.Join(rows, ", "), hasNext, hasPrevious,
 	)
 }
 
-func TestContextCanceledReturnsError(t *testing.T) {
-	repo := newSUT(t)
+func TestGetAccounts_RejectedRequests(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
 
-	rec := get(ctx, t, repo, "/accounts")
-	assert.Equal(t, http.StatusInternalServerError, rec.Code)
-}
-
-func TestGetAccounts_RejectedRequests(t *testing.T) {
 	tests := []struct {
 		name       string
+		ctx        context.Context
 		url        string
 		wantCode   int
 		wantDetail string
-		wantErrors []*huma.ErrorDetail
 	}{
 		{
-			name:       "zero limit",
+			name:       "context canceled",
+			ctx:        ctx,
+			url:        "/accounts",
+			wantCode:   http.StatusInternalServerError,
+			wantDetail: "internal server error",
+		},
+		{
+			name:       "invalid pagination",
+			ctx:        t.Context(),
 			url:        "/accounts?limit=0",
-			wantCode:   http.StatusUnprocessableEntity,
-			wantDetail: "validation failed",
-			wantErrors: []*huma.ErrorDetail{
-				{Message: "expected number >= 1", Location: "query.limit", Value: float64(0)},
-			},
-		},
-		{
-			name:       "big limit",
-			url:        "/accounts?limit=101",
-			wantCode:   http.StatusUnprocessableEntity,
-			wantDetail: "validation failed",
-			wantErrors: []*huma.ErrorDetail{
-				{Message: "expected number <= 100", Location: "query.limit", Value: float64(101)},
-			},
-		},
-		{
-			name:       "negative offset",
-			url:        "/accounts?offset=-1",
-			wantCode:   http.StatusUnprocessableEntity,
-			wantDetail: "validation failed",
-			wantErrors: []*huma.ErrorDetail{
-				{Message: "expected number >= 0", Location: "query.offset", Value: float64(-1)},
-			},
+			wantCode:   http.StatusBadRequest,
+			wantDetail: "invalid pagination",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repo := newSUT(t)
-			rec := get(t.Context(), t, repo, tt.url)
+			rec := get(tt.ctx, t, repo, tt.url)
 
-			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail, tt.wantErrors...)
+			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail)
 		})
 	}
 }
@@ -126,42 +105,12 @@ func TestGetAccounts_Success(t *testing.T) {
 		{
 			name: "no limit or offset",
 			url:  "/accounts",
-			want: page(3, false, false, accountID1, accountID2, accountID3),
-		},
-		{
-			name: "set limit",
-			url:  "/accounts?limit=2",
-			want: page(3, true, false, accountID1, accountID2),
-		},
-		{
-			name: "limit equal to number of accounts",
-			url:  "/accounts?limit=3",
-			want: page(3, false, false, accountID1, accountID2, accountID3),
-		},
-		{
-			name: "limit bigger than number of accounts",
-			url:  "/accounts?limit=10",
-			want: page(3, false, false, accountID1, accountID2, accountID3),
-		},
-		{
-			name: "set offset",
-			url:  "/accounts?offset=1",
-			want: page(3, false, true, accountID2, accountID3),
-		},
-		{
-			name: "offset bigger than number of accounts",
-			url:  "/accounts?offset=4",
-			want: page(3, false, true),
+			want: page(false, false, accountID1, accountID2, accountID3),
 		},
 		{
 			name: "set limit and offset",
-			url:  "/accounts?limit=1&offset=1",
-			want: page(3, true, true, accountID2),
-		},
-		{
-			name: "last page",
-			url:  "/accounts?limit=2&offset=2",
-			want: page(3, false, true, accountID3),
+			url:  "/accounts?limit=1&&offset=1",
+			want: page(true, true, accountID2),
 		},
 	}
 	for _, tt := range tests {

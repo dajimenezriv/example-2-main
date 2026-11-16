@@ -7,6 +7,7 @@ import (
 
 	"exercise/internal/participants/app/query/getaccounts"
 	"exercise/internal/participants/domain/account"
+	"exercise/internal/platform/httpapi"
 
 	"github.com/danielgtaylor/huma/v2"
 )
@@ -58,7 +59,7 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	case errors.Is(err, account.ErrInvalidPagination):
 		return nil, huma.Error400BadRequest("invalid pagination")
 	default:
-		return nil, huma.Error500InternalServerError(err.Error())
+		return nil, httpapi.Error500InternalServerError(err)
 	}
 
 	resp := getAccountsResponse{
