@@ -2,19 +2,30 @@ package getactors
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"exercise/internal/participants/app/query/getactors"
+	"exercise/internal/participants/domain/actor"
+	"exercise/internal/platform/httpapi"
 
 	"github.com/danielgtaylor/huma/v2"
 )
+
+type Input struct {
+	Limit  int32 `query:"limit" default:"20"`
+	Offset int32 `query:"offset" default:"0"`
+}
 
 type Output struct {
 	Body getActorsResponse
 }
 
 type getActorsResponse struct {
-	Actors []actorItem `json:"actors"`
+	Actors      []actorItem `json:"actors"`
+	TotalCount  int64       `json:"totalCount"`
+	HasNext     bool        `json:"hasNext"`
+	HasPrevious bool        `json:"hasPrevious"`
 }
 
 type actorItem struct {
@@ -48,14 +59,23 @@ func (h *Handler) Register(api huma.API) {
 	}, h.Handle)
 }
 
-func (h *Handler) Handle(ctx context.Context, _ *struct{}) (*Output, error) {
-	actors, err := h.Query.Execute(ctx)
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
+func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
+	res, err := h.Query.Execute(ctx, in.Limit, in.Offset)
+	switch {
+	case err == nil:
+	case errors.Is(err, actor.ErrInvalidPagination):
+		return nil, huma.Error400BadRequest("invalid pagination")
+	default:
+		return nil, httpapi.Error500InternalServerError(err)
 	}
 
-	resp := getActorsResponse{Actors: make([]actorItem, len(actors))}
-	for i, act := range actors {
+	resp := getActorsResponse{
+		Actors:      make([]actorItem, len(res.Actors)),
+		TotalCount:  res.TotalCount,
+		HasNext:     res.HasNext,
+		HasPrevious: res.HasPrevious,
+	}
+	for i, act := range res.Actors {
 		accountItems := make([]actorAccountItem, len(act.Accounts))
 		for j, acc := range act.Accounts {
 			accountItems[j] = actorAccountItem{

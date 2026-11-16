@@ -114,9 +114,9 @@ func TestRejectedRequests(t *testing.T) {
 
 			testhelpers.AssertHumaError(t, rec, tt.wantCode, tt.wantDetail, tt.wantErrors...)
 
-			actors, err := repo.FindAll(t.Context())
+			count, err := repo.Count(t.Context())
 			require.NoError(t, err)
-			assert.Len(t, actors, 1)
+			assert.Equal(t, int64(1), count)
 		})
 	}
 }
@@ -137,7 +137,7 @@ func TestCreatesActor(t *testing.T) {
 
 	testhelpers.AssertHumaOutput(t, rec, http.StatusCreated, want)
 
-	actors, err := repo.FindAll(t.Context())
+	count, err := repo.Count(t.Context())
 	require.NoError(t, err)
-	assert.Len(t, actors, 2)
+	assert.Equal(t, int64(2), count)
 }

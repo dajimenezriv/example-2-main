@@ -1,3 +1,6 @@
+-- name: CountActors :one
+SELECT COUNT(*) FROM actors;
+
 -- name: CreateActor :exec
 INSERT INTO
   actors (id, tax_id, type, version)
@@ -35,4 +38,6 @@ WHERE
 SELECT
   *
 FROM
-  actors;
+  actors
+LIMIT
+  @page_limit OFFSET @page_offset;
