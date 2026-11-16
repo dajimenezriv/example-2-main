@@ -98,11 +98,11 @@ LIMIT
 
 type FindAccountsParams struct {
 	PageOffset int32
-	PageSize   int32
+	PageLimit  int32
 }
 
 func (q *Queries) FindAccounts(ctx context.Context, arg FindAccountsParams) ([]Account, error) {
-	rows, err := q.db.Query(ctx, findAccounts, arg.PageOffset, arg.PageSize)
+	rows, err := q.db.Query(ctx, findAccounts, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

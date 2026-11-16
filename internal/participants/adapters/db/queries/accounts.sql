@@ -36,7 +36,7 @@ SELECT
 FROM
   accounts
 LIMIT
-  @page_size OFFSET @page_offset;
+  @page_limit OFFSET @page_offset;
 
 -- name: FindAccountsByActorIDs :many
 SELECT

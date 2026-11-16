@@ -2,16 +2,18 @@ package getaccounts
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"exercise/internal/participants/app/query/getaccounts"
+	"exercise/internal/participants/domain/account"
 
 	"github.com/danielgtaylor/huma/v2"
 )
 
 type Input struct {
-	Limit  int `query:"limit" default:"20" minimum:"1" maximum:"100"`
-	Offset int `query:"offset" default:"0" minimum:"0" maximum:"2147483647"`
+	Limit  int32 `query:"limit" default:"20"`
+	Offset int32 `query:"offset" default:"0"`
 }
 
 type Output struct {
@@ -42,18 +44,20 @@ func NewHandler(query *getaccounts.Query) *Handler {
 
 func (h *Handler) Register(api huma.API) {
 	huma.Register(api, huma.Operation{
-		Method:        http.MethodGet,
-		Path:          "/accounts",
-		Summary:       "List accounts",
-		Tags:          []string{"Accounts"},
-		DefaultStatus: http.StatusOK,
-		Errors:        []int{http.StatusUnprocessableEntity},
+		Method:  http.MethodGet,
+		Path:    "/accounts",
+		Summary: "List accounts",
+		Tags:    []string{"Accounts"},
 	}, h.Handle)
 }
 
 func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	res, err := h.Query.Execute(ctx, in.Limit, in.Offset)
-	if err != nil {
+	switch {
+	case err == nil:
+	case errors.Is(err, account.ErrInvalidPagination):
+		return nil, huma.Error400BadRequest("invalid pagination")
+	default:
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
