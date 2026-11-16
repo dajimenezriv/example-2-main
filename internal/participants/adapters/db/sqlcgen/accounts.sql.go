@@ -11,6 +11,17 @@ import (
 	"uuid"
 )
 
+const countAccounts = `-- name: CountAccounts :one
+SELECT COUNT(*) FROM accounts
+`
+
+func (q *Queries) CountAccounts(ctx context.Context) (int64, error) {
+	row := q.db.QueryRow(ctx, countAccounts)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createAccount = `-- name: CreateAccount :exec
 INSERT INTO
   accounts (

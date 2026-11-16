@@ -19,7 +19,10 @@ type Output struct {
 }
 
 type getAccountsResponse struct {
-	Accounts []accountItem `json:"accounts"`
+	Accounts    []accountItem `json:"accounts"`
+	TotalCount  int64         `json:"totalCount"`
+	HasNext     bool          `json:"hasNext"`
+	HasPrevious bool          `json:"hasPrevious"`
 }
 
 type accountItem struct {
@@ -49,13 +52,18 @@ func (h *Handler) Register(api huma.API) {
 }
 
 func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
-	accounts, err := h.Query.Execute(ctx, in.Limit, in.Offset)
+	res, err := h.Query.Execute(ctx, in.Limit, in.Offset)
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
-	resp := getAccountsResponse{Accounts: make([]accountItem, len(accounts))}
-	for i, a := range accounts {
+	resp := getAccountsResponse{
+		Accounts:    make([]accountItem, len(res.Accounts)),
+		TotalCount:  res.TotalCount,
+		HasNext:     res.HasNext,
+		HasPrevious: res.HasPrevious,
+	}
+	for i, a := range res.Accounts {
 		resp.Accounts[i] = accountItem{
 			ID:           a.ID,
 			DltAccountID: a.DltAccountID,

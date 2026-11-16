@@ -32,6 +32,14 @@ func toAccountDomain(d sqlcgen.Account) *account.Account {
 	)
 }
 
+func (r *AccountRepository) Count(ctx context.Context) (int64, error) {
+	n, err := r.db.CountAccounts(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count accounts: %w", err)
+	}
+	return n, nil
+}
+
 func (r *AccountRepository) Save(ctx context.Context, a *account.Account) error {
 	err := r.db.CreateAccount(ctx, sqlcgen.CreateAccountParams{
 		ID:           a.ID(),

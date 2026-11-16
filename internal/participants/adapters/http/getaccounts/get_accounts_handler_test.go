@@ -35,6 +35,7 @@ func newSUT(t *testing.T) account.Repository {
 }
 
 func saveAccount(t *testing.T, repo account.Repository, accountID uuid.UUID) {
+	t.Helper()
 	a, err := account.New(accountID, actorID, "dltID", "privKey", "pubKey")
 	require.NoError(t, err)
 	err = repo.Save(t.Context(), a)

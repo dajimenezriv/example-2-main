@@ -1,3 +1,7 @@
+-- name: CountAccounts :one
+SELECT COUNT(*) FROM accounts;
+
+
 -- name: CreateAccount :exec
 INSERT INTO
   accounts (
