@@ -6,6 +6,7 @@ import (
 	"uuid"
 
 	"exercise/internal/participants/domain/actor"
+	"exercise/internal/participants/domain/pagination"
 )
 
 type fakeRepository struct {
@@ -19,12 +20,23 @@ func NewFakeRepository() actor.Repository {
 	}
 }
 
+func (f *fakeRepository) Count(ctx context.Context) (int64, error) {
+	if err := ctx.Err(); err != nil {
+		return 0, err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	return int64(len(f.actors)), nil
+}
+
 func (f *fakeRepository) Save(ctx context.Context, act *actor.Actor) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
+
 	for _, a := range f.actors {
 		if a.ID() == act.ID() {
 			return actor.ErrAlreadyExists
@@ -43,6 +55,7 @@ func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor, expectedV
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
+
 	idx := -1
 	for i, a := range f.actors {
 		if a.ID() == act.ID() {
@@ -75,6 +88,7 @@ func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Act
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
+
 	for _, a := range f.actors {
 		if a.ID() == id {
 			return &a, nil
@@ -83,15 +97,19 @@ func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Act
 	return nil, actor.ErrNotFound
 }
 
-func (f *fakeRepository) FindAll(ctx context.Context) ([]*actor.Actor, error) {
+func (f *fakeRepository) FindAll(ctx context.Context, page pagination.Page) ([]*actor.Actor, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	accs := make([]*actor.Actor, len(f.actors))
-	for i, acc := range f.actors {
-		accs[i] = &acc
+
+	from := min(len(f.actors), int(page.Offset()))
+	to := min(len(f.actors), from+int(page.Limit()))
+	acts := make([]*actor.Actor, to-from)
+
+	for i, act := range f.actors[from:to] {
+		acts[i] = &act
 	}
-	return accs, nil
+	return acts, nil
 }

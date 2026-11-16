@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"exercise/internal/participants/app/query/getaccounts"
-	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/pagination"
 	"exercise/internal/platform/httpapi"
 
 	"github.com/danielgtaylor/huma/v2"
@@ -56,7 +56,7 @@ func (h *Handler) Handle(ctx context.Context, in *Input) (*Output, error) {
 	res, err := h.Query.Execute(ctx, in.Limit, in.Offset)
 	switch {
 	case err == nil:
-	case errors.Is(err, account.ErrInvalidPagination):
+	case errors.Is(err, pagination.ErrInvalid):
 		return nil, huma.Error400BadRequest("invalid pagination")
 	default:
 		return nil, httpapi.Error500InternalServerError(err)

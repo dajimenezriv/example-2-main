@@ -11,8 +11,10 @@ var (
 	ErrPublicKeyRequired    = errors.New("account: public key is required")
 	ErrNotFound             = errors.New("account: not found")
 	ErrAlreadyExists        = errors.New("account: already exists")
-	ErrInvalidPagination    = errors.New("account: invalid pagination")
 )
+
+// MaxPageLimit is the largest page size for listing accounts.
+const MaxPageLimit = 100
 
 type Account struct {
 	id           uuid.UUID

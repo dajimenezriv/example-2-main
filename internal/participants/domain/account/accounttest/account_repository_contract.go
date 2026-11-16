@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/pagination"
 )
 
 type Fixture struct {
@@ -24,9 +25,9 @@ func NewAccount(t *testing.T, actorID uuid.UUID) *account.Account {
 	return a
 }
 
-func MustPage(t *testing.T, limit, offset int32) account.Page {
+func MustPage(t *testing.T, limit, offset int32) pagination.Page {
 	t.Helper()
-	p, err := account.NewPage(limit, offset)
+	p, err := pagination.NewPage(limit, offset, account.MaxPageLimit)
 	require.NoError(t, err)
 	return p
 }

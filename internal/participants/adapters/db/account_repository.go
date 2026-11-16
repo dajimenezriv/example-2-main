@@ -8,6 +8,7 @@ import (
 
 	"exercise/internal/participants/adapters/db/sqlcgen"
 	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/pagination"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -69,7 +70,7 @@ func (r *AccountRepository) FindByID(ctx context.Context, id uuid.UUID) (*accoun
 	return toAccountDomain(a), nil
 }
 
-func (r *AccountRepository) FindAll(ctx context.Context, page account.Page) ([]*account.Account, error) {
+func (r *AccountRepository) FindAll(ctx context.Context, page pagination.Page) ([]*account.Account, error) {
 	as, err := r.db.FindAccounts(ctx, sqlcgen.FindAccountsParams{
 		PageLimit:  page.Limit(),
 		PageOffset: page.Offset(),

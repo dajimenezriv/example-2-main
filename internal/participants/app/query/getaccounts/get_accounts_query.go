@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/pagination"
 )
 
 type AccountDTO struct {
@@ -31,7 +32,7 @@ func NewQuery(repo account.Repository) *Query {
 }
 
 func (q *Query) Execute(ctx context.Context, limit, offset int32) (*Result, error) {
-	page, err := account.NewPage(limit, offset)
+	page, err := pagination.NewPage(limit, offset, account.MaxPageLimit)
 	if err != nil {
 		return nil, fmt.Errorf("build page: %w", err)
 	}

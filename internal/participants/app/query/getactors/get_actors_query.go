@@ -7,6 +7,7 @@ import (
 
 	"exercise/internal/participants/domain/account"
 	"exercise/internal/participants/domain/actor"
+	"exercise/internal/participants/domain/pagination"
 )
 
 type ActorDTO struct {
@@ -23,6 +24,13 @@ type AccountDTO struct {
 	PublicKey    string
 }
 
+type Result struct {
+	Actors      []ActorDTO
+	TotalCount  int64
+	HasNext     bool
+	HasPrevious bool
+}
+
 type Query struct {
 	RepoActor   actor.Repository
 	RepoAccount account.Repository
@@ -32,10 +40,18 @@ func NewQuery(actorRepo actor.Repository, accountRepo account.Repository) *Query
 	return &Query{RepoActor: actorRepo, RepoAccount: accountRepo}
 }
 
-func (q *Query) Execute(ctx context.Context) ([]ActorDTO, error) {
-	actors, err := q.RepoActor.FindAll(ctx)
+func (q *Query) Execute(ctx context.Context, limit, offset int32) (*Result, error) {
+	page, err := pagination.NewPage(limit, offset, actor.MaxPageLimit)
+	if err != nil {
+		return nil, fmt.Errorf("build page: %w", err)
+	}
+	actors, err := q.RepoActor.FindAll(ctx, page)
 	if err != nil {
 		return nil, fmt.Errorf("find actors: %w", err)
+	}
+	total, err := q.RepoActor.Count(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("count actors: %w", err)
 	}
 
 	actorsIDs := make([]uuid.UUID, len(actors))
@@ -66,5 +82,10 @@ func (q *Query) Execute(ctx context.Context) ([]ActorDTO, error) {
 			Accounts: byActor[act.ID()],
 		}
 	}
-	return actorDTOs, nil
+	return &Result{
+		Actors:      actorDTOs,
+		TotalCount:  total,
+		HasNext:     page.HasNext(total),
+		HasPrevious: page.HasPrevious(),
+	}, nil
 }

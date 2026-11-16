@@ -7,6 +7,7 @@ import (
 	"uuid"
 
 	"exercise/internal/participants/domain/account"
+	"exercise/internal/participants/domain/pagination"
 )
 
 type fakeRepository struct {
@@ -61,7 +62,7 @@ func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*account.A
 	return nil, account.ErrNotFound
 }
 
-func (f *fakeRepository) FindAll(ctx context.Context, page account.Page) ([]*account.Account, error) {
+func (f *fakeRepository) FindAll(ctx context.Context, page pagination.Page) ([]*account.Account, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}

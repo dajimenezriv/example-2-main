@@ -45,6 +45,9 @@ func (t Type) IsValid() bool {
 	return false
 }
 
+// MaxPageLimit is the largest page size for listing actors.
+const MaxPageLimit = 20
+
 type Actor struct {
 	id      uuid.UUID
 	taxID   TaxID

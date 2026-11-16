@@ -8,6 +8,7 @@ import (
 
 	"exercise/internal/participants/adapters/db/sqlcgen"
 	"exercise/internal/participants/domain/actor"
+	"exercise/internal/participants/domain/pagination"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -86,7 +87,7 @@ func (r *ActorRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Ac
 	return nil, fmt.Errorf("find actor by id: %w", err)
 }
 
-func (r *ActorRepository) FindAll(ctx context.Context, page actor.Page) ([]*actor.Actor, error) {
+func (r *ActorRepository) FindAll(ctx context.Context, page pagination.Page) ([]*actor.Actor, error) {
 	as, err := r.db.FindActors(ctx, sqlcgen.FindActorsParams{
 		PageLimit:  page.Limit(),
 		PageOffset: page.Offset(),
