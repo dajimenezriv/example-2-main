@@ -50,3 +50,35 @@ resource "auth0_client_grant" "participants_m2m" {
 
   depends_on = [auth0_resource_server_scopes.participants]
 }
+
+resource "auth0_client" "participants_web" {
+  name                = "${var.api_name} (Web)"
+  app_type            = "regular_web"
+  grant_types         = ["authorization_code"]
+  callbacks           = ["${var.web_base_url}/callback"]
+  allowed_logout_urls = ["${var.web_base_url}/"]
+  oidc_conformant     = true
+
+  jwt_configuration {
+    alg = "RS256"
+  }
+}
+
+resource "auth0_client_credentials" "participants_web" {
+  client_id             = auth0_client.participants_web.id
+  authentication_method = "client_secret_post"
+}
+
+resource "auth0_connection" "google" {
+  name     = "google-oauth2"
+  strategy = "google-oauth2"
+
+  options {
+    scopes = ["email", "profile"]
+  }
+}
+
+resource "auth0_connection_clients" "google" {
+  connection_id   = auth0_connection.google.id
+  enabled_clients = [auth0_client.participants_web.id]
+}
