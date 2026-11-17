@@ -40,3 +40,8 @@ tasks:
   migrate:version:
     desc: Show the current schema version
     cmd: migrate -path {{.MIGRATIONS}} -database "{{.DB_URL}}" version
+
+  tf:
+    desc: Run terraform
+    dir: infra/auth0
+    cmd: terraform {{.CLI_ARGS}}
