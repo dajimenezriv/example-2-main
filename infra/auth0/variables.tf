@@ -16,6 +16,11 @@ variable "token_lifetime" {
   default     = 3600
 }
 
+variable "admin_email" {
+  description = "Email of the bootstrap admin (passwordless login). Set in terraform.tfvars or TF_VAR_admin_email."
+  type        = string
+}
+
 variable "scopes" {
   description = "Permissions exposed by the API (scope value => description)."
   type        = map(string)

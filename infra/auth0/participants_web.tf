@@ -5,11 +5,9 @@ resource "auth0_client" "participants_web" {
   callbacks           = ["${var.web_base_url}/callback"]
   allowed_logout_urls = ["${var.web_base_url}/"]
   oidc_conformant     = true
-
   jwt_configuration {
     alg = "RS256"
   }
-
   refresh_token {
     rotation_type = "rotating"
     # The two lifetimes from below are applied and the token can expire without invalidating it explicitely.

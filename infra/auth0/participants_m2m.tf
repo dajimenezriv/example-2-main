@@ -2,7 +2,6 @@ resource "auth0_client" "participants_m2m" {
   name        = "${var.api_name} (M2M)"
   app_type    = "non_interactive"
   grant_types = ["client_credentials"]
-
   jwt_configuration {
     alg = "RS256"
   }
