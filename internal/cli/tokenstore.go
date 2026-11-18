@@ -12,9 +12,8 @@ import (
 const (
 	appDirName    = "data"
 	tokenFileName = "token.json"
-	// Tokens are credentials: only the current user may read them.
-	dirPerm  = 0o700
-	filePerm = 0o600
+	dirPerm       = 0o700
+	filePerm      = 0o600
 )
 
 type TokenStore struct {
