@@ -2,6 +2,9 @@
 
 - Aggregates
 - Option types
+- Circuit breaker
+- Auth middleware
+- Prometheus + exemplars
 
 ---
 
