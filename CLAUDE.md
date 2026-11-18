@@ -13,6 +13,7 @@ docker compose up -d                 # Postgres on localhost:5555 (user/pass/db:
 cp .env.example .env                 # backend env, loaded by the app and Taskfile
 task migrate:up                      # apply migrations/ to the local DB
 go run ./cmd/server                  # API on :8080, OpenAPI docs at /docs
+go run ./cmd/cli login               # CLI: device-flow login, tokens → ./data/token.json
 
 go test ./...                        # full suite; DB tests start Postgres via testcontainers (needs Docker)
 go test -short ./...                 # fast: skips DB repository tests
@@ -26,7 +27,10 @@ golangci-lint fmt ./...              # gofumpt + goimports
 ## Layout
 
 ```
+infra/auth0/           Terraform: Auth0 API
 cmd/server/            main.go (config, server, route registration), setup.go (manual DI wiring)
+cmd/cli/               CLI entrypoint
+internal/cli/          cobra commands
 migrations/            golang-migrate SQL, also the sqlc schema source and test DB init
 internal/platform/     cross-cutting: httpapi (Huma config, 500 helper), logger
 internal/testhelpers/  Huma test API + response/error assertions
