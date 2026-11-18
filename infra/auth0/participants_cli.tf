@@ -22,5 +22,6 @@ resource "auth0_client" "participants_cli" {
 }
 
 resource "auth0_client_credentials" "participants_cli" {
-  client_id = auth0_client.participants_cli.id
+  client_id             = auth0_client.participants_cli.id
+  authentication_method = "none"
 }
