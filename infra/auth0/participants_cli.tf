@@ -1,10 +1,8 @@
-resource "auth0_client" "participants_web" {
-  name                = "${var.api_name} (Web)"
-  app_type            = "regular_web"
-  grant_types         = ["authorization_code", "refresh_token"]
-  callbacks           = ["${var.web_base_url}/callback"]
-  allowed_logout_urls = ["${var.web_base_url}/"]
-  oidc_conformant     = true
+resource "auth0_client" "participants_cli" {
+  name            = "${var.api_name} (CLI)"
+  app_type        = "native"
+  grant_types     = ["urn:ietf:params:oauth:grant-type:device_code", "refresh_token"]
+  oidc_conformant = true
   jwt_configuration {
     alg = "RS256"
   }
@@ -23,7 +21,7 @@ resource "auth0_client" "participants_web" {
   }
 }
 
-resource "auth0_client_credentials" "participants_web" {
-  client_id             = auth0_client.participants_web.id
+resource "auth0_client_credentials" "participants_cli" {
+  client_id             = auth0_client.participants_cli.id
   authentication_method = "client_secret_post"
 }

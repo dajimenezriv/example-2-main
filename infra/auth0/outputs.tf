@@ -17,11 +17,6 @@ output "m2m_client_secret" {
   sensitive = true
 }
 
-output "web_client_id" {
-  value = auth0_client.participants_web.client_id
-}
-
-output "web_client_secret" {
-  value     = auth0_client_credentials.participants_web.client_secret
-  sensitive = true
+output "cli_client_id" {
+  value = auth0_client.participants_cli.client_id
 }
