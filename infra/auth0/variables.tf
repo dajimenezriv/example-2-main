@@ -16,8 +16,24 @@ variable "token_lifetime" {
   default     = 3600
 }
 
+variable "auth0_domain" {
+  description = "Auth0 tenant domain."
+  type        = string
+}
+
+variable "management_client_id" {
+  description = "Client ID of the bootstrap Management API app the provider runs as."
+  type        = string
+}
+
+variable "management_client_secret" {
+  description = "Client secret of the bootstrap Management API app."
+  type        = string
+  sensitive   = true
+}
+
 variable "admin_email" {
-  description = "Email of the bootstrap admin (passwordless login). Set in terraform.tfvars or TF_VAR_admin_email."
+  description = "Email of the bootstrap admin (passwordless login). Set via TF_VAR_admin_email in infra/auth0/.env."
   type        = string
 }
 

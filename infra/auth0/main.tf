@@ -57,8 +57,12 @@ resource "auth0_connection" "email" {
 }
 
 resource "auth0_connection_clients" "email" {
-  connection_id   = auth0_connection.email.id
-  enabled_clients = [auth0_client.participants_web.id]
+  connection_id = auth0_connection.email.id
+  enabled_clients = [
+    # We need it to manage the auth0_user.admin.
+    var.management_client_id,
+    auth0_client.participants_web.id,
+  ]
 }
 
 resource "auth0_role" "admin" {
@@ -83,6 +87,8 @@ resource "auth0_user" "admin" {
   connection_name = auth0_connection.email.name
   email           = var.admin_email
   email_verified  = true
+
+  depends_on = [auth0_connection_clients.email]
 }
 
 resource "auth0_user_roles" "admin" {
