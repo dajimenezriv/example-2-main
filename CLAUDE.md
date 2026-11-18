@@ -10,7 +10,7 @@
 
 ```bash
 docker compose up -d                 # Postgres on localhost:5555 (user/pass/db: ddd)
-cp .env.example .env                 # DATABASE_URL, loaded by the app and Taskfile
+cp .env.example .env                 # backend env, loaded by the app and Taskfile
 task migrate:up                      # apply migrations/ to the local DB
 go run ./cmd/server                  # API on :8080, OpenAPI docs at /docs
 
@@ -20,10 +20,7 @@ go test -race ./...                  # what CI runs
 golangci-lint run ./...              # strict config (.golangci.yaml), CI pins v2.14.0
 golangci-lint fmt ./...              # gofumpt + goimports
 
-task sqlc                            # regenerate + vet after changing queries/*.sql or migrations
-task migrate:create -- <name>        # new sequential up/down migration pair
-task squawk                          # lint migrations
-task cover                           # coverage (excludes actortest/accounttest)
+# Plus the ones defined in Taskfile.yaml
 ```
 
 ## Layout
