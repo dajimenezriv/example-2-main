@@ -1,5 +1,3 @@
-data "auth0_tenant" "current" {}
-
 # The API this service protects. Tokens are RS256, verified via the tenant JWKS.
 resource "auth0_resource_server" "participants" {
   name                                            = var.api_name

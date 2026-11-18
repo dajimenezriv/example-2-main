@@ -1,6 +1,6 @@
 output "auth_issuer" {
   description = "AUTH_ISSUER for the service (trailing slash matters)."
-  value       = "https://${data.auth0_tenant.current.domain}/"
+  value       = "https://${var.auth0_domain}/"
 }
 
 output "auth_audience" {
