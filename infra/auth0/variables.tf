@@ -47,9 +47,3 @@ variable "scopes" {
     "write:accounts" = "Create accounts"
   }
 }
-
-variable "web_base_url" {
-  description = "Web base URL."
-  type        = string
-  default     = "http://localhost:8080"
-}

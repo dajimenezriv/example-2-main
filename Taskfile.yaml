@@ -59,6 +59,5 @@ tasks:
         }
         upsert AUTH_ISSUER auth_issuer
         upsert AUTH_AUDIENCE auth_audience
-        upsert WEB_AUTH0_CLIENT_ID web_client_id
-        upsert WEB_AUTH0_CLIENT_SECRET web_client_secret
+        upsert CLI_AUTH0_CLIENT_ID cli_client_id
         echo "Updated .env from Terraform outputs."

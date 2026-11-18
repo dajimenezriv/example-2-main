@@ -34,7 +34,7 @@ resource "auth0_connection" "google" {
 
 resource "auth0_connection_clients" "google" {
   connection_id   = auth0_connection.google.id
-  enabled_clients = [auth0_client.participants_web.id]
+  enabled_clients = [auth0_client.participants_cli.id]
 }
 
 resource "auth0_connection" "email" {
@@ -59,7 +59,7 @@ resource "auth0_connection_clients" "email" {
   enabled_clients = [
     # We need it to manage the auth0_user.admin.
     var.management_client_id,
-    auth0_client.participants_web.id,
+    auth0_client.participants_cli.id,
   ]
 }
 
