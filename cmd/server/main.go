@@ -30,6 +30,8 @@ const (
 	shutdownTimeout   = 10 * time.Second
 )
 
+var errUnknownCommand = errors.New("unknown command")
+
 type config struct {
 	DatabaseURL string `env:"DATABASE_URL,required,notEmpty"`
 }
@@ -51,7 +53,7 @@ func dispatch(args []string) error {
 	case "migrate": // apply pending migrations
 		return migrateUp()
 	default:
-		return fmt.Errorf("unknown command %q", args[0])
+		return fmt.Errorf("%w %q", errUnknownCommand, args[0])
 	}
 }
 
