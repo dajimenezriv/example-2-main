@@ -1,0 +1,9 @@
+name: Setup
+description: Go + mise toolchain
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v7
+      with:
+        go-version-file: go.mod
+    - uses: jdx/mise-action@v5
