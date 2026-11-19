@@ -8,17 +8,18 @@ import (
 )
 
 var (
-	ErrLoginCancelled = errors.New("cancelled")
-	ErrLoginDenied    = errors.New("denied in the browser")
-	ErrLoginExpired   = errors.New("code expired; run `exercise login` again")
-	ErrNotLoggedIn    = errors.New("not logged in; run `exercise login`")
-	ErrSessionExpired = errors.New("session expired; run `exercise login`")
+	ErrLoginCancelled = errors.New("auth: cancelled")
+	ErrLoginDenied    = errors.New("auth: denied in the browser")
+	ErrLoginExpired   = errors.New("auth: code expired; run `exercise login` again")
+	ErrNotLoggedIn    = errors.New("auth: not logged in; run `exercise login`")
+	ErrSessionExpired = errors.New("auth: session expired; run `exercise login`")
 )
 
 type DeviceCode struct {
-	// Has the user code pre-filled, so the user only has to confirm it.
 	VerificationURL string
 	UserCode        string
+	// VerificationURL already carries UserCode: the user only confirms it instead of typing it.
+	CodePrefilled bool
 }
 
 type Authenticator interface {

@@ -29,13 +29,21 @@ func (a *Authenticator) DeviceLogin(ctx context.Context, show func(auth.DeviceCo
 		return nil, fmt.Errorf("request device code: %w", err)
 	}
 
-	show(auth.DeviceCode{VerificationURL: da.VerificationURIComplete, UserCode: da.UserCode})
+	show(deviceCode(da))
 
 	tok, err := oc.DeviceAccessToken(ctx, da)
 	if err != nil {
 		return nil, describeDeviceError(err, da.Expiry)
 	}
 	return tok, nil
+}
+
+func deviceCode(da *oauth2.DeviceAuthResponse) auth.DeviceCode {
+	// verification_uri_complete is optional (RFC 8628 §3.2); without it the user types the code.
+	if da.VerificationURIComplete == "" {
+		return auth.DeviceCode{VerificationURL: da.VerificationURI, UserCode: da.UserCode}
+	}
+	return auth.DeviceCode{VerificationURL: da.VerificationURIComplete, UserCode: da.UserCode, CodePrefilled: true}
 }
 
 func describeDeviceError(err error, expiry time.Time) error {

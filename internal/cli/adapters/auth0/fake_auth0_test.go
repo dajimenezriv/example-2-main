@@ -27,14 +27,23 @@ func tokenReply(access, refresh string) reply {
 }
 
 func deviceReply(expiresIn int) reply {
+	return deviceReplyWith(expiresIn, `"verification_uri_complete": "https://tenant.example/activate?user_code=ABCD-EFGH",`)
+}
+
+// Optional per RFC 8628: some IdPs only send verification_uri.
+func deviceReplyWithoutCompleteURI(expiresIn int) reply {
+	return deviceReplyWith(expiresIn, "")
+}
+
+func deviceReplyWith(expiresIn int, extra string) reply {
 	return reply{status: http.StatusOK, body: fmt.Sprintf(`{
 		"device_code": "dev-123",
 		"user_code": "ABCD-EFGH",
 		"verification_uri": "https://tenant.example/activate",
-		"verification_uri_complete": "https://tenant.example/activate?user_code=ABCD-EFGH",
+		%s
 		"expires_in": %d,
 		"interval": 5
-	}`, expiresIn)}
+	}`, extra, expiresIn)}
 }
 
 // fakeAuth0 is an http.RoundTripper, not an httptest.Server: synctest's fake clock only advances

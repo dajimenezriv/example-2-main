@@ -17,7 +17,6 @@ const (
 	appDirName    = "data"
 	tokenFileName = "token.json"
 	dirPerm       = 0o700
-	filePerm      = 0o600
 )
 
 type TokenStore struct {
@@ -54,20 +53,33 @@ func (s *TokenStore) Load() (*oauth2.Token, error) {
 }
 
 func (s *TokenStore) Save(tok *oauth2.Token) error {
-	//nolint:gosec // Ignore marshaling an access token.
+	//nolint:gosec // G117: persisting the token is this store's job; the file is 0600.
 	data, err := json.MarshalIndent(tok, "", "  ")
 	if err != nil {
 		return fmt.Errorf("encode token: %w", err)
 	}
-	if err := os.MkdirAll(filepath.Dir(s.path), dirPerm); err != nil {
+	if err = os.MkdirAll(filepath.Dir(s.path), dirPerm); err != nil {
 		return fmt.Errorf("create token dir: %w", err)
 	}
-	// WriteFile applies filePerm only when creating: tighten an existing file before the token goes in.
-	if err := os.Chmod(s.path, filePerm); err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return fmt.Errorf("restrict token file: %w", err)
+	// Temp file + rename: refresh tokens rotate, so a torn write would lose the only valid one.
+	// Same dir keeps the rename atomic; CreateTemp makes it 0600 (replacing any looser old file).
+	tmp, err := os.CreateTemp(filepath.Dir(s.path), "."+filepath.Base(s.path)+".*.tmp")
+	if err != nil {
+		return fmt.Errorf("create temp token file: %w", err)
 	}
-	if err := os.WriteFile(s.path, data, filePerm); err != nil {
-		return fmt.Errorf("write token file: %w", err)
+	if err = writeAndClose(tmp, data); err != nil {
+		return errors.Join(fmt.Errorf("write token file: %w", err), os.Remove(tmp.Name()))
+	}
+	if err = os.Rename(tmp.Name(), s.path); err != nil {
+		return errors.Join(fmt.Errorf("replace token file: %w", err), os.Remove(tmp.Name()))
 	}
 	return nil
+}
+
+func writeAndClose(f *os.File, data []byte) error {
+	_, err := f.Write(data)
+	if err == nil {
+		err = f.Sync()
+	}
+	return errors.Join(err, f.Close())
 }

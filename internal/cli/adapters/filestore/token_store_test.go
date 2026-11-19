@@ -138,6 +138,34 @@ func TestTokenStore_SaveFailsWhenParentIsAFile(t *testing.T) {
 	require.ErrorContains(t, err, "create token dir")
 }
 
+func TestTokenStore_SaveLeavesOnlyTheTokenFile(t *testing.T) {
+	dir := t.TempDir()
+	store := NewTokenStore(filepath.Join(dir, "token.json"))
+
+	require.NoError(t, store.Save(newToken("a")))
+	require.NoError(t, store.Save(newToken("b")))
+
+	entries, err := os.ReadDir(dir)
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+	assert.Equal(t, "token.json", entries[0].Name())
+}
+
+func TestTokenStore_FailedReplaceCleansUpTempFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "token.json")
+	// A non-empty dir at the target path makes the final rename fail after the temp file is written.
+	require.NoError(t, os.MkdirAll(filepath.Join(path, "blocker"), 0o700))
+
+	err := NewTokenStore(path).Save(newToken("a"))
+
+	require.ErrorContains(t, err, "replace token file")
+	entries, err := os.ReadDir(dir)
+	require.NoError(t, err)
+	require.Len(t, entries, 1)
+	assert.Equal(t, "token.json", entries[0].Name())
+}
+
 func TestDefaultTokenStore_UsesDataDirUnderWorkingDir(t *testing.T) {
 	dir := t.TempDir()
 	t.Chdir(dir)

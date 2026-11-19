@@ -33,7 +33,10 @@ func run(ctx context.Context) error {
 
 	root := newRootCmd(cfgErr)
 	registerCommands(root, app)
-	return root.ExecuteContext(ctx) //nolint:wrapcheck // Command errors are already wrapped ("list actors: ...").
+	if err := root.ExecuteContext(ctx); err != nil {
+		return fmt.Errorf("run command: %w", err)
+	}
+	return nil
 }
 
 func newRootCmd(cfgErr error) *cobra.Command {

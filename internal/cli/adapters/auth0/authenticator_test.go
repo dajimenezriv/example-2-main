@@ -22,6 +22,7 @@ func waitOutLeakedDeviceAuthTimer() {
 var wantCode = auth.DeviceCode{
 	VerificationURL: "https://tenant.example/activate?user_code=ABCD-EFGH",
 	UserCode:        "ABCD-EFGH",
+	CodePrefilled:   true,
 }
 
 func TestDeviceLogin_Success(t *testing.T) {
@@ -55,6 +56,20 @@ func TestDeviceLogin_Success(t *testing.T) {
 			// Public client: a secret would mean a misconfigured app type.
 			assert.False(t, form.Has("client_secret"))
 		}
+	})
+}
+
+func TestDeviceLogin_FallsBackToVerificationURI(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		defer waitOutLeakedDeviceAuthTimer()
+		f := &fakeAuth0{device: deviceReplyWithoutCompleteURI(900), tokens: []reply{tokenReply("access-1", "refresh-1")}}
+		var shown []auth.DeviceCode
+
+		_, err := NewAuthenticator(newConfig(f)).DeviceLogin(t.Context(), func(dc auth.DeviceCode) { shown = append(shown, dc) })
+
+		require.NoError(t, err)
+		want := auth.DeviceCode{VerificationURL: "https://tenant.example/activate", UserCode: "ABCD-EFGH"}
+		assert.Equal(t, []auth.DeviceCode{want}, shown)
 	})
 }
 

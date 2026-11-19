@@ -19,6 +19,7 @@ var (
 	deviceCode = auth.DeviceCode{
 		VerificationURL: "https://idp.example/activate?user_code=ABCD-EFGH",
 		UserCode:        "ABCD-EFGH",
+		CodePrefilled:   true,
 	}
 	errDiskFull = errors.New("disk full")
 )
@@ -66,6 +67,20 @@ func TestLogin_Success(t *testing.T) {
 	}
 }
 
+func TestLogin_CodeNotPrefilledAsksToEnterIt(t *testing.T) {
+	code := auth.DeviceCode{VerificationURL: "https://idp.example/activate", UserCode: "ABCD-EFGH"}
+	token := &oauth2.Token{AccessToken: "access", RefreshToken: "refresh"}
+
+	res := login(t.Context(), t, &authtest.FakeAuthenticator{Code: code, Token: token}, &authtest.FakeTokenStore{})
+
+	require.NoError(t, res.Err)
+	assert.Equal(t, "Open this URL in a browser:\n\n"+
+		"  https://idp.example/activate\n\n"+
+		"Enter this code there: ABCD-EFGH\n\n"+
+		"Waiting for approval (Ctrl+C to cancel)...\n"+
+		"Logged in. Tokens saved to /fake/token.json\n", res.Stderr)
+}
+
 func TestLogin_Errors(t *testing.T) {
 	canceled, cancel := context.WithCancel(t.Context())
 	cancel()
@@ -85,7 +100,7 @@ func TestLogin_Errors(t *testing.T) {
 			ctx:        t.Context(),
 			authErr:    auth.ErrLoginDenied,
 			wantErr:    auth.ErrLoginDenied,
-			wantMsg:    "login: denied in the browser",
+			wantMsg:    "login: auth: denied in the browser",
 			wantStderr: prompt,
 		},
 		{
@@ -93,14 +108,14 @@ func TestLogin_Errors(t *testing.T) {
 			ctx:        t.Context(),
 			authErr:    auth.ErrLoginExpired,
 			wantErr:    auth.ErrLoginExpired,
-			wantMsg:    "login: code expired; run `exercise login` again",
+			wantMsg:    "login: auth: code expired; run `exercise login` again",
 			wantStderr: prompt,
 		},
 		{
 			name:    "cancelled before the code is shown",
 			ctx:     canceled,
 			wantErr: auth.ErrLoginCancelled,
-			wantMsg: "login: cancelled",
+			wantMsg: "login: auth: cancelled",
 		},
 		{
 			name:       "token approved but not saved",
