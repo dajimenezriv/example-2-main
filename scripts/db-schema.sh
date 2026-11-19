@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cid=$(docker run -d --rm -p 127.0.0.1::5432 -e POSTGRES_USER=ddd -e POSTGRES_PASSWORD=ddd postgres:16)
+cid=$(docker run -d --rm -p 127.0.0.1::5432 -e POSTGRES_USER=ddd -e POSTGRES_PASSWORD=ddd postgres:18)
 trap 'docker rm -f "$cid" >/dev/null' EXIT
 
 for _ in {1..60}; do docker exec "$cid" pg_isready -qh 127.0.0.1 && break; sleep 0.5; done
