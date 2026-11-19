@@ -9,7 +9,7 @@ vars:
 tasks:
   cover:
     cmds:
-      - go test ./... -coverpkg=./... -coverprofile=raw_coverage.out
+      - go test ./... -race -coverpkg=./... -coverprofile=raw_coverage.out
       - grep -vE '/(actortest|accounttest)/' raw_coverage.out > coverage.out
 
   squawk: squawk '{{.MIGRATIONS}}/*.sql'
