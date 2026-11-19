@@ -1,4 +1,3 @@
 pg_version = "18"
 excluded_rules = ["ban-drop-table", "ban-drop-column"]
-# goose wraps each file in a transaction (unless -- +goose NO TRANSACTION).
 assume_in_transaction = true
