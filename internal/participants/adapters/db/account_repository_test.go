@@ -20,7 +20,7 @@ func seedActor(t *testing.T, q *sqlcgen.Queries) uuid.UUID {
 	t.Helper()
 	id := uuid.New()
 	taxID := fmt.Sprintf("%09d", seedTaxID.Add(1))
-	err := q.CreateActor(t.Context(), sqlcgen.CreateActorParams{ID: id, TaxID: taxID, Type: "issuer"})
+	err := q.CreateActor(t.Context(), sqlcgen.CreateActorParams{ID: id, TaxID: taxID, Type: "issuer", Version: 1})
 	require.NoError(t, err, "seed actor")
 	return id
 }

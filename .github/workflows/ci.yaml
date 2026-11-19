@@ -60,3 +60,7 @@ jobs:
         run: sqlc vet -f sqlc.yaml
       - name: squawk (migration linting)
         run: npx --yes squawk-cli@2.59.0 'migrations/*.sql'
+      - name: db/schema.sql is up to date
+        run: |
+          ./scripts/schema-dump.sh
+          git diff --exit-code -- db/schema.sql

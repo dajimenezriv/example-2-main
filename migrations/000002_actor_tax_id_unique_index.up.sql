@@ -1,10 +1,4 @@
-SET lock_timeout = '1s';
-
--- A concurrent build doesn't block writes, so allow it time on large tables.
-SET statement_timeout = '10min';
-
+-- Single statement on purpose: golang-migrate runs a multi-statement file as one implicit
+-- transaction, and CONCURRENTLY can't run in one. Timeouts come from PGOPTIONS (Taskfile).
+-- squawk-ignore require-timeout-settings
 CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS actors_tax_id_key ON actors (tax_id);
-
-RESET statement_timeout;
-
-RESET lock_timeout;

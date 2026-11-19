@@ -116,6 +116,7 @@ func registerOperations(api huma.API, app *application) {
 	app.GetActorsHTTP.Register(api)
 	app.CreateActorHTTP.Register(api)
 	app.UpdateActorHTTP.Register(api)
+	app.DeleteActorHTTP.Register(api)
 	app.GetAccountsHTTP.Register(api)
 	app.CreateAccountHTTP.Register(api)
 }
