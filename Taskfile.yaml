@@ -18,6 +18,12 @@ tasks:
     - sqlc generate -f sqlc.yaml
     - sqlc vet -f sqlc.yaml
 
+  openapi:
+    desc: Export the API spec (api/openapi.yaml) and regenerate the CLI client from it
+    cmds:
+      - go run ./cmd/server openapi > api/openapi.yaml
+      - go tool oapi-codegen -config oapi-codegen.yaml api/openapi.yaml
+
   migrate:create:
     requires:
       vars: [CLI_ARGS]
