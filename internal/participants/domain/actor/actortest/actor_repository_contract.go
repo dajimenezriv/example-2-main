@@ -47,6 +47,7 @@ func RunRepositoryContract(t *testing.T, newRepo func(t *testing.T) actor.Reposi
 	runCountContract(t, newRepo)
 	runSaveContract(t, newRepo)
 	runUpdateContract(t, newRepo)
+	runDeleteContract(t, newRepo)
 	runFindContract(t, newRepo)
 	runContextCanceledContract(t, newRepo)
 }
@@ -202,6 +203,67 @@ func runUpdateContract(t *testing.T, newRepo func(t *testing.T) actor.Repository
 	})
 }
 
+func runDeleteContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
+	t.Helper()
+
+	t.Run("Delete removes the actor", func(t *testing.T) {
+		repo := newRepo(t)
+		a := saveActor(t, repo, "000000000")
+		other := saveActor(t, repo, "111111111")
+
+		err := repo.Delete(t.Context(), a.ID(), 1)
+		require.NoError(t, err)
+
+		_, err = repo.FindByID(t.Context(), a.ID())
+		require.ErrorIs(t, err, actor.ErrNotFound)
+		checkActor(t, repo, other)
+	})
+
+	t.Run("Delete frees the tax ID", func(t *testing.T) {
+		repo := newRepo(t)
+		a := saveActor(t, repo, "000000000")
+
+		err := repo.Delete(t.Context(), a.ID(), 1)
+		require.NoError(t, err)
+		saveActor(t, repo, "000000000")
+	})
+
+	t.Run("Delete accepts the version after an update", func(t *testing.T) {
+		repo := newRepo(t)
+		a := saveActor(t, repo, "000000000")
+		_, err := repo.Update(t.Context(), a, 1)
+		require.NoError(t, err)
+
+		err = repo.Delete(t.Context(), a.ID(), 2)
+		require.NoError(t, err)
+	})
+
+	t.Run("Delete fails if actor does not exist", func(t *testing.T) {
+		repo := newRepo(t)
+
+		err := repo.Delete(t.Context(), uuid.New(), 1)
+		require.ErrorIs(t, err, actor.ErrNotFound)
+	})
+
+	t.Run("Delete fails if already deleted", func(t *testing.T) {
+		repo := newRepo(t)
+		a := saveActor(t, repo, "000000000")
+		require.NoError(t, repo.Delete(t.Context(), a.ID(), 1))
+
+		err := repo.Delete(t.Context(), a.ID(), 1)
+		require.ErrorIs(t, err, actor.ErrNotFound)
+	})
+
+	t.Run("Delete fails if versions do not match", func(t *testing.T) {
+		repo := newRepo(t)
+		a := saveActor(t, repo, "000000000")
+
+		err := repo.Delete(t.Context(), a.ID(), 2)
+		require.ErrorIs(t, err, actor.ErrVersionConflict)
+		checkActor(t, repo, a)
+	})
+}
+
 func runFindContract(t *testing.T, newRepo func(t *testing.T) actor.Repository) {
 	t.Helper()
 
@@ -281,6 +343,7 @@ func runContextCanceledContract(t *testing.T, newRepo func(t *testing.T) actor.R
 			{"Count", func() (any, error) { return repo.Count(ctx) }},
 			{"Save", func() (any, error) { return nil, repo.Save(ctx, a) }},
 			{"Update", func() (any, error) { return repo.Update(ctx, a, 1) }},
+			{"Delete", func() (any, error) { return nil, repo.Delete(ctx, a.ID(), 1) }},
 			{"FindByID", func() (any, error) { return repo.FindByID(ctx, a.ID()) }},
 			{"FindAll", func() (any, error) { return repo.FindAll(ctx, page) }},
 		}

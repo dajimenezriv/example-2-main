@@ -1,0 +1,1 @@
+-- Nothing to undo: an already-validated constraint can't be un-validated.

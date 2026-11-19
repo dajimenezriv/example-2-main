@@ -5,6 +5,7 @@
 package sqlcgen
 
 import (
+	"github.com/jackc/pgx/v5/pgtype"
 	"uuid"
 )
 
@@ -22,4 +23,13 @@ type Actor struct {
 	TaxID   string
 	Type    string
 	Version int64
+}
+
+type DeletionAudit struct {
+	ID         int64
+	EntityType string
+	EntityID   uuid.UUID
+	Data       []byte
+	DeletedBy  pgtype.Text
+	DeletedAt  pgtype.Timestamptz
 }

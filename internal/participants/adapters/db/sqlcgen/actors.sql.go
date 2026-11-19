@@ -46,6 +46,26 @@ func (q *Queries) CreateActor(ctx context.Context, arg CreateActorParams) error 
 	return err
 }
 
+const deleteActor = `-- name: DeleteActor :execrows
+DELETE FROM actors
+WHERE
+  id = $1
+  AND version = $2
+`
+
+type DeleteActorParams struct {
+	ID      uuid.UUID
+	Version int64
+}
+
+func (q *Queries) DeleteActor(ctx context.Context, arg DeleteActorParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteActor, arg.ID, arg.Version)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const findActorByID = `-- name: FindActorByID :one
 SELECT
   id, tax_id, type, version
