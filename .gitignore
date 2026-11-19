@@ -2,5 +2,5 @@
 .terraform
 *.tfstate
 *.tfstate.backup
-/*coverage.out
+*coverage.out
 /data
