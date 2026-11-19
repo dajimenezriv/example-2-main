@@ -53,6 +53,7 @@ func NewHandler(cmd *createactor.Handler) *Handler {
 
 func (h *Handler) Register(api huma.API) {
 	huma.Register(api, huma.Operation{
+		OperationID:   "create-actor",
 		Method:        http.MethodPost,
 		Path:          "/actors",
 		Summary:       "Create an actor",

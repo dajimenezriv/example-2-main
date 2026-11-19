@@ -45,10 +45,11 @@ func NewHandler(query *getaccounts.Query) *Handler {
 
 func (h *Handler) Register(api huma.API) {
 	huma.Register(api, huma.Operation{
-		Method:  http.MethodGet,
-		Path:    "/accounts",
-		Summary: "List accounts",
-		Tags:    []string{"Accounts"},
+		OperationID: "list-accounts",
+		Method:      http.MethodGet,
+		Path:        "/accounts",
+		Summary:     "List accounts",
+		Tags:        []string{"Accounts"},
 	}, h.Handle)
 }
 

@@ -45,6 +45,7 @@ func NewHandler(handler *createaccount.Handler) *Handler {
 
 func (h *Handler) Register(api huma.API) {
 	huma.Register(api, huma.Operation{
+		OperationID:   "create-account",
 		Method:        http.MethodPost,
 		Path:          "/accounts",
 		Summary:       "Create an account",
