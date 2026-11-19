@@ -3,5 +3,4 @@
 *.tfstate
 *.tfstate.backup
 *coverage.out
-/.mise
 /data
