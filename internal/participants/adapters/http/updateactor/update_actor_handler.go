@@ -15,7 +15,7 @@ import (
 
 type Input struct {
 	ID string `path:"id" format:"uuid"`
-	// Optional in the schema so a missing header gets 428 instead of Huma's 422.
+	// Optional so a missing header gets 428 instead of Huma's 422.
 	IfMatch string `header:"If-Match" doc:"Strong ETag of the version being updated, e.g. \"1\". Required."`
 	Body    updateActorRequest
 }
