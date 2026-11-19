@@ -197,9 +197,8 @@ type GetActorsResponse struct {
 // UpdateActorRequest defines model for UpdateActorRequest.
 type UpdateActorRequest struct {
 	// TaxId Example: 123456789
-	TaxId   *string                 `json:"taxId,omitempty"`
-	Type    *UpdateActorRequestType `json:"type,omitempty"`
-	Version int64                   `json:"version"`
+	TaxId *string                 `json:"taxId,omitempty"`
+	Type  *UpdateActorRequestType `json:"type,omitempty"`
 }
 
 // UpdateActorRequestType defines model for UpdateActorRequest.Type.
@@ -223,6 +222,18 @@ type ListAccountsParams struct {
 type ListActorsParams struct {
 	Limit  *int32 `form:"limit,omitempty" json:"limit,omitempty"`
 	Offset *int32 `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
+// DeleteActorParams defines parameters for DeleteActor.
+type DeleteActorParams struct {
+	// IfMatch Strong ETag of the version being deleted, e.g. "1". Required.
+	IfMatch *string `json:"If-Match,omitempty"`
+}
+
+// UpdateActorParams defines parameters for UpdateActor.
+type UpdateActorParams struct {
+	// IfMatch Strong ETag of the version being updated, e.g. "1". Required.
+	IfMatch *string `json:"If-Match,omitempty"`
 }
 
 // CreateAccountJSONRequestBody defines body for CreateAccount for application/json ContentType.
@@ -346,19 +357,24 @@ type ClientInterface interface {
 	// Corresponds with POST /actors (the `CreateActor` operationId).
 	CreateActor(ctx context.Context, body CreateActorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteActor Delete an actor and its accounts
+	//
+	// Corresponds with DELETE /actors/{id} (the `DeleteActor` operationId).
+	DeleteActor(ctx context.Context, id openapi_types.UUID, params *DeleteActorParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// UpdateActorWithBody Update an actor
 	//
 	// Takes any type of body and a specified content type.
 	//
 	// Corresponds with PATCH /actors/{id} (the `UpdateActor` operationId).
-	UpdateActorWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	UpdateActorWithBody(ctx context.Context, id openapi_types.UUID, params *UpdateActorParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// UpdateActor Update an actor
 	//
 	// Takes a body of the `application/json` content type.
 	//
 	// Corresponds with PATCH /actors/{id} (the `UpdateActor` operationId).
-	UpdateActor(ctx context.Context, id openapi_types.UUID, body UpdateActorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	UpdateActor(ctx context.Context, id openapi_types.UUID, params *UpdateActorParams, body UpdateActorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 // ListAccounts List accounts
@@ -459,13 +475,28 @@ func (c *Client) CreateActor(ctx context.Context, body CreateActorJSONRequestBod
 	return c.Client.Do(req)
 }
 
+// DeleteActor Delete an actor and its accounts
+//
+// Corresponds with DELETE /actors/{id} (the `DeleteActor` operationId).
+func (c *Client) DeleteActor(ctx context.Context, id openapi_types.UUID, params *DeleteActorParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteActorRequest(c.Server, id, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // UpdateActorWithBody Update an actor
 //
 // Takes any type of body and a specified content type.
 //
 // Corresponds with PATCH /actors/{id} (the `UpdateActor` operationId).
-func (c *Client) UpdateActorWithBody(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewUpdateActorRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) UpdateActorWithBody(ctx context.Context, id openapi_types.UUID, params *UpdateActorParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateActorRequestWithBody(c.Server, id, params, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -481,8 +512,8 @@ func (c *Client) UpdateActorWithBody(ctx context.Context, id openapi_types.UUID,
 // Takes a body of the `application/json` content type.
 //
 // Corresponds with PATCH /actors/{id} (the `UpdateActor` operationId).
-func (c *Client) UpdateActor(ctx context.Context, id openapi_types.UUID, body UpdateActorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewUpdateActorRequest(c.Server, id, body)
+func (c *Client) UpdateActor(ctx context.Context, id openapi_types.UUID, params *UpdateActorParams, body UpdateActorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateActorRequest(c.Server, id, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -705,19 +736,68 @@ func NewCreateActorRequestWithBody(server string, contentType string, body io.Re
 	return req, nil
 }
 
+// NewDeleteActorRequest constructs an http.Request for the DeleteActor method
+func NewDeleteActorRequest(server string, id openapi_types.UUID, params *DeleteActorParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "uuid"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/actors/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+
+		if params.IfMatch != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "If-Match", *params.IfMatch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-Match", headerParam0)
+		}
+
+	}
+
+	return req, nil
+}
+
 // NewUpdateActorRequest calls the generic UpdateActor builder with application/json body
-func NewUpdateActorRequest(server string, id openapi_types.UUID, body UpdateActorJSONRequestBody) (*http.Request, error) {
+func NewUpdateActorRequest(server string, id openapi_types.UUID, params *UpdateActorParams, body UpdateActorJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewUpdateActorRequestWithBody(server, id, "application/json", bodyReader)
+	return NewUpdateActorRequestWithBody(server, id, params, "application/json", bodyReader)
 }
 
 // NewUpdateActorRequestWithBody constructs an http.Request for the UpdateActor method, with any body, and a specified content type
-func NewUpdateActorRequestWithBody(server string, id openapi_types.UUID, contentType string, body io.Reader) (*http.Request, error) {
+func NewUpdateActorRequestWithBody(server string, id openapi_types.UUID, params *UpdateActorParams, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -748,6 +828,21 @@ func NewUpdateActorRequestWithBody(server string, id openapi_types.UUID, content
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	if params != nil {
+
+		if params.IfMatch != nil {
+			var headerParam0 string
+
+			headerParam0, err = runtime.StyleParamWithOptions("simple", false, "If-Match", *params.IfMatch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationHeader, Type: "string", Format: ""})
+			if err != nil {
+				return nil, err
+			}
+
+			req.Header.Set("If-Match", headerParam0)
+		}
+
+	}
 
 	return req, nil
 }
@@ -838,19 +933,26 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /actors (the `CreateActor` operationId).
 	CreateActorWithResponse(ctx context.Context, body CreateActorJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateActorHTTPResponse, error)
 
+	// DeleteActorWithResponse Delete an actor and its accounts
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /actors/{id} (the `DeleteActor` operationId).
+	DeleteActorWithResponse(ctx context.Context, id openapi_types.UUID, params *DeleteActorParams, reqEditors ...RequestEditorFn) (*DeleteActorHTTPResponse, error)
+
 	// UpdateActorWithBodyWithResponse Update an actor
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with PATCH /actors/{id} (the `UpdateActor` operationId).
-	UpdateActorWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateActorHTTPResponse, error)
+	UpdateActorWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, params *UpdateActorParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateActorHTTPResponse, error)
 
 	// UpdateActorWithResponse Update an actor
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with PATCH /actors/{id} (the `UpdateActor` operationId).
-	UpdateActorWithResponse(ctx context.Context, id openapi_types.UUID, body UpdateActorJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateActorHTTPResponse, error)
+	UpdateActorWithResponse(ctx context.Context, id openapi_types.UUID, params *UpdateActorParams, body UpdateActorJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateActorHTTPResponse, error)
 }
 
 type ListAccountsHTTPResponse struct {
@@ -1094,6 +1196,87 @@ func (r CreateActorHTTPResponse) ContentType() string {
 	return ""
 }
 
+type DeleteActorHTTPResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// ApplicationproblemJSON400 the response for an HTTP 400 `application/problem+json` response
+	ApplicationproblemJSON400 *ErrorModel
+	// ApplicationproblemJSON404 the response for an HTTP 404 `application/problem+json` response
+	ApplicationproblemJSON404 *ErrorModel
+	// ApplicationproblemJSON412 the response for an HTTP 412 `application/problem+json` response
+	ApplicationproblemJSON412 *ErrorModel
+	// ApplicationproblemJSON422 the response for an HTTP 422 `application/problem+json` response
+	ApplicationproblemJSON422 *ErrorModel
+	// ApplicationproblemJSON428 the response for an HTTP 428 `application/problem+json` response
+	ApplicationproblemJSON428 *ErrorModel
+	// ApplicationproblemJSON500 the response for an HTTP 500 `application/problem+json` response
+	ApplicationproblemJSON500 *ErrorModel
+}
+
+// GetApplicationproblemJSON400 returns the response for an HTTP 400 `application/problem+json` response
+func (r DeleteActorHTTPResponse) GetApplicationproblemJSON400() *ErrorModel {
+	return r.ApplicationproblemJSON400
+}
+
+// GetApplicationproblemJSON404 returns the response for an HTTP 404 `application/problem+json` response
+func (r DeleteActorHTTPResponse) GetApplicationproblemJSON404() *ErrorModel {
+	return r.ApplicationproblemJSON404
+}
+
+// GetApplicationproblemJSON412 returns the response for an HTTP 412 `application/problem+json` response
+func (r DeleteActorHTTPResponse) GetApplicationproblemJSON412() *ErrorModel {
+	return r.ApplicationproblemJSON412
+}
+
+// GetApplicationproblemJSON422 returns the response for an HTTP 422 `application/problem+json` response
+func (r DeleteActorHTTPResponse) GetApplicationproblemJSON422() *ErrorModel {
+	return r.ApplicationproblemJSON422
+}
+
+// GetApplicationproblemJSON428 returns the response for an HTTP 428 `application/problem+json` response
+func (r DeleteActorHTTPResponse) GetApplicationproblemJSON428() *ErrorModel {
+	return r.ApplicationproblemJSON428
+}
+
+// GetApplicationproblemJSON500 returns the response for an HTTP 500 `application/problem+json` response
+func (r DeleteActorHTTPResponse) GetApplicationproblemJSON500() *ErrorModel {
+	return r.ApplicationproblemJSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteActorHTTPResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteActorHTTPResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteActorHTTPResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteActorHTTPResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// UpdateActorHTTPResponse200Headers the declared response headers of an HTTP 200 response for UpdateActor
+type UpdateActorHTTPResponse200Headers struct {
+	Etag *string
+}
+
 type UpdateActorHTTPResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1105,10 +1288,16 @@ type UpdateActorHTTPResponse struct {
 	ApplicationproblemJSON404 *ErrorModel
 	// ApplicationproblemJSON409 the response for an HTTP 409 `application/problem+json` response
 	ApplicationproblemJSON409 *ErrorModel
+	// ApplicationproblemJSON412 the response for an HTTP 412 `application/problem+json` response
+	ApplicationproblemJSON412 *ErrorModel
 	// ApplicationproblemJSON422 the response for an HTTP 422 `application/problem+json` response
 	ApplicationproblemJSON422 *ErrorModel
+	// ApplicationproblemJSON428 the response for an HTTP 428 `application/problem+json` response
+	ApplicationproblemJSON428 *ErrorModel
 	// ApplicationproblemJSON500 the response for an HTTP 500 `application/problem+json` response
 	ApplicationproblemJSON500 *ErrorModel
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *UpdateActorHTTPResponse200Headers
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -1131,9 +1320,19 @@ func (r UpdateActorHTTPResponse) GetApplicationproblemJSON409() *ErrorModel {
 	return r.ApplicationproblemJSON409
 }
 
+// GetApplicationproblemJSON412 returns the response for an HTTP 412 `application/problem+json` response
+func (r UpdateActorHTTPResponse) GetApplicationproblemJSON412() *ErrorModel {
+	return r.ApplicationproblemJSON412
+}
+
 // GetApplicationproblemJSON422 returns the response for an HTTP 422 `application/problem+json` response
 func (r UpdateActorHTTPResponse) GetApplicationproblemJSON422() *ErrorModel {
 	return r.ApplicationproblemJSON422
+}
+
+// GetApplicationproblemJSON428 returns the response for an HTTP 428 `application/problem+json` response
+func (r UpdateActorHTTPResponse) GetApplicationproblemJSON428() *ErrorModel {
+	return r.ApplicationproblemJSON428
 }
 
 // GetApplicationproblemJSON500 returns the response for an HTTP 500 `application/problem+json` response
@@ -1248,13 +1447,26 @@ func (c *ClientWithResponses) CreateActorWithResponse(ctx context.Context, body 
 	return ParseCreateActorHTTPResponse(rsp)
 }
 
+// DeleteActorWithResponse Delete an actor and its accounts
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /actors/{id} (the `DeleteActor` operationId).
+func (c *ClientWithResponses) DeleteActorWithResponse(ctx context.Context, id openapi_types.UUID, params *DeleteActorParams, reqEditors ...RequestEditorFn) (*DeleteActorHTTPResponse, error) {
+	rsp, err := c.DeleteActor(ctx, id, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteActorHTTPResponse(rsp)
+}
+
 // UpdateActorWithBodyWithResponse Update an actor
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
 // Corresponds with PATCH /actors/{id} (the `UpdateActor` operationId).
-func (c *ClientWithResponses) UpdateActorWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateActorHTTPResponse, error) {
-	rsp, err := c.UpdateActorWithBody(ctx, id, contentType, body, reqEditors...)
+func (c *ClientWithResponses) UpdateActorWithBodyWithResponse(ctx context.Context, id openapi_types.UUID, params *UpdateActorParams, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateActorHTTPResponse, error) {
+	rsp, err := c.UpdateActorWithBody(ctx, id, params, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1266,8 +1478,8 @@ func (c *ClientWithResponses) UpdateActorWithBodyWithResponse(ctx context.Contex
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
 // Corresponds with PATCH /actors/{id} (the `UpdateActor` operationId).
-func (c *ClientWithResponses) UpdateActorWithResponse(ctx context.Context, id openapi_types.UUID, body UpdateActorJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateActorHTTPResponse, error) {
-	rsp, err := c.UpdateActor(ctx, id, body, reqEditors...)
+func (c *ClientWithResponses) UpdateActorWithResponse(ctx context.Context, id openapi_types.UUID, params *UpdateActorParams, body UpdateActorJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateActorHTTPResponse, error) {
+	rsp, err := c.UpdateActor(ctx, id, params, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
@@ -1455,6 +1667,70 @@ func ParseCreateActorHTTPResponse(rsp *http.Response) (*CreateActorHTTPResponse,
 	return response, nil
 }
 
+// ParseDeleteActorHTTPResponse parses an HTTP response from a DeleteActorWithResponse call
+func ParseDeleteActorHTTPResponse(rsp *http.Response) (*DeleteActorHTTPResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteActorHTTPResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON412 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 428:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON428 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseUpdateActorHTTPResponse parses an HTTP response from a UpdateActorWithResponse call
 func ParseUpdateActorHTTPResponse(rsp *http.Response) (*UpdateActorHTTPResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -1497,12 +1773,26 @@ func ParseUpdateActorHTTPResponse(rsp *http.Response) (*UpdateActorHTTPResponse,
 		}
 		response.ApplicationproblemJSON409 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 412:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON412 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 422:
 		var dest ErrorModel
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.ApplicationproblemJSON422 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 428:
+		var dest ErrorModel
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.ApplicationproblemJSON428 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest ErrorModel
@@ -1511,6 +1801,19 @@ func ParseUpdateActorHTTPResponse(rsp *http.Response) (*UpdateActorHTTPResponse,
 		}
 		response.ApplicationproblemJSON500 = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers UpdateActorHTTPResponse200Headers
+		if values := rsp.Header.Values("Etag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Etag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.Etag = &value
+		}
+		response.Headers200 = &headers
 	}
 
 	return response, nil
