@@ -35,27 +35,44 @@ type config struct {
 }
 
 func main() {
-	run := run
-	// `server openapi`: print the spec and exit, no DB or env needed. Used by `task openapi`.
-	if len(os.Args) == 2 && os.Args[1] == "openapi" {
-		run = func() error { return printOpenAPI(os.Stdout) }
-	}
-	if err := run(); err != nil {
+	if err := dispatch(os.Args[1:]); err != nil {
 		log.Printf("❌ %v", err)
 		os.Exit(1)
 	}
+}
+
+func dispatch(args []string) error {
+	if len(args) == 0 {
+		return run()
+	}
+	switch args[0] {
+	case "openapi": // print the spec
+		return printOpenAPI(os.Stdout)
+	case "migrate": // apply pending migrations
+		return migrateUp()
+	default:
+		return fmt.Errorf("unknown command %q", args[0])
+	}
+}
+
+func loadConfig() (config, error) {
+	if err := godotenv.Load(); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return config{}, fmt.Errorf("load .env: %w", err)
+	}
+	cfg, err := env.ParseAs[config]()
+	if err != nil {
+		return config{}, fmt.Errorf("parse config: %w", err)
+	}
+	return cfg, nil
 }
 
 func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	if err := godotenv.Load(); err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return fmt.Errorf("load .env: %w", err)
-	}
-	cfg, err := env.ParseAs[config]()
+	cfg, err := loadConfig()
 	if err != nil {
-		return fmt.Errorf("parse config: %w", err)
+		return err
 	}
 
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
