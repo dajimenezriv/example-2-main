@@ -36,22 +36,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
-      - name: go mod tidy
-        run: go mod tidy -diff
-      - uses: sqlc-dev/setup-sqlc@v5
-        with:
-          sqlc-version: "1.31.1"
-      - name: sqlc generated code is up to date
-        run: sqlc diff -f sqlc.yaml
-      - name: sqlc vet
-        run: sqlc vet -f sqlc.yaml
-      - name: squawk (migration linting)
-        run: npx --yes squawk-cli@2.59.0 'migrations/*.sql'
-      - name: db/schema.sql is up to date
-        run: |
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ./.github/actions/setup
+      - run: go mod tidy -diff
+      - run: sqlc diff -f sqlc.yaml
+      - run: sqlc vet -f sqlc.yaml
+      - run: squawk 'migrations/*.sql'
+      - run: |
           ./scripts/schema-dump.sh
           git diff --exit-code -- db/schema.sql
