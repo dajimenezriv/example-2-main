@@ -3,7 +3,7 @@
 -- squawk-ignore-file require-timeout-settings
 
 -- +goose Up
--- A failed concurrent build leaves an INVALID index that IF NOT EXISTS would silently accept.
+-- A failed concurrent build leaves an INVALID index.
 DROP INDEX CONCURRENTLY IF EXISTS actors_tax_id_key;
 CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS actors_tax_id_key ON actors (tax_id);
 
