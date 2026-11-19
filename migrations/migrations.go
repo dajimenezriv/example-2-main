@@ -13,8 +13,7 @@ import (
 var FS embed.FS
 
 func NewProvider(db *sql.DB) (*goose.Provider, error) {
-	// Advisory lock: overlapping pipeline runs apply each migration once. It also pins one
-	// connection, so NO TRANSACTION files keep session state.
+	// `pg_try_advisory_lock`: no more than migration running at the same time.
 	locker, err := lock.NewPostgresSessionLocker()
 	if err != nil {
 		return nil, fmt.Errorf("create migration locker: %w", err)
