@@ -1,0 +1,10 @@
+# Generates the CLI's typed API client from api/openapi.yaml. Run via `task openapi`.
+package: apiclient
+output: internal/cli/adapters/api/apiclient/apiclient.gen.go
+generate:
+  models: true
+  client: true
+output-options:
+  # Huma names bodies <Op>Response (e.g. CreateActorResponse), which collides with
+  # oapi-codegen's default response wrapper name. Wrappers become <Op>HTTPResponse.
+  response-type-suffix: HTTPResponse

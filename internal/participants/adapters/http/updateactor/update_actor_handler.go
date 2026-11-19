@@ -56,6 +56,7 @@ func NewHandler(cmd *updateactor.Handler) *Handler {
 
 func (h *Handler) Register(api huma.API) {
 	huma.Register(api, huma.Operation{
+		OperationID:   "update-actor",
 		Method:        http.MethodPatch,
 		Path:          "/actors/{id}",
 		Summary:       "Update an actor",
