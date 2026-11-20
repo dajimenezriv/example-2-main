@@ -11,7 +11,6 @@
 ```bash
 docker compose up -d                 # Postgres on localhost:5555 (user/pass/db: ddd)
 cp .env.example .env                 # backend env, loaded by the app and Taskfile
-task migrate:up                      # apply migrations/ to the local DB
 go run ./cmd/server                  # API on :8080, OpenAPI docs at /docs
 go run ./cmd/cli login               # CLI: device-flow login, tokens → ./data/token.json
 
@@ -70,7 +69,7 @@ Deps inward: `adapters → app → domain`. Domain imports nothing from app/adap
 - **New endpoint**: domain → command/query pkg → http pkg → wire `cmd/server/setup.go` → register in `registerHTTPHandlers` (`main.go`).
 - **Schema change**: `task migrate:create` → `queries/*.sql` → `task sqlc` → `errors.go` constraint names if needed → `task squawk`.
 - Modern Go (`errors.AsType`, `new(expr)`, `t.Context()`). Match it. Don't "fix" it.
-- **Comments**: minimal. Only to explain *why* (non-obvious decisions). Never restate what code does. No doc comments on exported identifiers (lint rule disabled on purpose).
+- **Comments**: minimal. Only to explain _why_ (non-obvious decisions). Never restate what code does. No doc comments on exported identifiers (lint rule disabled on purpose).
 
 ## Testing
 
