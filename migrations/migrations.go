@@ -14,6 +14,7 @@ var FS embed.FS
 
 func NewProvider(db *sql.DB) (*goose.Provider, error) {
 	// `pg_try_advisory_lock`: no more than migration running at the same time.
+	// It also pins to one connection.
 	locker, err := lock.NewPostgresSessionLocker()
 	if err != nil {
 		return nil, fmt.Errorf("create migration locker: %w", err)

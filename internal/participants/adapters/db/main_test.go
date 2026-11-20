@@ -53,7 +53,6 @@ func run(m *testing.M) int {
 	}
 	defer testPool.Close()
 
-	// Same runner as `server migrate` in the deploy pipeline.
 	if err := migrate(ctx); err != nil {
 		log.Printf("migrate test DB: %v", err)
 		return 1
@@ -63,7 +62,7 @@ func run(m *testing.M) int {
 }
 
 func migrate(ctx context.Context) (err error) {
-	// Closing this *sql.DB leaves testPool open.
+	// Wraps the pool in a *sql.DB so code that accepts database/sql interface can use it.
 	db := stdlib.OpenDBFromPool(testPool)
 	defer func() { err = errors.Join(err, db.Close()) }()
 
