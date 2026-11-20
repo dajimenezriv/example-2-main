@@ -1,0 +1,91 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      squawk-cli:
+        specifier: 2.73.0
+        version: 2.73.0
+
+packages:
+
+  '@squawk-cli/darwin-arm64@2.73.0':
+    resolution: {integrity: sha512-voKI5K4wCuy/cFJaw0nWEISqDItBP3dhng74gGEIr+mSUgtaWpYRGB9+ZoTCAQ/XIAIStQnUQii7jn6daMZGDQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@squawk-cli/darwin-x64@2.73.0':
+    resolution: {integrity: sha512-SB5QPf7uW/9JCVWoi9dP98C+505wjHgS28iKPxssaVDpBSZAXKQ+UIjrjcyVUDDNLiKA6Nl85I1wKFrNjycC9w==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@squawk-cli/linux-arm64-musl@2.73.0':
+    resolution: {integrity: sha512-WY91BOP+Xfx7AviM/NIbR0r+UH61KYfpK8E3tuCLJDIQY5mP4ojcHKTqyj4E6lBxsEHfOdDg/3wEVQUY9inBog==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@squawk-cli/linux-arm64@2.73.0':
+    resolution: {integrity: sha512-5RUA2VYkU97bRsWUlhpg2kvjdcPye47156KIERsUaJuRQ1UEsmKxMvPly6Gf5v1XUJF7uoX03A+vEJTqlVM0AA==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@squawk-cli/linux-x64-musl@2.73.0':
+    resolution: {integrity: sha512-dCLvPvBfRiAKpbYkTLXo8wxtdx35I+9kGSwvEwhi+RHy6XNRwRqs+c2aUzy25AY35ccR1LrxMyqtPaYeEUu2lg==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@squawk-cli/linux-x64@2.73.0':
+    resolution: {integrity: sha512-SMMp5x6SfZoo+6o+WQHg5ife04rvmg5mKw3Ok5En2FleISx7/w2esERQHiJ/NmI4SUYMSu6j+PW0ieA09hmTZg==}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@squawk-cli/win32-x64@2.73.0':
+    resolution: {integrity: sha512-o26xbHqIcOlGbjG4E2kniIHAhpba0MtwlgSGg6fX+/6Mo6o+Vd1QvYjJTK88F3OWSiIPVcSAKlzCo7SAyy7HwA==}
+    cpu: [x64]
+    os: [win32]
+
+  squawk-cli@2.73.0:
+    resolution: {integrity: sha512-RTAH31j8vPO88vk7FSLZMgv3Upd0+EZkC1KU5SqSxQe7p699hGy2lclUBHH24mo1rFRZzWdP9UzVypTXgTehBw==}
+    hasBin: true
+
+snapshots:
+
+  '@squawk-cli/darwin-arm64@2.73.0':
+    optional: true
+
+  '@squawk-cli/darwin-x64@2.73.0':
+    optional: true
+
+  '@squawk-cli/linux-arm64-musl@2.73.0':
+    optional: true
+
+  '@squawk-cli/linux-arm64@2.73.0':
+    optional: true
+
+  '@squawk-cli/linux-x64-musl@2.73.0':
+    optional: true
+
+  '@squawk-cli/linux-x64@2.73.0':
+    optional: true
+
+  '@squawk-cli/win32-x64@2.73.0':
+    optional: true
+
+  squawk-cli@2.73.0:
+    optionalDependencies:
+      '@squawk-cli/darwin-arm64': 2.73.0
+      '@squawk-cli/darwin-x64': 2.73.0
+      '@squawk-cli/linux-arm64': 2.73.0
+      '@squawk-cli/linux-arm64-musl': 2.73.0
+      '@squawk-cli/linux-x64': 2.73.0
+      '@squawk-cli/linux-x64-musl': 2.73.0
+      '@squawk-cli/win32-x64': 2.73.0
