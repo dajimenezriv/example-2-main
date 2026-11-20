@@ -24,8 +24,7 @@ func saveActor(t *testing.T, repo actor.Repository, id uuid.UUID, taxID string) 
 	t.Helper()
 	a, err := actor.New(id, taxID, actor.Issuer)
 	require.NoError(t, err)
-	err = repo.Save(t.Context(), a)
-	require.NoError(t, err)
+	require.NoError(t, repo.Save(t.Context(), a))
 	return a
 }
 
