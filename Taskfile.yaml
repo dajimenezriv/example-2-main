@@ -30,13 +30,11 @@ tasks:
   db:up: go run ./cmd/server migrate
   db:*:
     desc: task db:status | db:down | db:create -- add_foo sql
-    vars:
-      GOOSE_CMD: "{{index .MATCH 0}}"
     env:
       GOOSE_DRIVER: postgres
       GOOSE_MIGRATION_DIR: "{{.MIGRATIONS}}"
       GOOSE_DBSTRING: "{{.DATABASE_URL}}"
-    cmd: goose -s {{.GOOSE_CMD}} {{.CLI_ARGS}}
+    cmd: goose -s {{index .MATCH 0}} {{.CLI_ARGS}}
 
   env:decrypt:
     cmds:
