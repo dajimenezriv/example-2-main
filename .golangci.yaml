@@ -44,10 +44,8 @@ linters:
       - path: (_test\.go$|test/|testhelpers/)
         linters:
           - containedctx
-          - cyclop
           - funlen
           - gochecknoglobals
-          - gocognit
           - goconst
           - mnd
           - wrapcheck
