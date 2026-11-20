@@ -43,27 +43,10 @@ tasks:
       - for: { var: ENV_DIRS }
         cmd: sops decrypt --input-type dotenv --output-type dotenv --output {{.ITEM}}/.env {{.ITEM}}/.env.enc
   env:encrypt:
-    cmds:
-      - for: { var: ENV_DIRS }
-        cmd: sops encrypt --filename-override {{.ITEM}}/.env --input-type dotenv --output-type dotenv --output {{.ITEM}}/.env.enc {{.ITEM}}/.env
+    cmd: ./scripts/env-encrypt.sh {{.ENV_DIRS}}
 
   auth:env:
     desc: Copy Terraform outputs (issuer, audience, web client) into the backend .env
     cmds:
-      - touch .env
-      - |
-        set -eu
-        upsert() {
-          v="$(terraform -chdir=infra/auth0 output -raw "$2")" # plain assignment so set -e catches failures
-          K="$1" V="$v" awk '
-            $0 ~ "^" ENVIRON["K"] "=" { print ENVIRON["K"] "=\"" ENVIRON["V"] "\""; done = 1; next }
-            { print }
-            END { if (!done) print ENVIRON["K"] "=\"" ENVIRON["V"] "\"" }
-          ' .env > .env.tmp
-          cat .env.tmp > .env
-          rm .env.tmp
-        }
-        upsert AUTH_ISSUER auth_issuer
-        upsert AUTH_AUDIENCE auth_audience
-        upsert CLI_AUTH0_CLIENT_ID cli_client_id
-        echo "Updated .env from Terraform outputs."
+      - ./scripts/auth-env.sh
+      - task: env:encrypt
