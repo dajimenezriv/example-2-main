@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -64,6 +65,12 @@ func loadConfig() (config, error) {
 	cfg, err := env.ParseAs[config]()
 	if err != nil {
 		return config{}, fmt.Errorf("parse config: %w", err)
+	}
+	// We pool client-side (pgxpool) and migrations take a session-level advisory
+	// lock, which breaks under PgBouncer transaction mode. Use the direct endpoint.
+	// https://neon.com/docs/connect/connection-pooling
+	if strings.Contains(cfg.DatabaseURL, "-pooler") {
+		return config{}, errors.New("DATABASE_URL must use the direct Neon endpoint, not -pooler")
 	}
 	return cfg, nil
 }
@@ -129,8 +136,6 @@ func registerHTTPHandlers(app *application) chi.Router {
 	return r
 }
 
-// registerOperations is shared by the server and `openapi` (spec export), so the spec
-// always lists exactly the endpoints the server serves.
 func registerOperations(api huma.API, app *application) {
 	app.GetActorsHTTP.Register(api)
 	app.CreateActorHTTP.Register(api)
