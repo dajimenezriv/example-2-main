@@ -10,7 +10,6 @@
 
 ```bash
 docker compose up -d                 # Postgres on localhost:5555 (user/pass/db: ddd)
-cp .env.example .env                 # backend env, loaded by the app and Taskfile
 go run ./cmd/server                  # API on :8080, OpenAPI docs at /docs
 go run ./cmd/cli login               # CLI: device-flow login, tokens → ./data/token.json
 
