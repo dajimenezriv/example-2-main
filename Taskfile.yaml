@@ -25,15 +25,14 @@ tasks:
   db:schema: ./scripts/db-schema.sh
   db:up: go run ./cmd/server migrate
   db:*:
-    desc: task db:down | db:status | db:redo | db:create -- add_foo
+    desc: task db:status | db:down | db:create -- add_foo sql
     vars:
       GOOSE_CMD: "{{index .MATCH 0}}"
     env:
       GOOSE_DRIVER: postgres
       GOOSE_MIGRATION_DIR: "{{.MIGRATIONS}}"
-    # $DATABASE_URL, not {{.DATABASE_URL}}: the template always takes .env, the shell var lets an
-    # exported value win (same precedence as the server).
-    cmd: GOOSE_DBSTRING="$DATABASE_URL" goose -s {{.GOOSE_CMD}} {{if eq .GOOSE_CMD "create"}}{{.CLI_ARGS}} sql{{end}}
+      GOOSE_DBSTRING: "{{.DATABASE_URL}}"
+    cmd: goose -s {{.GOOSE_CMD}} {{.CLI_ARGS}}
 
   auth:env:
     desc: Copy Terraform outputs (issuer, audience, web client) into the backend .env
