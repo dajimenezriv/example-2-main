@@ -2,8 +2,12 @@ version: "3"
 
 dotenv: [".env"]
 
+env:
+  SOPS_AGE_KEY_FILE: "{{.ROOT_DIR}}/.age-key.txt"
+
 vars:
   MIGRATIONS: migrations
+  ENV_DIRS: . infra/auth0 infra/github
 
 tasks:
   test:coverage:
@@ -26,31 +30,21 @@ tasks:
   db:up: go run ./cmd/server migrate
   db:*:
     desc: task db:status | db:down | db:create -- add_foo sql
-    vars:
-      GOOSE_CMD: "{{index .MATCH 0}}"
     env:
       GOOSE_DRIVER: postgres
       GOOSE_MIGRATION_DIR: "{{.MIGRATIONS}}"
       GOOSE_DBSTRING: "{{.DATABASE_URL}}"
-    cmd: goose -s {{.GOOSE_CMD}} {{.CLI_ARGS}}
+    cmd: goose -s {{index .MATCH 0}} {{.CLI_ARGS}}
+
+  env:decrypt:
+    cmds:
+      - for: { var: ENV_DIRS }
+        cmd: sops decrypt --input-type dotenv --output-type dotenv --output {{.ITEM}}/.env {{.ITEM}}/.env.enc
+  env:encrypt:
+    cmd: ./scripts/env-encrypt.sh {{.ENV_DIRS}}
 
   auth:env:
     desc: Copy Terraform outputs (issuer, audience, web client) into the backend .env
     cmds:
-      - touch .env
-      - |
-        set -eu
-        upsert() {
-          v="$(terraform -chdir=infra/auth0 output -raw "$2")" # plain assignment so set -e catches failures
-          K="$1" V="$v" awk '
-            $0 ~ "^" ENVIRON["K"] "=" { print ENVIRON["K"] "=\"" ENVIRON["V"] "\""; done = 1; next }
-            { print }
-            END { if (!done) print ENVIRON["K"] "=\"" ENVIRON["V"] "\"" }
-          ' .env > .env.tmp
-          cat .env.tmp > .env
-          rm .env.tmp
-        }
-        upsert AUTH_ISSUER auth_issuer
-        upsert AUTH_AUDIENCE auth_audience
-        upsert CLI_AUTH0_CLIENT_ID cli_client_id
-        echo "Updated .env from Terraform outputs."
+      - ./scripts/auth-env.sh
+      - task: env:encrypt
