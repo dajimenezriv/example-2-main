@@ -30,7 +30,7 @@ func run(m *testing.M) int {
 
 	ctx := context.Background()
 
-	ctr, err := postgres.Run(ctx, "postgres:16", postgres.BasicWaitStrategies())
+	ctr, err := postgres.Run(ctx, "postgres:18", postgres.BasicWaitStrategies())
 	defer func() {
 		if termErr := testcontainers.TerminateContainer(ctr); termErr != nil {
 			log.Printf("terminate postgres container: %v", termErr)

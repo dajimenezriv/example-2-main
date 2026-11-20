@@ -48,9 +48,9 @@ func dispatch(args []string) error {
 		return run()
 	}
 	switch args[0] {
-	case "openapi": // print the spec
-		return printOpenAPI(os.Stdout)
-	case "migrate": // apply pending migrations
+	case "openapi":
+		return printOpenAPI()
+	case "migrate":
 		return migrateUp()
 	default:
 		return fmt.Errorf("%w %q", errUnknownCommand, args[0])
