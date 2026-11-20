@@ -31,7 +31,10 @@ const (
 	shutdownTimeout   = 10 * time.Second
 )
 
-var errUnknownCommand = errors.New("unknown command")
+var (
+	errUnknownCommand = errors.New("unknown command")
+	errPoolerURL      = errors.New("DATABASE_URL must use the direct Neon endpoint, not -pooler")
+)
 
 type config struct {
 	DatabaseURL string `env:"DATABASE_URL,required,notEmpty"`
@@ -70,7 +73,7 @@ func loadConfig() (config, error) {
 	// lock, which breaks under PgBouncer transaction mode. Use the direct endpoint.
 	// https://neon.com/docs/connect/connection-pooling
 	if strings.Contains(cfg.DatabaseURL, "-pooler") {
-		return config{}, errors.New("DATABASE_URL must use the direct Neon endpoint, not -pooler")
+		return config{}, errPoolerURL
 	}
 	return cfg, nil
 }
