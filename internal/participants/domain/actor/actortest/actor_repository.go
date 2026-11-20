@@ -2,6 +2,7 @@ package actortest
 
 import (
 	"context"
+	"slices"
 	"sync"
 	"uuid"
 
@@ -80,6 +81,25 @@ func (f *fakeRepository) Update(ctx context.Context, act *actor.Actor, expectedV
 	act = actor.Reconstitute(act.ID(), string(act.TaxID()), act.Type(), expectedVersion+1)
 	f.actors[idx] = *act
 	return act, nil
+}
+
+func (f *fakeRepository) Delete(ctx context.Context, id uuid.UUID, expectedVersion int64) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	for i, a := range f.actors {
+		if a.ID() == id {
+			if a.Version() != expectedVersion {
+				return actor.ErrVersionConflict
+			}
+			f.actors = slices.Delete(f.actors, i, i+1)
+			return nil
+		}
+	}
+	return actor.ErrNotFound
 }
 
 func (f *fakeRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {

@@ -14,12 +14,12 @@ type Command struct {
 }
 
 type Handler struct {
-	ActorRepository actor.Repository
-	newID           func() uuid.UUID
+	repo  actor.Repository
+	newID func() uuid.UUID
 }
 
 func NewHandler(repo actor.Repository, newID func() uuid.UUID) *Handler {
-	return &Handler{ActorRepository: repo, newID: newID}
+	return &Handler{repo: repo, newID: newID}
 }
 
 func (h *Handler) Execute(ctx context.Context, cmd Command) (*actor.Actor, error) {
@@ -27,7 +27,7 @@ func (h *Handler) Execute(ctx context.Context, cmd Command) (*actor.Actor, error
 	if err != nil {
 		return nil, fmt.Errorf("build actor: %w", err)
 	}
-	if err := h.ActorRepository.Save(ctx, a); err != nil {
+	if err := h.repo.Save(ctx, a); err != nil {
 		return nil, fmt.Errorf("save actor: %w", err)
 	}
 	return a, nil

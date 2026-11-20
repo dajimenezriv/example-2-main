@@ -3,49 +3,36 @@ version: "3"
 dotenv: [".env"]
 
 vars:
-  DB_URL: "{{.DATABASE_URL}}"
   MIGRATIONS: migrations
 
 tasks:
-  cover:
+  test:coverage:
     cmds:
       - go test ./... -race -coverpkg=./... -coverprofile=raw_coverage.out
       - grep -vE '/(actortest|accounttest)/' raw_coverage.out > coverage.out
 
-  squawk: squawk '{{.MIGRATIONS}}/*.sql'
-
-  sqlc:
-    - sqlc generate -f sqlc.yaml
-    - sqlc vet -f sqlc.yaml
+  lint: golangci-lint run
 
   openapi:
-    desc: Export the API spec (api/openapi.yaml) and regenerate the CLI client from it
     cmds:
       - go run ./cmd/server openapi > api/openapi.yaml
       - go tool oapi-codegen -config oapi-codegen.yaml api/openapi.yaml
 
-  migrate:create:
-    requires:
-      vars: [CLI_ARGS]
-    cmd: migrate create -ext sql -dir {{.MIGRATIONS}} -seq {{.CLI_ARGS}}
-
-  migrate:up:
-    desc: Apply all pending migrations
-    cmd: migrate -path {{.MIGRATIONS}} -database "{{.DB_URL}}" up
-
-  migrate:down:
-    desc: Roll back last migration
-    cmd: migrate -path {{.MIGRATIONS}} -database "{{.DB_URL}}" down 1
-
-  migrate:force:
-    desc: Force migration version (task migrate:force -- 1)
-    requires:
-      vars: [CLI_ARGS]
-    cmd: migrate -path {{.MIGRATIONS}} -database "{{.DB_URL}}" force {{.CLI_ARGS}}
-
-  migrate:version:
-    desc: Show the current schema version
-    cmd: migrate -path {{.MIGRATIONS}} -database "{{.DB_URL}}" version
+  db:lint: squawk '{{.MIGRATIONS}}/*.sql'
+  db:sqlc:
+    - sqlc generate -f sqlc.yaml
+    - sqlc vet -f sqlc.yaml
+  db:schema: ./scripts/db-schema.sh
+  db:up: go run ./cmd/server migrate
+  db:*:
+    desc: task db:status | db:down | db:create -- add_foo sql
+    vars:
+      GOOSE_CMD: "{{index .MATCH 0}}"
+    env:
+      GOOSE_DRIVER: postgres
+      GOOSE_MIGRATION_DIR: "{{.MIGRATIONS}}"
+      GOOSE_DBSTRING: "{{.DATABASE_URL}}"
+    cmd: goose -s {{.GOOSE_CMD}} {{.CLI_ARGS}}
 
   auth:env:
     desc: Copy Terraform outputs (issuer, audience, web client) into the backend .env

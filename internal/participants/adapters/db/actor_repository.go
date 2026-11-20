@@ -66,7 +66,7 @@ func (r *ActorRepository) Update(ctx context.Context, a *actor.Actor, expectedVe
 		return toActorDomain(act), nil
 	}
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, r.explainUpdateMiss(ctx, a.ID())
+		return nil, r.explainMiss(ctx, "update actor", a.ID())
 	}
 	if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok && pgErr.Code == uniqueViolation {
 		if pgErr.ConstraintName == actorsTaxIDConstraint {
@@ -74,6 +74,20 @@ func (r *ActorRepository) Update(ctx context.Context, a *actor.Actor, expectedVe
 		}
 	}
 	return nil, fmt.Errorf("update actor: %w", err)
+}
+
+func (r *ActorRepository) Delete(ctx context.Context, id uuid.UUID, expectedVersion int64) error {
+	n, err := r.db.DeleteActor(ctx, sqlcgen.DeleteActorParams{
+		ID:      id,
+		Version: expectedVersion,
+	})
+	if err != nil {
+		return fmt.Errorf("delete actor: %w", err)
+	}
+	if n == 0 {
+		return r.explainMiss(ctx, "delete actor", id)
+	}
+	return nil
 }
 
 func (r *ActorRepository) FindByID(ctx context.Context, id uuid.UUID) (*actor.Actor, error) {
@@ -102,7 +116,7 @@ func (r *ActorRepository) FindAll(ctx context.Context, page pagination.Page) ([]
 	return res, nil
 }
 
-func (r *ActorRepository) explainUpdateMiss(ctx context.Context, id uuid.UUID) error {
+func (r *ActorRepository) explainMiss(ctx context.Context, op string, id uuid.UUID) error {
 	_, err := r.db.GetActorVersion(ctx, id)
 	switch {
 	case err == nil:
@@ -110,6 +124,6 @@ func (r *ActorRepository) explainUpdateMiss(ctx context.Context, id uuid.UUID) e
 	case errors.Is(err, pgx.ErrNoRows):
 		return actor.ErrNotFound
 	default:
-		return fmt.Errorf("update actor: get version: %w", err)
+		return fmt.Errorf("%s: get version: %w", op, err)
 	}
 }
