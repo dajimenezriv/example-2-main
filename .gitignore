@@ -3,4 +3,5 @@
 *.tfstate
 *.tfstate.backup
 *coverage.out
+/.age-key.txt
 /data
