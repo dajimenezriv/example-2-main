@@ -43,3 +43,9 @@ ORDER BY
   id
 LIMIT
   @page_limit OFFSET @page_offset;
+
+-- name: DeleteActor :execrows
+DELETE FROM actors
+WHERE
+  id = @id
+  AND version = @version;

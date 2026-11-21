@@ -41,7 +41,7 @@ jobs:
       - run: go mod tidy -diff
       - run: sqlc diff -f sqlc.yaml
       - run: sqlc vet -f sqlc.yaml
-      - run: squawk 'migrations/*.sql'
+      - run: task db:lint
       - run: |
-          ./scripts/schema-dump.sh
+          task db:schema
           git diff --exit-code -- db/schema.sql

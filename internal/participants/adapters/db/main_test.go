@@ -2,18 +2,19 @@ package db
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"log"
 	"os"
-	"path/filepath"
 	"testing"
 
+	"exercise/migrations"
+
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 )
-
-const migrationsGlob = "../../../../migrations/*.up.sql"
 
 var testPool *pgxpool.Pool
 
@@ -29,15 +30,7 @@ func run(m *testing.M) int {
 
 	ctx := context.Background()
 
-	migrations, err := filepath.Glob(migrationsGlob)
-	if err != nil {
-		log.Printf("filepath.Glob: %v", err)
-		return 1
-	}
-
-	ctr, err := postgres.Run(ctx, "postgres:16",
-		postgres.WithInitScripts(migrations...),
-		postgres.BasicWaitStrategies())
+	ctr, err := postgres.Run(ctx, "postgres:18", postgres.BasicWaitStrategies())
 	defer func() {
 		if termErr := testcontainers.TerminateContainer(ctr); termErr != nil {
 			log.Printf("terminate postgres container: %v", termErr)
@@ -60,5 +53,23 @@ func run(m *testing.M) int {
 	}
 	defer testPool.Close()
 
+	if err := migrate(ctx); err != nil {
+		log.Printf("migrate test DB: %v", err)
+		return 1
+	}
+
 	return m.Run()
+}
+
+func migrate(ctx context.Context) (err error) {
+	// Wraps the pool in a *sql.DB so code that accepts database/sql interface can use it.
+	db := stdlib.OpenDBFromPool(testPool)
+	defer func() { err = errors.Join(err, db.Close()) }()
+
+	p, err := migrations.NewProvider(db)
+	if err != nil {
+		return err
+	}
+	_, err = p.Up(ctx)
+	return err
 }

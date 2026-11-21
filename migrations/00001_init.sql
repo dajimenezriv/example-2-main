@@ -1,10 +1,6 @@
-BEGIN;
-
-SET
-  LOCAL lock_timeout = '1s';
-
-SET
-  LOCAL statement_timeout = '5s';
+-- +goose Up
+SET LOCAL lock_timeout = '1s';
+SET LOCAL statement_timeout = '5s';
 
 CREATE TABLE actors (
   id UUID PRIMARY KEY,
@@ -20,4 +16,9 @@ CREATE TABLE accounts (
   actor_id UUID NOT NULL REFERENCES actors (id)
 );
 
-COMMIT;
+-- +goose Down
+SET LOCAL lock_timeout = '1s';
+SET LOCAL statement_timeout = '5s';
+
+DROP TABLE accounts;
+DROP TABLE actors;

@@ -244,12 +244,6 @@ components:
             - settlement_operator
             - custom
           type: string
-        version:
-          format: int64
-          minimum: 1
-          type: integer
-      required:
-        - version
       type: object
     UpdateActorResponse:
       additionalProperties: false
@@ -434,6 +428,63 @@ paths:
       tags:
         - Actors
   /actors/{id}:
+    delete:
+      operationId: delete-actor
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            format: uuid
+            type: string
+        - description: Strong ETag of the version being deleted, e.g. "1". Required.
+          in: header
+          name: If-Match
+          schema:
+            description: Strong ETag of the version being deleted, e.g. "1". Required.
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Bad Request
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Not Found
+        "412":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Precondition Failed
+        "422":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Unprocessable Entity
+        "428":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Precondition Required
+        "500":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Internal Server Error
+      summary: Delete an actor and its accounts
+      tags:
+        - Actors
     patch:
       operationId: update-actor
       parameters:
@@ -442,6 +493,12 @@ paths:
           required: true
           schema:
             format: uuid
+            type: string
+        - description: Strong ETag of the version being updated, e.g. "1". Required.
+          in: header
+          name: If-Match
+          schema:
+            description: Strong ETag of the version being updated, e.g. "1". Required.
             type: string
       requestBody:
         content:
@@ -456,6 +513,10 @@ paths:
               schema:
                 $ref: "#/components/schemas/UpdateActorResponse"
           description: OK
+          headers:
+            Etag:
+              schema:
+                type: string
         "400":
           content:
             application/problem+json:
@@ -474,12 +535,24 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorModel"
           description: Conflict
+        "412":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Precondition Failed
         "422":
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ErrorModel"
           description: Unprocessable Entity
+        "428":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ErrorModel"
+          description: Precondition Required
         "500":
           content:
             application/problem+json:

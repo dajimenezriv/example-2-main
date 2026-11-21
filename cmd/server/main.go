@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -30,32 +31,60 @@ const (
 	shutdownTimeout   = 10 * time.Second
 )
 
+var (
+	errUnknownCommand = errors.New("unknown command")
+	errPoolerURL      = errors.New("DATABASE_URL must use the direct Neon endpoint, not -pooler")
+)
+
 type config struct {
 	DatabaseURL string `env:"DATABASE_URL,required,notEmpty"`
 }
 
 func main() {
-	run := run
-	// `server openapi`: print the spec and exit, no DB or env needed. Used by `task openapi`.
-	if len(os.Args) == 2 && os.Args[1] == "openapi" {
-		run = func() error { return printOpenAPI(os.Stdout) }
-	}
-	if err := run(); err != nil {
+	if err := dispatch(os.Args[1:]); err != nil {
 		log.Printf("❌ %v", err)
 		os.Exit(1)
 	}
+}
+
+func dispatch(args []string) error {
+	if len(args) == 0 {
+		return run()
+	}
+	switch args[0] {
+	case "openapi":
+		return printOpenAPI()
+	case "migrate":
+		return migrateUp()
+	default:
+		return fmt.Errorf("%w %q", errUnknownCommand, args[0])
+	}
+}
+
+func loadConfig() (config, error) {
+	if err := godotenv.Load(); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return config{}, fmt.Errorf("load .env: %w", err)
+	}
+	cfg, err := env.ParseAs[config]()
+	if err != nil {
+		return config{}, fmt.Errorf("parse config: %w", err)
+	}
+	// We pool client-side (pgxpool) and migrations take a session-level advisory
+	// lock, which breaks under PgBouncer transaction mode. Use the direct endpoint.
+	// https://neon.com/docs/connect/connection-pooling
+	if strings.Contains(cfg.DatabaseURL, "-pooler") {
+		return config{}, errPoolerURL
+	}
+	return cfg, nil
 }
 
 func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	if err := godotenv.Load(); err != nil && !errors.Is(err, fs.ErrNotExist) {
-		return fmt.Errorf("load .env: %w", err)
-	}
-	cfg, err := env.ParseAs[config]()
+	cfg, err := loadConfig()
 	if err != nil {
-		return fmt.Errorf("parse config: %w", err)
+		return err
 	}
 
 	pool, err := pgxpool.New(ctx, cfg.DatabaseURL)
@@ -110,12 +139,11 @@ func registerHTTPHandlers(app *application) chi.Router {
 	return r
 }
 
-// registerOperations is shared by the server and `openapi` (spec export), so the spec
-// always lists exactly the endpoints the server serves.
 func registerOperations(api huma.API, app *application) {
 	app.GetActorsHTTP.Register(api)
 	app.CreateActorHTTP.Register(api)
 	app.UpdateActorHTTP.Register(api)
+	app.DeleteActorHTTP.Register(api)
 	app.GetAccountsHTTP.Register(api)
 	app.CreateAccountHTTP.Register(api)
 }
