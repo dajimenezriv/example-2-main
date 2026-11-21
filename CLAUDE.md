@@ -7,6 +7,7 @@
 - HTTP: Huma v2 + chi. SQL: sqlc + pgx/v5.
 - Aggregates: `Actor`, `Account`. Postgres.
 - Bounded context: `internal/participants`.
+- Remember to encode the env variables
 
 ## Commands
 
